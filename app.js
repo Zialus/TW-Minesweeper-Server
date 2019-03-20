@@ -225,13 +225,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 // chamada ao módulo MySQL
 var mysql = require('mysql');
 // criação da conecção
-var db_con = mysql.createConnection({
-	socketPath: `/cloudsql/${process.env.CLOUD_SQL_CONNECTION_NAME}`,
-	// host : 'localhost',
-	user: process.env.DB_USER,
-	password: process.env.DB_PASS,
-	database: process.env.DB_NAME,
-});
+var db_con = mysql.createConnection(process.env.JAWSDB_MARIA_URL);
 
 // conecção e selecção da base de dados
 db_con.connect(function(err) {
