@@ -1,14 +1,16 @@
 //lista de jogadores à espera para jogarem
-var waiting_list = [];
+const waiting_list = [];
+
 // lista de ligações para server-side events
-var openConnections = [];
-var gameVar = 0;
-var games = [];
-var regex = /^[a-z0-9_-]+$/i;
+const openConnections = [];
+let gameVar = 0;
+const games = [];
+const regex = /^[a-z0-9_-]+$/i;
+
 // envia eventos para os jogaores de um jogo
 function sendEvent(game_id, e, move) {
     console.log('Sent Event:');
-    for (var i = 0; i < openConnections.length; i++) {
+    for (let i = 0; i < openConnections.length; i++) {
         if (openConnections[i].game == game_id) {
             // se o evento for de inicio de jogo (oponente encontrado)
             // começa o jogo também
@@ -58,10 +60,10 @@ function sendEvent(game_id, e, move) {
 }
 
 function testKey(name, key, game_id) {
-    var found = false;
+    let found = false;
 
     if (games[game_id] === undefined) {
-        for (var i = 0; i < waiting_list.length; i++)
+        for (let i = 0; i < waiting_list.length; i++)
             if (waiting_list[i].name == name && waiting_list[i].key == key) found = true;
     } else if (
         (games[game_id].player1 == name && games[game_id].p1key == key) ||
@@ -73,10 +75,10 @@ function testKey(name, key, game_id) {
 }
 
 function checkGameStart(game_id) {
-    var players = [];
+    const players = [];
     if (games[game_id] === undefined) return false;
     else {
-        for (var i = 0; i < openConnections.length; i++) {
+        for (let i = 0; i < openConnections.length; i++) {
             if (openConnections[i].game == game_id) players.push(openConnections[i].name);
         }
 
@@ -92,8 +94,8 @@ function checkGameStart(game_id) {
 
 // método para espalhar minas no início de um jogo
 function startGame(level, game_id, key1, key2, p1, p2) {
-    var minesLeft;
-    var game = {
+    let minesLeft;
+    const game = {
         level: level,
         mines: 0,
         board: [[]],
@@ -126,22 +128,22 @@ function startGame(level, game_id, key1, key2, p1, p2) {
     }
     game.board = new Array(game.boardHeight);
     game.popped = new Array(game.boardHeight);
-    for (var i = 0; i < game.boardHeight; i++) {
+    for (let i = 0; i < game.boardHeight; i++) {
         game.board[i] = new Array(game.boardWidth);
         game.popped[i] = new Array(game.boardWidth);
     }
     while (minesLeft > 0) {
         //escolhe duas coordenadas aleatórias
-        var x = Math.floor(Math.random() * game.boardWidth);
-        var y = Math.floor(Math.random() * game.boardHeight);
+        const x = Math.floor(Math.random() * game.boardWidth);
+        const y = Math.floor(Math.random() * game.boardHeight);
         if (game.board[y][x] != -1) {
             game.board[y][x] = -1;
             minesLeft--;
         }
     }
     //contagem das minas que rodeiam cada casa
-    for (var i = 0; i < game.boardHeight; i++) {
-        for (var j = 0; j < game.boardWidth; j++) {
+    for (let i = 0; i < game.boardHeight; i++) {
+        for (let j = 0; j < game.boardWidth; j++) {
             if (game.board[i][j] != -1) {
                 game.board[i][j] = countNeighbours(game, j, i);
             }
@@ -150,9 +152,10 @@ function startGame(level, game_id, key1, key2, p1, p2) {
     }
     games[game_id] = game;
 }
+
 function countNeighbours(game, x, y) {
-    var count = 0;
-    var strt_i = y,
+    let count = 0;
+    let strt_i = y,
         strt_j = x,
         lm_i = y,
         lm_j = x;
@@ -161,15 +164,17 @@ function countNeighbours(game, x, y) {
     if (x + 1 < game.boardWidth) lm_j = x + 1;
     if (y - 1 >= 0) strt_i = y - 1;
     if (y + 1 < game.boardHeight) lm_i = y + 1;
-    for (var i = strt_i; i <= lm_i; i++) {
-        for (var j = strt_j; j <= lm_j; j++) {
+    for (let i = strt_i; i <= lm_i; i++) {
+        for (let j = strt_j; j <= lm_j; j++) {
             if (game.board[i][j] === -1) count++;
         }
     }
     return count;
 }
+
 // casas reveladas na última jogada
-var move = [];
+let move = [];
+
 function clickPop(x, y, game_id) {
     // se a jogada for uma mina
     if (games[game_id].board[y][x] === -1) {
@@ -207,7 +212,7 @@ function clickPop(x, y, game_id) {
         move = [];
         // função recursiva
         expandPop(x, y, game_id);
-        var p = games[game_id].turn;
+        const p = games[game_id].turn;
         // determinar o próximo turno
         if (games[game_id].turn === games[game_id].player1) games[game_id].turn = games[game_id].player2;
         else games[game_id].turn = games[game_id].player1;
@@ -215,11 +220,12 @@ function clickPop(x, y, game_id) {
         sendEvent(game_id, 'move', { name: p, cells: move, turn: games[game_id].turn });
     }
 }
+
 function expandPop(x, y, game_id) {
     games[game_id].popped[y][x] = true;
     // adicionar casa às destapadas nesta jogada
     move.push([x + 1, y + 1, games[game_id].board[y][x]]);
-    var strt_i = y,
+    let strt_i = y,
         strt_j = x,
         lm_i = y,
         lm_j = x;
@@ -229,8 +235,8 @@ function expandPop(x, y, game_id) {
     if (y - 1 >= 0) strt_i = y - 1;
     if (y + 1 < games[game_id].boardHeight) lm_i = y + 1;
     if (games[game_id].board[y][x] === 0) {
-        for (var i = strt_i; i <= lm_i; i++) {
-            for (var j = strt_j; j <= lm_j; j++) {
+        for (let i = strt_i; i <= lm_i; i++) {
+            for (let j = strt_j; j <= lm_j; j++) {
                 if (!games[game_id].popped[i][j]) {
                     expandPop(j, i, game_id);
                 }
@@ -238,20 +244,23 @@ function expandPop(x, y, game_id) {
         }
     }
 }
+
 // chamada ao módulo Express, para simplificar alguns passos
-var express = require('express');
-var cors = require('cors');
-var app = express();
+const express = require('express');
+const cors = require('cors');
+const app = express();
 app.use(cors());
+
 // declaraçao de um body parser para ler o corpo dos POST
-var bodyParser = require('body-parser');
+const bodyParser = require('body-parser');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // chamada ao módulo MySQL
-var mysql = require('mysql');
+const mysql = require('mysql');
+
 // criação da conecção
-var db_con = mysql.createConnection(process.env.JAWSDB_MARIA_URL);
+const db_con = mysql.createConnection(process.env.JAWSDB_MARIA_URL);
 
 // conecção e selecção da base de dados
 db_con.connect(function(err) {
@@ -264,25 +273,21 @@ db_con.connect(function(err) {
 });
 
 function increaseScore(name, level) {
-    var query = db_con.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], function(
-        err,
-        result
-    ) {
+    db_con.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], function(err, result) {
         if (err) console.log(err);
 
         if (result.length > 0) {
-            var query = db_con.query(
-                'UPDATE Rankings SET score = score + 1 WHERE name = ? && level = ?',
-                [name, level],
-                function(err, result) {
-                    if (err) console.log(err);
+            db_con.query('UPDATE Rankings SET score = score + 1 WHERE name = ? && level = ?', [name, level], function(
+                err,
+                result
+            ) {
+                if (err) console.log(err);
 
-                    console.log('updated score.');
-                }
-            );
+                console.log('updated score.');
+            });
         } else {
-            var post = { name: name, score: 1, level: level, timestamp: Date.now() };
-            var query = db_con.query('INSERT INTO Rankings SET ?', [post], function(err, result) {
+            const post = { name: name, score: 1, level: level, timestamp: Date.now() };
+            db_con.query('INSERT INTO Rankings SET ?', [post], function(err, result) {
                 if (err) console.log(err);
                 console.log('Created new ranking');
                 // resposta positiva
@@ -292,15 +297,12 @@ function increaseScore(name, level) {
 }
 
 function decreaseScore(name, level) {
-    var query = db_con.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], function(
-        err,
-        result
-    ) {
+    db_con.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], function(err, result) {
         if (err) console.log(err);
 
         if (result.length > 0) {
             if (result[0].score > 0) {
-                var query = db_con.query(
+                db_con.query(
                     'UPDATE Rankings SET score = score - 1 WHERE name = ? && level = ?',
                     [name, level],
                     function(err, result) {
@@ -311,8 +313,8 @@ function decreaseScore(name, level) {
                 );
             }
         } else {
-            var post = { name: name, score: 0, level: level, timestamp: Date.now() };
-            var query = db_con.query('INSERT INTO Rankings SET ?', [post], function(err, result) {
+            const post = { name: name, score: 0, level: level, timestamp: Date.now() };
+            db_con.query('INSERT INTO Rankings SET ?', [post], function(err, result) {
                 if (err) console.log(err);
                 console.log('Created new ranking');
                 // resposta positiva
@@ -322,7 +324,8 @@ function decreaseScore(name, level) {
 }
 
 // chamada ao módulo criptográfico para uso da função MD5
-var crypto = require('crypto');
+const crypto = require('crypto');
+
 // função para criar hashes a partir de password e salt
 function createHash(str) {
     return crypto
@@ -330,25 +333,27 @@ function createHash(str) {
         .update(str)
         .digest('hex');
 }
+
 // chamada ao módulo Chance para a geração dos salts
-var Chance = require('chance');
-var chance = new Chance();
+const Chance = require('chance');
+const chance = new Chance();
+
 // função de registo/login
 app.post('/register', function(request, response) {
     // extração do nome e pass do corpo do request
-    var name = request.body.name;
-    var pass = request.body.pass;
+    const name = request.body.name;
+    const pass = request.body.pass;
     //verifica se o nome obedece à regex
     if (regex.test(name)) {
         // query à base de dados
         // para descobrir se o utilizador já está registado
-        var query = db_con.query('SELECT * FROM Users WHERE name = ?', [name], function(err, result) {
+        db_con.query('SELECT * FROM Users WHERE name = ?', [name], function(err, result) {
             if (err) console.log(err);
             // utilizador já existe
             if (result.length > 0) {
                 console.log('User exists');
                 // resultado da query
-                var user = result[0];
+                const user = result[0];
                 // verificar se a password está correta
                 if (createHash(pass + user.salt) == user.pass) {
                     console.log('Correct Password');
@@ -366,11 +371,11 @@ app.post('/register', function(request, response) {
             else {
                 console.log('New user');
                 // gerar salt e hash
-                var salt = chance.string({ length: 4 });
-                var hash = createHash(pass + salt);
+                const salt = chance.string({ length: 4 });
+                const hash = createHash(pass + salt);
                 // guardar na base de dados
-                var post = { name: name, pass: hash, salt: salt };
-                var query = db_con.query('INSERT INTO Users SET ?', [post], function(err, result) {
+                const post = { name: name, pass: hash, salt: salt };
+                db_con.query('INSERT INTO Users SET ?', [post], function(err, result) {
                     if (err) console.log(err);
                     console.log('Created new user');
                     // resposta positiva
@@ -382,10 +387,11 @@ app.post('/register', function(request, response) {
         response.json({ error: 'Nome de utilizador inválido!' });
     }
 });
+
 // Ranking
 app.post('/ranking', function(request, response) {
-    var level = request.body.level;
-    var query = db_con.query(
+    const level = request.body.level;
+    db_con.query(
         'SELECT * FROM Rankings WHERE level = ? ORDER BY score DESC, timestamp ASC LIMIT 10;',
         [level],
         function(err, result) {
@@ -394,10 +400,11 @@ app.post('/ranking', function(request, response) {
         }
     );
 });
+
 //retorna o 1º oponente válido para p1 se existir se não retorna undefined e adiciona p1 à lista
 function findOpponent(p1) {
-    var p2;
-    for (var i = 0; i < waiting_list.length; i++) {
+    let p2;
+    for (let i = 0; i < waiting_list.length; i++) {
         if (waiting_list[i].level === p1.level && waiting_list[i].group === p1.group) {
             p2 = waiting_list[i];
             waiting_list.splice(i, 1); //remove elemento da lista
@@ -406,20 +413,21 @@ function findOpponent(p1) {
     }
     return p2;
 }
+
 app.post('/join', function(request, response) {
     if (regex.test(request.body.name)) {
-        var query = db_con.query('SELECT * FROM Users WHERE name = ?', [request.body.name], function(err, result) {
+        db_con.query('SELECT * FROM Users WHERE name = ?', [request.body.name], function(err, result) {
             if (err) console.log(err);
             // utilizador já existe
             if (result.length > 0) {
                 // resultado da query
-                var user = result[0];
+                const user = result[0];
                 // verificar se a password está correta
                 if (createHash(request.body.pass + user.salt) == user.pass) {
-                    var game_id;
-                    var key;
-                    var p1 = {};
-                    var p2 = {};
+                    let game_id;
+                    let key;
+                    const p1 = {};
+                    let p2 = {};
                     p1.name = request.body.name;
                     p1.group = request.body.group;
                     p1.level = request.body.level;
@@ -454,13 +462,14 @@ app.post('/join', function(request, response) {
         response.json({ error: 'Jogada inválida!' });
     }
 });
+
 app.post('/leave', function(request, response) {
-    var name = request.body.name;
-    var key = request.body.key;
-    var game_id = request.body.game;
+    const name = request.body.name;
+    const key = request.body.key;
+    const game_id = request.body.game;
     if (regex.test(name) && testKey(name, key, game_id)) {
-        var found = false;
-        for (var i = 0; i < waiting_list.length; i++) {
+        let found = false;
+        for (let i = 0; i < waiting_list.length; i++) {
             if (waiting_list[i].name == name) {
                 found = true;
                 waiting_list.splice(i, 1);
@@ -470,9 +479,10 @@ app.post('/leave', function(request, response) {
         response.json({});
     }
 });
+
 app.post('/score', function(request, response) {
     if (regex.test(request.body.name)) {
-        var query = db_con.query(
+        db_con.query(
             'SELECT * FROM Rankings WHERE name = ? && level = ?',
             [request.body.name, request.body.level],
             function(err, result) {
@@ -485,13 +495,14 @@ app.post('/score', function(request, response) {
         response.json({ error: 'Nome de utilizador inválido!' });
     }
 });
+
 app.post('/notify', function(request, response) {
-    var row = request.body.row;
-    var col = request.body.col;
-    var game_id = request.body.game;
-    var name = request.body.name;
-    var key = request.body.key;
-    var cells = [];
+    const row = request.body.row;
+    const col = request.body.col;
+    const game_id = request.body.game;
+    const name = request.body.name;
+    const key = request.body.key;
+    const cells = [];
     console.log(name, ' plays in [', row, ',', col, ']');
     //verifica a validade do nome e da chave
     if (regex.test(name) && testKey(name, key, game_id)) {
@@ -514,10 +525,11 @@ app.post('/notify', function(request, response) {
         } else response.json({ error: 'Não é o seu turno!' });
     } else response.json({ error: 'Erro! Não foi possivel validar a jogada' });
 });
+
 app.get('/update', function(request, response) {
-    var name = request.query.name;
-    var game_id = request.query.game;
-    var key = request.query.key;
+    const name = request.query.name;
+    const game_id = request.query.game;
+    const key = request.query.key;
     if (regex.test(name) && testKey(name, key, game_id)) {
         // impedir que a conecção se feche
         request.socket.setTimeout(6000000);
@@ -536,7 +548,7 @@ app.get('/update', function(request, response) {
 
         // no caso do cliente terminar a conecção, remover da lista
         request.on('close', function() {
-            for (var i = 0; i < openConnections.length; i++) {
+            for (let i = 0; i < openConnections.length; i++) {
                 if (openConnections[i].name == name) openConnections.splice(i, 1);
                 break;
             }
@@ -548,6 +560,6 @@ app.get('/update', function(request, response) {
 
 const port = process.env.PORT;
 
-var server = app.listen(port, function() {
+const server = app.listen(port, function() {
     console.log('Listening at http://%s:%s', server.address().address, server.address().port);
 });
