@@ -1,3 +1,27 @@
+// chamada ao módulo Express, para simplificar alguns passos
+const express = require('express');
+const cors = require('cors');
+const app = express();
+app.use(cors());
+
+// declaraçao de um body parser para ler o corpo dos POST
+const bodyParser = require('body-parser');
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// chamada ao módulo MySQL
+const mysql = require('mysql');
+
+// criação da conecção
+const db_con = mysql.createConnection(process.env.JAWSDB_MARIA_URL);
+
+// chamada ao módulo criptográfico para uso da função MD5
+const crypto = require('crypto');
+
+// chamada ao módulo Chance para a geração dos salts
+const Chance = require('chance');
+const chance = new Chance();
+
 //lista de jogadores à espera para jogarem
 const waiting_list = [];
 
@@ -6,6 +30,38 @@ const openConnections = [];
 let gameVar = 0;
 const games = [];
 const regex = /^[a-z0-9_-]+$/i;
+
+// casas reveladas na última jogada
+let move = [];
+
+const port = process.env.PORT;
+
+// conecção e selecção da base de dados
+db_con.connect(function(err) {
+    if (err) {
+        console.error('error connecting: ' + err.stack);
+        return;
+    }
+
+    console.log('connected as id ' + db_con.threadId);
+});
+
+const server = app.listen(port, function() {
+    console.log('Listening at http://%s:%s', server.address().address, server.address().port);
+});
+
+//retorna o 1º oponente válido para p1 se existir se não retorna undefined e adiciona p1 à lista
+function findOpponent(p1) {
+    let p2;
+    for (let i = 0; i < waiting_list.length; i++) {
+        if (waiting_list[i].level === p1.level && waiting_list[i].group === p1.group) {
+            p2 = waiting_list[i];
+            waiting_list.splice(i, 1); //remove elemento da lista
+            break;
+        }
+    }
+    return p2;
+}
 
 // envia eventos para os jogaores de um jogo
 function sendEvent(game_id, e, move) {
@@ -172,9 +228,6 @@ function countNeighbours(game, x, y) {
     return count;
 }
 
-// casas reveladas na última jogada
-let move = [];
-
 function clickPop(x, y, game_id) {
     // se a jogada for uma mina
     if (games[game_id].board[y][x] === -1) {
@@ -245,33 +298,6 @@ function expandPop(x, y, game_id) {
     }
 }
 
-// chamada ao módulo Express, para simplificar alguns passos
-const express = require('express');
-const cors = require('cors');
-const app = express();
-app.use(cors());
-
-// declaraçao de um body parser para ler o corpo dos POST
-const bodyParser = require('body-parser');
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-// chamada ao módulo MySQL
-const mysql = require('mysql');
-
-// criação da conecção
-const db_con = mysql.createConnection(process.env.JAWSDB_MARIA_URL);
-
-// conecção e selecção da base de dados
-db_con.connect(function(err) {
-    if (err) {
-        console.error('error connecting: ' + err.stack);
-        return;
-    }
-
-    console.log('connected as id ' + db_con.threadId);
-});
-
 function increaseScore(name, level) {
     db_con.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], function(err, result) {
         if (err) console.log(err);
@@ -323,9 +349,6 @@ function decreaseScore(name, level) {
     });
 }
 
-// chamada ao módulo criptográfico para uso da função MD5
-const crypto = require('crypto');
-
 // função para criar hashes a partir de password e salt
 function createHash(str) {
     return crypto
@@ -333,10 +356,6 @@ function createHash(str) {
         .update(str)
         .digest('hex');
 }
-
-// chamada ao módulo Chance para a geração dos salts
-const Chance = require('chance');
-const chance = new Chance();
 
 // função de registo/login
 app.post('/register', function(request, response) {
@@ -400,19 +419,6 @@ app.post('/ranking', function(request, response) {
         }
     );
 });
-
-//retorna o 1º oponente válido para p1 se existir se não retorna undefined e adiciona p1 à lista
-function findOpponent(p1) {
-    let p2;
-    for (let i = 0; i < waiting_list.length; i++) {
-        if (waiting_list[i].level === p1.level && waiting_list[i].group === p1.group) {
-            p2 = waiting_list[i];
-            waiting_list.splice(i, 1); //remove elemento da lista
-            break;
-        }
-    }
-    return p2;
-}
 
 app.post('/join', function(request, response) {
     if (regex.test(request.body.name)) {
@@ -556,10 +562,4 @@ app.get('/update', function(request, response) {
     } else {
         response.json({ error: 'Erro! Não foi possivel validar o pedido' });
     }
-});
-
-const port = process.env.PORT;
-
-const server = app.listen(port, function() {
-    console.log('Listening at http://%s:%s', server.address().address, server.address().port);
 });
