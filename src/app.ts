@@ -1,25 +1,25 @@
 // chamada ao módulo Express, para simplificar alguns passos
-const express = require('express');
-const cors = require('cors');
+import express from 'express';
+import cors from 'cors';
 const app = express();
 app.use(cors());
 
 // declaraçao de um body parser para ler o corpo dos POST
-const bodyParser = require('body-parser');
+import bodyParser from 'body-parser';
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // chamada ao módulo MySQL
-const mysql = require('mysql');
+import mysql from 'mysql';
 
 // criação da conecção
 const db_con = mysql.createConnection(process.env.JAWSDB_MARIA_URL);
 
 // chamada ao módulo criptográfico para uso da função MD5
-const crypto = require('crypto');
+import crypto from 'crypto';
 
 // chamada ao módulo Chance para a geração dos salts
-const Chance = require('chance');
+import Chance from 'chance';
 const chance = new Chance();
 
 //lista de jogadores à espera para jogarem
