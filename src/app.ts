@@ -546,8 +546,10 @@ app.get('/update', function(request, response) {
         // no caso do cliente terminar a conecção, remover da lista
         request.on('close', function() {
             for (let i = 0; i < openConnections.length; i++) {
-                if (openConnections[i].name == name) openConnections.splice(i, 1);
-                break;
+                if (openConnections[i].name == name) {
+                    openConnections.splice(i, 1);
+                    break;
+                }
             }
         });
     } else {
