@@ -28,7 +28,7 @@ let move = [];
 const port = process.env.PORT;
 
 // conecção e selecção da base de dados
-db_con.connect(function(err) {
+db_con.connect(function (err) {
     if (err) {
         console.error('error connecting: ' + err.stack);
         return;
@@ -37,7 +37,7 @@ db_con.connect(function(err) {
     console.log('connected as id ' + db_con.threadId);
 });
 
-const server = app.listen(port, function() {
+const server = app.listen(port, function () {
     console.log('Listening at http://%s:%s', server.address().address, server.address().port);
 });
 
@@ -155,7 +155,7 @@ function startGame(level, game_id, key1, key2, p1, p2) {
         player2: p2,
         p2key: key2,
         p2score: 0,
-        turn: p1
+        turn: p1,
     };
     if (level === 'beginner') {
         minesLeft = 10;
@@ -231,7 +231,7 @@ function clickPop(x, y, game_id) {
             sendEvent(game_id, 'end', {
                 name: games[game_id].turn,
                 cells: [[x + 1, y + 1, -1]],
-                winner: games[game_id].player1
+                winner: games[game_id].player1,
             });
             increaseScore(games[game_id].player1, games[game_id].level);
             decreaseScore(games[game_id].player2, games[game_id].level);
@@ -239,7 +239,7 @@ function clickPop(x, y, game_id) {
             sendEvent(game_id, 'end', {
                 name: games[game_id].turn,
                 cells: [[x + 1, y + 1, -1]],
-                winner: games[game_id].player2
+                winner: games[game_id].player2,
             });
             increaseScore(games[game_id].player2, games[game_id].level);
             decreaseScore(games[game_id].player1, games[game_id].level);
@@ -247,7 +247,7 @@ function clickPop(x, y, game_id) {
             sendEvent(game_id, 'move', {
                 name: games[game_id].turn,
                 cells: [[x + 1, y + 1, -1]],
-                turn: games[game_id].turn
+                turn: games[game_id].turn,
             });
     }
     // se for uma jogada normal
@@ -290,11 +290,11 @@ function expandPop(x, y, game_id) {
 }
 
 function increaseScore(name, level) {
-    db_con.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], function(err, result) {
+    db_con.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], function (err, result) {
         if (err) console.log(err);
 
         if (result.length > 0) {
-            db_con.query('UPDATE Rankings SET score = score + 1 WHERE name = ? && level = ?', [name, level], function(
+            db_con.query('UPDATE Rankings SET score = score + 1 WHERE name = ? && level = ?', [name, level], function (
                 err,
                 result
             ) {
@@ -304,7 +304,7 @@ function increaseScore(name, level) {
             });
         } else {
             const post = { name: name, score: 1, level: level, timestamp: Date.now() };
-            db_con.query('INSERT INTO Rankings SET ?', [post], function(err, result) {
+            db_con.query('INSERT INTO Rankings SET ?', [post], function (err, result) {
                 if (err) console.log(err);
                 console.log('Created new ranking');
                 // resposta positiva
@@ -314,7 +314,7 @@ function increaseScore(name, level) {
 }
 
 function decreaseScore(name, level) {
-    db_con.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], function(err, result) {
+    db_con.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], function (err, result) {
         if (err) console.log(err);
 
         if (result.length > 0) {
@@ -322,7 +322,7 @@ function decreaseScore(name, level) {
                 db_con.query(
                     'UPDATE Rankings SET score = score - 1 WHERE name = ? && level = ?',
                     [name, level],
-                    function(err, result) {
+                    function (err, result) {
                         if (err) console.log(err);
 
                         console.log('updated score.');
@@ -331,7 +331,7 @@ function decreaseScore(name, level) {
             }
         } else {
             const post = { name: name, score: 0, level: level, timestamp: Date.now() };
-            db_con.query('INSERT INTO Rankings SET ?', [post], function(err, result) {
+            db_con.query('INSERT INTO Rankings SET ?', [post], function (err, result) {
                 if (err) console.log(err);
                 console.log('Created new ranking');
                 // resposta positiva
@@ -342,14 +342,11 @@ function decreaseScore(name, level) {
 
 // função para criar hashes a partir de password e salt
 function createHash(str) {
-    return crypto
-        .createHash('md5')
-        .update(str)
-        .digest('hex');
+    return crypto.createHash('md5').update(str).digest('hex');
 }
 
 // função de registo/login
-app.post('/register', function(request, response) {
+app.post('/register', function (request, response) {
     // extração do nome e pass do corpo do request
     const name = request.body.name;
     const pass = request.body.pass;
@@ -357,7 +354,7 @@ app.post('/register', function(request, response) {
     if (regex.test(name)) {
         // query à base de dados
         // para descobrir se o utilizador já está registado
-        db_con.query('SELECT * FROM Users WHERE name = ?', [name], function(err, result) {
+        db_con.query('SELECT * FROM Users WHERE name = ?', [name], function (err, result) {
             if (err) console.log(err);
             // utilizador já existe
             if (result.length > 0) {
@@ -385,7 +382,7 @@ app.post('/register', function(request, response) {
                 const hash = createHash(pass + salt);
                 // guardar na base de dados
                 const post = { name: name, pass: hash, salt: salt };
-                db_con.query('INSERT INTO Users SET ?', [post], function(err, result) {
+                db_con.query('INSERT INTO Users SET ?', [post], function (err, result) {
                     if (err) console.log(err);
                     console.log('Created new user');
                     // resposta positiva
@@ -399,21 +396,21 @@ app.post('/register', function(request, response) {
 });
 
 // Ranking
-app.post('/ranking', function(request, response) {
+app.post('/ranking', function (request, response) {
     const level = request.body.level;
     db_con.query(
         'SELECT * FROM Rankings WHERE level = ? ORDER BY score DESC, timestamp ASC LIMIT 10;',
         [level],
-        function(err, result) {
+        function (err, result) {
             if (err) console.log(err);
             response.json({ ranking: result });
         }
     );
 });
 
-app.post('/join', function(request, response) {
+app.post('/join', function (request, response) {
     if (regex.test(request.body.name)) {
-        db_con.query('SELECT * FROM Users WHERE name = ?', [request.body.name], function(err, result) {
+        db_con.query('SELECT * FROM Users WHERE name = ?', [request.body.name], function (err, result) {
             if (err) console.log(err);
             // utilizador já existe
             if (result.length > 0) {
@@ -460,7 +457,7 @@ app.post('/join', function(request, response) {
     }
 });
 
-app.post('/leave', function(request, response) {
+app.post('/leave', function (request, response) {
     const name = request.body.name;
     const key = request.body.key;
     const game_id = request.body.game;
@@ -477,12 +474,12 @@ app.post('/leave', function(request, response) {
     }
 });
 
-app.post('/score', function(request, response) {
+app.post('/score', function (request, response) {
     if (regex.test(request.body.name)) {
         db_con.query(
             'SELECT * FROM Rankings WHERE name = ? && level = ?',
             [request.body.name, request.body.level],
-            function(err, result) {
+            function (err, result) {
                 if (err) console.log(err);
                 if (result.length > 0) response.json({ score: result[0].score });
                 else response.json({ score: 0 });
@@ -493,7 +490,7 @@ app.post('/score', function(request, response) {
     }
 });
 
-app.post('/notify', function(request, response) {
+app.post('/notify', function (request, response) {
     const row = request.body.row;
     const col = request.body.col;
     const game_id = request.body.game;
@@ -506,7 +503,7 @@ app.post('/notify', function(request, response) {
         //verifica se a jogada é válida (turno)
         if (name === games[game_id].turn) {
             //verifica os limites da tabela
-            if (row > 0 && row <= games[game_id].boardHeight && (col > 0 && col <= games[game_id].boardWidth)) {
+            if (row > 0 && row <= games[game_id].boardHeight && col > 0 && col <= games[game_id].boardWidth) {
                 //célula já destapada
                 if (!games[game_id].popped[col - 1][row - 1]) {
                     console.log('Accepted.');
@@ -523,7 +520,7 @@ app.post('/notify', function(request, response) {
     } else response.json({ error: 'Erro! Não foi possivel validar a jogada' });
 });
 
-app.get('/update', function(request, response) {
+app.get('/update', function (request, response) {
     const name = request.query.name;
     const game_id = request.query.game;
     const key = request.query.key;
@@ -534,7 +531,7 @@ app.get('/update', function(request, response) {
         response.writeHead(200, {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
-            Connection: 'keep-alive'
+            Connection: 'keep-alive',
         });
         response.write('\n');
         // adicionar às conecções abertas
@@ -544,7 +541,7 @@ app.get('/update', function(request, response) {
         if (checkGameStart(game_id)) sendEvent(game_id, 'start');
 
         // no caso do cliente terminar a conecção, remover da lista
-        request.on('close', function() {
+        request.on('close', function () {
             for (let i = 0; i < openConnections.length; i++) {
                 if (openConnections[i].name == name) {
                     openConnections.splice(i, 1);
