@@ -13,7 +13,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const db_con = mysql.createConnection(process.env.JAWSDB_MARIA_URL);
 const chance = new Chance();
 
-//lista de jogadores à espera para jogarem
+// lista de jogadores à espera para jogarem
 const waiting_list = [];
 
 // lista de ligações para server-side events
@@ -41,13 +41,13 @@ const server = app.listen(port, function () {
     console.log('Listening at http://%s:%s', server.address().address, server.address().port);
 });
 
-//retorna o 1º oponente válido para p1 se existir se não retorna undefined e adiciona p1 à lista
+// retorna o 1º oponente válido para p1 se existir se não retorna undefined e adiciona p1 à lista
 function findOpponent(p1) {
     let p2;
     for (let i = 0; i < waiting_list.length; i++) {
         if (waiting_list[i].level === p1.level && waiting_list[i].group === p1.group) {
             p2 = waiting_list[i];
-            waiting_list.splice(i, 1); //remove elemento da lista
+            waiting_list.splice(i, 1); // remove elemento da lista
             break;
         }
     }
@@ -143,7 +143,7 @@ function checkGameStart(game_id) {
 function startGame(level, game_id, key1, key2, p1, p2) {
     let minesLeft;
     const game = {
-        level: level,
+        level,
         mines: 0,
         board: [[]],
         popped: [[]],
@@ -180,7 +180,7 @@ function startGame(level, game_id, key1, key2, p1, p2) {
         game.popped[i] = new Array(game.boardWidth);
     }
     while (minesLeft > 0) {
-        //escolhe duas coordenadas aleatórias
+        // escolhe duas coordenadas aleatórias
         const x = Math.floor(Math.random() * game.boardWidth);
         const y = Math.floor(Math.random() * game.boardHeight);
         if (game.board[y][x] != -1) {
@@ -188,7 +188,7 @@ function startGame(level, game_id, key1, key2, p1, p2) {
             minesLeft--;
         }
     }
-    //contagem das minas que rodeiam cada casa
+    // contagem das minas que rodeiam cada casa
     for (let i = 0; i < game.boardHeight; i++) {
         for (let j = 0; j < game.boardWidth; j++) {
             if (game.board[i][j] != -1) {
@@ -206,7 +206,7 @@ function countNeighbours(game, x, y) {
         strt_j = x,
         lm_i = y,
         lm_j = x;
-    //verifica os limites da tabela
+    // verifica os limites da tabela
     if (x - 1 >= 0) strt_j = x - 1;
     if (x + 1 < game.boardWidth) lm_j = x + 1;
     if (y - 1 >= 0) strt_i = y - 1;
@@ -273,7 +273,7 @@ function expandPop(x, y, game_id) {
         strt_j = x,
         lm_i = y,
         lm_j = x;
-    //verifica os limites da tabela
+    // verifica os limites da tabela
     if (x - 1 >= 0) strt_j = x - 1;
     if (x + 1 < games[game_id].boardWidth) lm_j = x + 1;
     if (y - 1 >= 0) strt_i = y - 1;
@@ -303,7 +303,7 @@ function increaseScore(name, level) {
                 console.log('updated score.');
             });
         } else {
-            const post = { name: name, score: 1, level: level, timestamp: Date.now() };
+            const post = { name, score: 1, level, timestamp: Date.now() };
             db_con.query('INSERT INTO Rankings SET ?', [post], function (err, result) {
                 if (err) console.log(err);
                 console.log('Created new ranking');
@@ -330,7 +330,7 @@ function decreaseScore(name, level) {
                 );
             }
         } else {
-            const post = { name: name, score: 0, level: level, timestamp: Date.now() };
+            const post = { name, score: 0, level, timestamp: Date.now() };
             db_con.query('INSERT INTO Rankings SET ?', [post], function (err, result) {
                 if (err) console.log(err);
                 console.log('Created new ranking');
@@ -350,7 +350,7 @@ app.post('/register', function (request, response) {
     // extração do nome e pass do corpo do request
     const name = request.body.name;
     const pass = request.body.pass;
-    //verifica se o nome obedece à regex
+    // verifica se o nome obedece à regex
     if (regex.test(name)) {
         // query à base de dados
         // para descobrir se o utilizador já está registado
@@ -367,7 +367,7 @@ app.post('/register', function (request, response) {
                     // resposta positiva
                     response.json({});
                 }
-                //password errada
+                // password errada
                 else {
                     console.log('Incorrect Password');
                     // resposta negativa
@@ -381,7 +381,7 @@ app.post('/register', function (request, response) {
                 const salt = chance.string({ length: 4 });
                 const hash = createHash(pass + salt);
                 // guardar na base de dados
-                const post = { name: name, pass: hash, salt: salt };
+                const post = { name, pass: hash, salt };
                 db_con.query('INSERT INTO Users SET ?', [post], function (err, result) {
                     if (err) console.log(err);
                     console.log('Created new user');
@@ -431,11 +431,11 @@ app.post('/join', function (request, response) {
                     if (p2 === undefined) {
                         game_id = gameVar++;
                         p1.game = game_id;
-                        waiting_list.push(p1); //adicona p1 ao fim da fila
+                        waiting_list.push(p1); // adicona p1 ao fim da fila
                         console.log(p1.name, ' joined waiting list.\n Waiting list:\n', waiting_list);
                     } else {
                         game_id = p2.game;
-                        //key = p2.key;
+                        // key = p2.key;
                         startGame(p2.level, p2.game, p1.key, p2.key, p1.name, p2.name);
                         console.log(
                             'Started game: ',
@@ -448,7 +448,7 @@ app.post('/join', function (request, response) {
                             p2.level
                         );
                     }
-                    response.json({ key: key, game: game_id });
+                    response.json({ key, game: game_id });
                 }
             }
         });
@@ -498,16 +498,16 @@ app.post('/notify', function (request, response) {
     const key = request.body.key;
     const cells = [];
     console.log(name, ' plays in [', row, ',', col, ']');
-    //verifica a validade do nome e da chave
+    // verifica a validade do nome e da chave
     if (regex.test(name) && testKey(name, key, game_id)) {
-        //verifica se a jogada é válida (turno)
+        // verifica se a jogada é válida (turno)
         if (name === games[game_id].turn) {
-            //verifica os limites da tabela
+            // verifica os limites da tabela
             if (row > 0 && row <= games[game_id].boardHeight && col > 0 && col <= games[game_id].boardWidth) {
-                //célula já destapada
+                // célula já destapada
                 if (!games[game_id].popped[col - 1][row - 1]) {
                     console.log('Accepted.');
-                    response.json({}); //jogada aceite
+                    response.json({}); // jogada aceite
                     // rebenta casa(s)
                     clickPop(row - 1, col - 1, game_id);
                 } else {
@@ -535,7 +535,7 @@ app.get('/update', function (request, response) {
         });
         response.write('\n');
         // adicionar às conecções abertas
-        openConnections.push({ name: name, game: game_id, connection: response });
+        openConnections.push({ name, game: game_id, connection: response });
         console.log('Added player ', name, ' to connections, game ', game_id);
 
         if (checkGameStart(game_id)) sendEvent(game_id, 'start');
