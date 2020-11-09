@@ -14,16 +14,16 @@ const db_con = mysql.createConnection(process.env.JAWSDB_MARIA_URL);
 const chance = new Chance();
 
 // lista de jogadores à espera para jogarem
-const waiting_list = [];
+const waiting_list = [] as Player[];
 
 // lista de ligações para server-side events
-const openConnections = [];
+const openConnections = [] as Connection[];
 let gameVar = 0;
-const games = [];
+const games = [] as Game[];
 const regex = /^[a-z0-9_-]+$/i;
 
 // casas reveladas na última jogada
-let move = [];
+let move = [] as number[][];
 
 const port = process.env.PORT;
 
@@ -42,7 +42,7 @@ const server = app.listen(port, function () {
 });
 
 // retorna o 1º oponente válido para p1 se existir se não retorna undefined e adiciona p1 à lista
-function findOpponent(p1) {
+function findOpponent(p1: Player): Player | undefined {
     let p2;
     for (let i = 0; i < waiting_list.length; i++) {
         if (waiting_list[i].level === p1.level && waiting_list[i].group === p1.group) {
@@ -55,7 +55,7 @@ function findOpponent(p1) {
 }
 
 // envia eventos para os jogaores de um jogo
-function sendEvent(game_id, e, move) {
+function sendEvent(game_id: number, e: string, move?: Move) {
     console.log('Sent Event:');
     for (let i = 0; i < openConnections.length; i++) {
         if (openConnections[i].game == game_id) {
@@ -106,7 +106,7 @@ function sendEvent(game_id, e, move) {
     }
 }
 
-function testKey(name, key, game_id) {
+function testKey(name: string, key: string, game_id: number): boolean {
     let found = false;
 
     if (games[game_id] === undefined) {
@@ -121,7 +121,7 @@ function testKey(name, key, game_id) {
     return found;
 }
 
-function checkGameStart(game_id) {
+function checkGameStart(game_id: number): boolean {
     const players = [];
     if (games[game_id] === undefined) return false;
     else {
@@ -140,9 +140,9 @@ function checkGameStart(game_id) {
 }
 
 // método para espalhar minas no início de um jogo
-function startGame(level, game_id, key1, key2, p1, p2) {
+function startGame(level: string, game_id: number, key1: string, key2: string, p1: string, p2: string): void {
     let minesLeft;
-    const game = {
+    const game: Game = {
         level,
         mines: 0,
         board: [[]],
@@ -200,7 +200,7 @@ function startGame(level, game_id, key1, key2, p1, p2) {
     games[game_id] = game;
 }
 
-function countNeighbours(game, x, y) {
+function countNeighbours(game: Game, x: number, y: number): number {
     let count = 0;
     let strt_i = y,
         strt_j = x,
@@ -219,7 +219,7 @@ function countNeighbours(game, x, y) {
     return count;
 }
 
-function clickPop(x, y, game_id) {
+function clickPop(x: number, y: number, game_id: number): void {
     // se a jogada for uma mina
     if (games[game_id].board[y][x] === -1) {
         games[game_id].popped[y][x] = true;
@@ -265,7 +265,7 @@ function clickPop(x, y, game_id) {
     }
 }
 
-function expandPop(x, y, game_id) {
+function expandPop(x: number, y: number, game_id: number): void {
     games[game_id].popped[y][x] = true;
     // adicionar casa às destapadas nesta jogada
     move.push([x + 1, y + 1, games[game_id].board[y][x]]);
@@ -289,7 +289,7 @@ function expandPop(x, y, game_id) {
     }
 }
 
-function increaseScore(name, level) {
+function increaseScore(name: string, level: string): void {
     db_con.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], function (err, result) {
         if (err) console.log(err);
 
@@ -313,7 +313,7 @@ function increaseScore(name, level) {
     });
 }
 
-function decreaseScore(name, level) {
+function decreaseScore(name: string, level: string): void {
     db_con.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], function (err, result) {
         if (err) console.log(err);
 
@@ -341,7 +341,7 @@ function decreaseScore(name, level) {
 }
 
 // função para criar hashes a partir de password e salt
-function createHash(str) {
+function createHash(str: string): string {
     return crypto.createHash('md5').update(str).digest('hex');
 }
 
@@ -420,8 +420,8 @@ app.post('/join', function (request, response) {
                 if (createHash(request.body.pass + user.salt) == user.pass) {
                     let game_id;
                     let key;
-                    const p1 = {};
-                    let p2 = {};
+                    const p1 = {} as Player;
+                    let p2: Player | undefined;
                     p1.name = request.body.name;
                     p1.group = request.body.group;
                     p1.level = request.body.level;
@@ -521,9 +521,9 @@ app.post('/notify', function (request, response) {
 });
 
 app.get('/update', function (request, response) {
-    const name = request.query.name;
-    const game_id = request.query.game;
-    const key = request.query.key;
+    const name: string = request.query.name;
+    const game_id: number = request.query.game;
+    const key: string = request.query.key;
     if (regex.test(name) && testKey(name, key, game_id)) {
         // impedir que a conecção se feche
         request.socket.setTimeout(6000000);
@@ -535,7 +535,8 @@ app.get('/update', function (request, response) {
         });
         response.write('\n');
         // adicionar às conecções abertas
-        openConnections.push({ name, game: game_id, connection: response });
+        const connection: Connection = { name, game: game_id, connection: response };
+        openConnections.push(connection);
         console.log('Added player ', name, ' to connections, game ', game_id);
 
         if (checkGameStart(game_id)) sendEvent(game_id, 'start');
