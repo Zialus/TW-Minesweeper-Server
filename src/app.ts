@@ -5,6 +5,15 @@ import mysql from 'mysql';
 import crypto from 'crypto';
 import Chance from 'chance';
 import helmet from 'helmet';
+import pino from 'pino';
+
+const logger = pino({
+    prettyPrint: {
+        levelFirst: true,
+        translateTime: true,
+        colorize: true,
+    },
+});
 
 const app = express();
 app.use(helmet());
@@ -32,15 +41,15 @@ const port = process.env.PORT;
 // conecção e selecção da base de dados
 db_con.connect((err) => {
     if (err) {
-        console.error('error connecting: ' + err.stack);
+        logger.error('error connecting: ' + err.stack);
         return;
     }
 
-    console.log('connected as id ' + db_con.threadId);
+    logger.info('connected as id ' + db_con.threadId);
 });
 
 const server = app.listen(port, () => {
-    console.log('Listening at http://%s:%s', server.address().address, server.address().port);
+    logger.info('Listening at http://%s:%s', server.address().address, server.address().port);
 });
 
 // retorna o 1º oponente válido para p1 se existir se não retorna undefined e adiciona p1 à lista
@@ -58,7 +67,7 @@ function findOpponent(p1: Player): Player | undefined {
 
 // envia eventos para os jogaores de um jogo
 function sendEvent(game_id: number, e: string, move?: Move) {
-    console.log('Sent Event:');
+    logger.info('Sent Event:');
     for (let i = 0; i < openConnections.length; i++) {
         if (openConnections[i].game === game_id) {
             // se o evento for de inicio de jogo (oponente encontrado)
@@ -70,7 +79,7 @@ function sendEvent(game_id: number, e: string, move?: Move) {
                             JSON.stringify({ opponent: games[game_id].player2, turn: games[game_id].turn }) +
                             '\n\n'
                     );
-                    console.log(
+                    logger.info(
                         JSON.stringify({ opponent: games[game_id].player2, turn: games[game_id].turn }) + '\n\n'
                     );
                 } else {
@@ -79,7 +88,7 @@ function sendEvent(game_id: number, e: string, move?: Move) {
                             JSON.stringify({ opponent: games[game_id].player1, turn: games[game_id].turn }) +
                             '\n\n'
                     );
-                    console.log(
+                    logger.info(
                         JSON.stringify({ opponent: games[game_id].player1, turn: games[game_id].turn }) + '\n\n'
                     );
                 }
@@ -91,7 +100,7 @@ function sendEvent(game_id: number, e: string, move?: Move) {
                         JSON.stringify({ move: { name: move.name, cells: move.cells }, turn: move.turn }) +
                         '\n\n'
                 );
-                console.log(JSON.stringify({ move: { name: move.name, cells: move.cells }, turn: move.turn }) + '\n\n');
+                logger.info(JSON.stringify({ move: { name: move.name, cells: move.cells }, turn: move.turn }) + '\n\n');
             }
             // se o evento for de fim de jogo
             else if (e === 'end') {
@@ -100,7 +109,7 @@ function sendEvent(game_id: number, e: string, move?: Move) {
                         JSON.stringify({ move: { name: move.name, cells: move.cells }, winner: move.winner }) +
                         '\n\n'
                 );
-                console.log(
+                logger.info(
                     JSON.stringify({ move: { name: move.name, cells: move.cells }, winner: move.winner }) + '\n\n'
                 );
             }
@@ -293,23 +302,23 @@ function expandPop(x: number, y: number, game_id: number): void {
 
 function increaseScore(name: string, level: string): void {
     db_con.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], (err, result) => {
-        if (err) console.log(err);
+        if (err) logger.info(err);
 
         if (result.length > 0) {
             db_con.query(
                 'UPDATE Rankings SET score = score + 1 WHERE name = ? && level = ?',
                 [name, level],
                 (err, result) => {
-                    if (err) console.log(err);
+                    if (err) logger.info(err);
 
-                    console.log('updated score.');
+                    logger.info('updated score.');
                 }
             );
         } else {
             const post = { name, score: 1, level, timestamp: Date.now() };
             db_con.query('INSERT INTO Rankings SET ?', [post], (err, result) => {
-                if (err) console.log(err);
-                console.log('Created new ranking');
+                if (err) logger.info(err);
+                logger.info('Created new ranking');
                 // resposta positiva
             });
         }
@@ -318,7 +327,7 @@ function increaseScore(name: string, level: string): void {
 
 function decreaseScore(name: string, level: string): void {
     db_con.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], (err, result) => {
-        if (err) console.log(err);
+        if (err) logger.info(err);
 
         if (result.length > 0) {
             if (result[0].score > 0) {
@@ -326,17 +335,17 @@ function decreaseScore(name: string, level: string): void {
                     'UPDATE Rankings SET score = score - 1 WHERE name = ? && level = ?',
                     [name, level],
                     (err, result) => {
-                        if (err) console.log(err);
+                        if (err) logger.info(err);
 
-                        console.log('updated score.');
+                        logger.info('updated score.');
                     }
                 );
             }
         } else {
             const post = { name, score: 0, level, timestamp: Date.now() };
             db_con.query('INSERT INTO Rankings SET ?', [post], (err, result) => {
-                if (err) console.log(err);
-                console.log('Created new ranking');
+                if (err) logger.info(err);
+                logger.info('Created new ranking');
                 // resposta positiva
             });
         }
@@ -358,36 +367,36 @@ app.post('/register', (request, response) => {
         // query à base de dados
         // para descobrir se o utilizador já está registado
         db_con.query('SELECT * FROM Users WHERE name = ?', [name], (err, result) => {
-            if (err) console.log(err);
+            if (err) logger.info(err);
             // utilizador já existe
             if (result.length > 0) {
-                console.log('User exists');
+                logger.info('User exists');
                 // resultado da query
                 const user = result[0];
                 // verificar se a password está correta
                 if (createHash(pass + user.salt) === user.pass) {
-                    console.log('Correct Password');
+                    logger.info('Correct Password');
                     // resposta positiva
                     response.json({});
                 }
                 // password errada
                 else {
-                    console.log('Incorrect Password');
+                    logger.info('Incorrect Password');
                     // resposta negativa
                     response.json({ error: 'Utilizador registado com senha diferente' });
                 }
             }
             // utilizador nao existe
             else {
-                console.log('New user');
+                logger.info('New user');
                 // gerar salt e hash
                 const salt = chance.string({ length: 4 });
                 const hash = createHash(pass + salt);
                 // guardar na base de dados
                 const post = { name, pass: hash, salt };
                 db_con.query('INSERT INTO Users SET ?', [post], (err, result) => {
-                    if (err) console.log(err);
-                    console.log('Created new user');
+                    if (err) logger.info(err);
+                    logger.info('Created new user');
                     // resposta positiva
                     response.json({});
                 });
@@ -405,7 +414,7 @@ app.post('/ranking', (request, response) => {
         'SELECT * FROM Rankings WHERE level = ? ORDER BY score DESC, timestamp ASC LIMIT 10;',
         [level],
         (err, result) => {
-            if (err) console.log(err);
+            if (err) logger.info(err);
             response.json({ ranking: result });
         }
     );
@@ -414,7 +423,7 @@ app.post('/ranking', (request, response) => {
 app.post('/join', (request, response) => {
     if (regex.test(request.body.name)) {
         db_con.query('SELECT * FROM Users WHERE name = ?', [request.body.name], (err, result) => {
-            if (err) console.log(err);
+            if (err) logger.info(err);
             // utilizador já existe
             if (result.length > 0) {
                 // resultado da query
@@ -435,12 +444,12 @@ app.post('/join', (request, response) => {
                         game_id = gameVar++;
                         p1.game = game_id;
                         waiting_list.push(p1); // adicona p1 ao fim da fila
-                        console.log(p1.name, ' joined waiting list.\n Waiting list:\n', waiting_list);
+                        logger.info(p1.name, ' joined waiting list.\n Waiting list:\n', waiting_list);
                     } else {
                         game_id = p2.game;
                         // key = p2.key;
                         startGame(p2.level, p2.game, p1.key, p2.key, p1.name, p2.name);
-                        console.log(
+                        logger.info(
                             'Started game: ',
                             p1.name,
                             ' vs ',
@@ -470,7 +479,7 @@ app.post('/leave', (request, response) => {
             if (waiting_list[i].name === name) {
                 found = true;
                 waiting_list.splice(i, 1);
-                console.log(name, ' left waiting list. \nWaiting list:\n ', waiting_list);
+                logger.info(name, ' left waiting list. \nWaiting list:\n ', waiting_list);
             }
         }
         response.json({});
@@ -483,7 +492,7 @@ app.post('/score', (request, response) => {
             'SELECT * FROM Rankings WHERE name = ? && level = ?',
             [request.body.name, request.body.level],
             (err, result) => {
-                if (err) console.log(err);
+                if (err) logger.info(err);
                 if (result.length > 0) response.json({ score: result[0].score });
                 else response.json({ score: 0 });
             }
@@ -500,7 +509,7 @@ app.post('/notify', (request, response) => {
     const name = request.body.name;
     const key = request.body.key;
     const cells = [];
-    console.log(name, ' plays in [', row, ',', col, ']');
+    logger.info(name, ' plays in [', row, ',', col, ']');
     // verifica a validade do nome e da chave
     if (regex.test(name) && testKey(name, key, game_id)) {
         // verifica se a jogada é válida (turno)
@@ -509,7 +518,7 @@ app.post('/notify', (request, response) => {
             if (row > 0 && row <= games[game_id].boardHeight && col > 0 && col <= games[game_id].boardWidth) {
                 // célula já destapada
                 if (!games[game_id].popped[col - 1][row - 1]) {
-                    console.log('Accepted.');
+                    logger.info('Accepted.');
                     response.json({}); // jogada aceite
                     // rebenta casa(s)
                     clickPop(row - 1, col - 1, game_id);
@@ -540,7 +549,7 @@ app.get('/update', (request, response) => {
         // adicionar às conecções abertas
         const connection: Connection = { name, game: game_id, connection: response };
         openConnections.push(connection);
-        console.log('Added player ', name, ' to connections, game ', game_id);
+        logger.info('Added player ', name, ' to connections, game ', game_id);
 
         if (checkGameStart(game_id)) sendEvent(game_id, 'start');
 
