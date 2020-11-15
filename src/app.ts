@@ -4,8 +4,10 @@ import bodyParser from 'body-parser';
 import mysql from 'mysql';
 import crypto from 'crypto';
 import Chance from 'chance';
+import helmet from 'helmet';
 
 const app = express();
+app.use(helmet());
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
