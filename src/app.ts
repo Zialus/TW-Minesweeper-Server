@@ -202,10 +202,10 @@ function startGame(level: string, game_id: number, key1: string, key2: string, p
 
 function countNeighbours(game: Game, x: number, y: number): number {
     let count = 0;
-    let strt_i = y,
-        strt_j = x,
-        lm_i = y,
-        lm_j = x;
+    let strt_i = y;
+    let strt_j = x;
+    let lm_i = y;
+    let lm_j = x;
     // verifica os limites da tabela
     if (x - 1 >= 0) strt_j = x - 1;
     if (x + 1 < game.boardWidth) lm_j = x + 1;
@@ -269,10 +269,10 @@ function expandPop(x: number, y: number, game_id: number): void {
     games[game_id].popped[y][x] = true;
     // adicionar casa às destapadas nesta jogada
     move.push([x + 1, y + 1, games[game_id].board[y][x]]);
-    let strt_i = y,
-        strt_j = x,
-        lm_i = y,
-        lm_j = x;
+    let strt_i = y;
+    let strt_j = x;
+    let lm_i = y;
+    let lm_j = x;
     // verifica os limites da tabela
     if (x - 1 >= 0) strt_j = x - 1;
     if (x + 1 < games[game_id].boardWidth) lm_j = x + 1;
