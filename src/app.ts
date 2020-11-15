@@ -58,11 +58,11 @@ function findOpponent(p1: Player): Player | undefined {
 function sendEvent(game_id: number, e: string, move?: Move) {
     console.log('Sent Event:');
     for (let i = 0; i < openConnections.length; i++) {
-        if (openConnections[i].game == game_id) {
+        if (openConnections[i].game === game_id) {
             // se o evento for de inicio de jogo (oponente encontrado)
             // começa o jogo também
-            if (e == 'start') {
-                if (openConnections[i].name == games[game_id].player1) {
+            if (e === 'start') {
+                if (openConnections[i].name === games[game_id].player1) {
                     openConnections[i].connection.write(
                         'data: ' +
                             JSON.stringify({ opponent: games[game_id].player2, turn: games[game_id].turn }) +
@@ -83,7 +83,7 @@ function sendEvent(game_id: number, e: string, move?: Move) {
                 }
             }
             // se o evento for uma jogada
-            else if (e == 'move') {
+            else if (e === 'move') {
                 openConnections[i].connection.write(
                     'data: ' +
                         JSON.stringify({ move: { name: move.name, cells: move.cells }, turn: move.turn }) +
@@ -92,7 +92,7 @@ function sendEvent(game_id: number, e: string, move?: Move) {
                 console.log(JSON.stringify({ move: { name: move.name, cells: move.cells }, turn: move.turn }) + '\n\n');
             }
             // se o evento for de fim de jogo
-            else if (e == 'end') {
+            else if (e === 'end') {
                 openConnections[i].connection.write(
                     'data: ' +
                         JSON.stringify({ move: { name: move.name, cells: move.cells }, winner: move.winner }) +
@@ -111,10 +111,10 @@ function testKey(name: string, key: string, game_id: number): boolean {
 
     if (games[game_id] === undefined) {
         for (let i = 0; i < waiting_list.length; i++)
-            if (waiting_list[i].name == name && waiting_list[i].key == key) found = true;
+            if (waiting_list[i].name === name && waiting_list[i].key === key) found = true;
     } else if (
-        (games[game_id].player1 == name && games[game_id].p1key == key) ||
-        (games[game_id].player2 == name && games[game_id].p2key == key)
+        (games[game_id].player1 === name && games[game_id].p1key === key) ||
+        (games[game_id].player2 === name && games[game_id].p2key === key)
     )
         found = true;
 
@@ -126,13 +126,13 @@ function checkGameStart(game_id: number): boolean {
     if (games[game_id] === undefined) return false;
     else {
         for (let i = 0; i < openConnections.length; i++) {
-            if (openConnections[i].game == game_id) players.push(openConnections[i].name);
+            if (openConnections[i].game === game_id) players.push(openConnections[i].name);
         }
 
         if (
-            players.length == 2 &&
-            ((players[0] == games[game_id].player1 && players[1] == games[game_id].player2) ||
-                (players[0] == games[game_id].player2 && players[1] == games[game_id].player1))
+            players.length === 2 &&
+            ((players[0] === games[game_id].player1 && players[1] === games[game_id].player2) ||
+                (players[0] === games[game_id].player2 && players[1] === games[game_id].player1))
         )
             return true;
     }
@@ -183,7 +183,7 @@ function startGame(level: string, game_id: number, key1: string, key2: string, p
         // escolhe duas coordenadas aleatórias
         const x = Math.floor(Math.random() * game.boardWidth);
         const y = Math.floor(Math.random() * game.boardHeight);
-        if (game.board[y][x] != -1) {
+        if (game.board[y][x] !== -1) {
             game.board[y][x] = -1;
             minesLeft--;
         }
@@ -191,7 +191,7 @@ function startGame(level: string, game_id: number, key1: string, key2: string, p
     // contagem das minas que rodeiam cada casa
     for (let i = 0; i < game.boardHeight; i++) {
         for (let j = 0; j < game.boardWidth; j++) {
-            if (game.board[i][j] != -1) {
+            if (game.board[i][j] !== -1) {
                 game.board[i][j] = countNeighbours(game, j, i);
             }
             game.popped[i][j] = false; // inicializa todas as células da matriz popped
@@ -224,7 +224,7 @@ function clickPop(x: number, y: number, game_id: number): void {
     if (games[game_id].board[y][x] === -1) {
         games[game_id].popped[y][x] = true;
         // adicionar ao score do jogador
-        if (games[game_id].player1 == games[game_id].turn) games[game_id].p1score++;
+        if (games[game_id].player1 === games[game_id].turn) games[game_id].p1score++;
         else games[game_id].p2score++;
         // se o score for maior que metade das bombas no jogo, vitória
         if (games[game_id].p1score >= games[game_id].mines / 2) {
@@ -362,7 +362,7 @@ app.post('/register', function (request, response) {
                 // resultado da query
                 const user = result[0];
                 // verificar se a password está correta
-                if (createHash(pass + user.salt) == user.pass) {
+                if (createHash(pass + user.salt) === user.pass) {
                     console.log('Correct Password');
                     // resposta positiva
                     response.json({});
@@ -417,7 +417,7 @@ app.post('/join', function (request, response) {
                 // resultado da query
                 const user = result[0];
                 // verificar se a password está correta
-                if (createHash(request.body.pass + user.salt) == user.pass) {
+                if (createHash(request.body.pass + user.salt) === user.pass) {
                     let game_id;
                     let key;
                     const p1 = {} as Player;
@@ -464,7 +464,7 @@ app.post('/leave', function (request, response) {
     if (regex.test(name) && testKey(name, key, game_id)) {
         let found = false;
         for (let i = 0; i < waiting_list.length; i++) {
-            if (waiting_list[i].name == name) {
+            if (waiting_list[i].name === name) {
                 found = true;
                 waiting_list.splice(i, 1);
                 console.log(name, ' left waiting list. \nWaiting list:\n ', waiting_list);
@@ -522,7 +522,7 @@ app.post('/notify', function (request, response) {
 
 app.get('/update', function (request, response) {
     const name: string = request.query.name;
-    const game_id: number = request.query.game;
+    const game_id: number = parseInt(request.query.game, 10);
     const key: string = request.query.key;
     if (regex.test(name) && testKey(name, key, game_id)) {
         // impedir que a conecção se feche
@@ -544,7 +544,7 @@ app.get('/update', function (request, response) {
         // no caso do cliente terminar a conecção, remover da lista
         request.on('close', function () {
             for (let i = 0; i < openConnections.length; i++) {
-                if (openConnections[i].name == name) {
+                if (openConnections[i].name === name) {
                     openConnections.splice(i, 1);
                     break;
                 }
