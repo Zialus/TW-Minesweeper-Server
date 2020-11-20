@@ -179,11 +179,11 @@ function startGame(level: string, gameId: number, key1: string, key2: string, p1
         game.boardWidth = 30;
         game.boardHeight = 16;
     }
-    game.board = new Array(game.boardHeight);
-    game.popped = new Array(game.boardHeight);
+    game.board = Array.from({ length: game.boardHeight });
+    game.popped = Array.from({ length: game.boardHeight });
     for (let i = 0; i < game.boardHeight; i++) {
-        game.board[i] = new Array(game.boardWidth);
-        game.popped[i] = new Array(game.boardWidth);
+        game.board[i] = Array.from({ length: game.boardWidth });
+        game.popped[i] = Array.from({ length: game.boardWidth });
     }
     while (minesLeft > 0) {
         // escolhe duas coordenadas aleatórias
