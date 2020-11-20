@@ -21,11 +21,11 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const db_con = mysql.createConnection(process.env.JAWSDB_MARIA_URL);
+const dbConnection = mysql.createConnection(process.env.JAWSDB_MARIA_URL);
 const chance = new Chance();
 
 // lista de jogadores à espera para jogarem
-const waiting_list = [] as Player[];
+const playerWaitingList = [] as Player[];
 
 // lista de ligações para server-side events
 const openConnections = [] as Connection[];
@@ -39,13 +39,13 @@ let move = [] as number[][];
 const port = process.env.PORT;
 
 // conecção e selecção da base de dados
-db_con.connect((err) => {
+dbConnection.connect((err) => {
     if (err) {
         logger.error('error connecting: ' + err.stack);
         return;
     }
 
-    logger.info('connected as id ' + db_con.threadId);
+    logger.info('connected as id ' + dbConnection.threadId);
 });
 
 const server = app.listen(port, () => {
@@ -55,10 +55,10 @@ const server = app.listen(port, () => {
 // retorna o 1º oponente válido para p1 se existir se não retorna undefined e adiciona p1 à lista
 function findOpponent(p1: Player): Player | undefined {
     let p2;
-    for (let i = 0; i < waiting_list.length; i++) {
-        if (waiting_list[i].level === p1.level && waiting_list[i].group === p1.group) {
-            p2 = waiting_list[i];
-            waiting_list.splice(i, 1); // remove elemento da lista
+    for (let i = 0; i < playerWaitingList.length; i++) {
+        if (playerWaitingList[i].level === p1.level && playerWaitingList[i].group === p1.group) {
+            p2 = playerWaitingList[i];
+            playerWaitingList.splice(i, 1); // remove elemento da lista
             break;
         }
     }
@@ -66,31 +66,27 @@ function findOpponent(p1: Player): Player | undefined {
 }
 
 // envia eventos para os jogaores de um jogo
-function sendEvent(game_id: number, e: string, move?: Move) {
+function sendEvent(gameId: number, e: string, move?: Move) {
     logger.info('Sent Event:');
     for (let i = 0; i < openConnections.length; i++) {
-        if (openConnections[i].game === game_id) {
+        if (openConnections[i].game === gameId) {
             // se o evento for de inicio de jogo (oponente encontrado)
             // começa o jogo também
             if (e === 'start') {
-                if (openConnections[i].name === games[game_id].player1) {
+                if (openConnections[i].name === games[gameId].player1) {
                     openConnections[i].connection.write(
                         'data: ' +
-                            JSON.stringify({ opponent: games[game_id].player2, turn: games[game_id].turn }) +
+                            JSON.stringify({ opponent: games[gameId].player2, turn: games[gameId].turn }) +
                             '\n\n'
                     );
-                    logger.info(
-                        JSON.stringify({ opponent: games[game_id].player2, turn: games[game_id].turn }) + '\n\n'
-                    );
+                    logger.info(JSON.stringify({ opponent: games[gameId].player2, turn: games[gameId].turn }) + '\n\n');
                 } else {
                     openConnections[i].connection.write(
                         'data: ' +
-                            JSON.stringify({ opponent: games[game_id].player1, turn: games[game_id].turn }) +
+                            JSON.stringify({ opponent: games[gameId].player1, turn: games[gameId].turn }) +
                             '\n\n'
                     );
-                    logger.info(
-                        JSON.stringify({ opponent: games[game_id].player1, turn: games[game_id].turn }) + '\n\n'
-                    );
+                    logger.info(JSON.stringify({ opponent: games[gameId].player1, turn: games[gameId].turn }) + '\n\n');
                 }
             }
             // se o evento for uma jogada
@@ -117,33 +113,33 @@ function sendEvent(game_id: number, e: string, move?: Move) {
     }
 }
 
-function testKey(name: string, key: string, game_id: number): boolean {
+function testKey(name: string, key: string, gameId: number): boolean {
     let found = false;
 
-    if (games[game_id] === undefined) {
-        for (let i = 0; i < waiting_list.length; i++)
-            if (waiting_list[i].name === name && waiting_list[i].key === key) found = true;
+    if (games[gameId] === undefined) {
+        for (let i = 0; i < playerWaitingList.length; i++)
+            if (playerWaitingList[i].name === name && playerWaitingList[i].key === key) found = true;
     } else if (
-        (games[game_id].player1 === name && games[game_id].p1key === key) ||
-        (games[game_id].player2 === name && games[game_id].p2key === key)
+        (games[gameId].player1 === name && games[gameId].p1key === key) ||
+        (games[gameId].player2 === name && games[gameId].p2key === key)
     )
         found = true;
 
     return found;
 }
 
-function checkGameStart(game_id: number): boolean {
+function checkGameStart(gameId: number): boolean {
     const players = [];
-    if (games[game_id] === undefined) return false;
+    if (games[gameId] === undefined) return false;
     else {
         for (let i = 0; i < openConnections.length; i++) {
-            if (openConnections[i].game === game_id) players.push(openConnections[i].name);
+            if (openConnections[i].game === gameId) players.push(openConnections[i].name);
         }
 
         if (
             players.length === 2 &&
-            ((players[0] === games[game_id].player1 && players[1] === games[game_id].player2) ||
-                (players[0] === games[game_id].player2 && players[1] === games[game_id].player1))
+            ((players[0] === games[gameId].player1 && players[1] === games[gameId].player2) ||
+                (players[0] === games[gameId].player2 && players[1] === games[gameId].player1))
         )
             return true;
     }
@@ -151,7 +147,7 @@ function checkGameStart(game_id: number): boolean {
 }
 
 // método para espalhar minas no início de um jogo
-function startGame(level: string, game_id: number, key1: string, key2: string, p1: string, p2: string): void {
+function startGame(level: string, gameId: number, key1: string, key2: string, p1: string, p2: string): void {
     let minesLeft;
     const game: Game = {
         level,
@@ -208,57 +204,57 @@ function startGame(level: string, game_id: number, key1: string, key2: string, p
             game.popped[i][j] = false; // inicializa todas as células da matriz popped
         }
     }
-    games[game_id] = game;
+    games[gameId] = game;
 }
 
 function countNeighbours(game: Game, x: number, y: number): number {
     let count = 0;
-    let strt_i = y;
-    let strt_j = x;
-    let lm_i = y;
-    let lm_j = x;
+    let startY = y;
+    let startX = x;
+    let limitY = y;
+    let limitX = x;
     // verifica os limites da tabela
-    if (x - 1 >= 0) strt_j = x - 1;
-    if (x + 1 < game.boardWidth) lm_j = x + 1;
-    if (y - 1 >= 0) strt_i = y - 1;
-    if (y + 1 < game.boardHeight) lm_i = y + 1;
-    for (let i = strt_i; i <= lm_i; i++) {
-        for (let j = strt_j; j <= lm_j; j++) {
+    if (x - 1 >= 0) startX = x - 1;
+    if (x + 1 < game.boardWidth) limitX = x + 1;
+    if (y - 1 >= 0) startY = y - 1;
+    if (y + 1 < game.boardHeight) limitY = y + 1;
+    for (let i = startY; i <= limitY; i++) {
+        for (let j = startX; j <= limitX; j++) {
             if (game.board[i][j] === -1) count++;
         }
     }
     return count;
 }
 
-function clickPop(x: number, y: number, game_id: number): void {
+function clickPop(x: number, y: number, gameId: number): void {
     // se a jogada for uma mina
-    if (games[game_id].board[y][x] === -1) {
-        games[game_id].popped[y][x] = true;
+    if (games[gameId].board[y][x] === -1) {
+        games[gameId].popped[y][x] = true;
         // adicionar ao score do jogador
-        if (games[game_id].player1 === games[game_id].turn) games[game_id].p1score++;
-        else games[game_id].p2score++;
+        if (games[gameId].player1 === games[gameId].turn) games[gameId].p1score++;
+        else games[gameId].p2score++;
         // se o score for maior que metade das bombas no jogo, vitória
-        if (games[game_id].p1score >= games[game_id].mines / 2) {
-            sendEvent(game_id, 'end', {
-                name: games[game_id].turn,
+        if (games[gameId].p1score >= games[gameId].mines / 2) {
+            sendEvent(gameId, 'end', {
+                name: games[gameId].turn,
                 cells: [[x + 1, y + 1, -1]],
-                winner: games[game_id].player1,
+                winner: games[gameId].player1,
             });
-            increaseScore(games[game_id].player1, games[game_id].level);
-            decreaseScore(games[game_id].player2, games[game_id].level);
-        } else if (games[game_id].p2score >= games[game_id].mines / 2) {
-            sendEvent(game_id, 'end', {
-                name: games[game_id].turn,
+            increaseScore(games[gameId].player1, games[gameId].level);
+            decreaseScore(games[gameId].player2, games[gameId].level);
+        } else if (games[gameId].p2score >= games[gameId].mines / 2) {
+            sendEvent(gameId, 'end', {
+                name: games[gameId].turn,
                 cells: [[x + 1, y + 1, -1]],
-                winner: games[game_id].player2,
+                winner: games[gameId].player2,
             });
-            increaseScore(games[game_id].player2, games[game_id].level);
-            decreaseScore(games[game_id].player1, games[game_id].level);
+            increaseScore(games[gameId].player2, games[gameId].level);
+            decreaseScore(games[gameId].player1, games[gameId].level);
         } else
-            sendEvent(game_id, 'move', {
-                name: games[game_id].turn,
+            sendEvent(gameId, 'move', {
+                name: games[gameId].turn,
                 cells: [[x + 1, y + 1, -1]],
-                turn: games[game_id].turn,
+                turn: games[gameId].turn,
             });
     }
     // se for uma jogada normal
@@ -266,34 +262,34 @@ function clickPop(x: number, y: number, game_id: number): void {
         // limpar as celulas da jogada anterior
         move = [];
         // função recursiva
-        expandPop(x, y, game_id);
-        const p = games[game_id].turn;
+        expandPop(x, y, gameId);
+        const p = games[gameId].turn;
         // determinar o próximo turno
-        if (games[game_id].turn === games[game_id].player1) games[game_id].turn = games[game_id].player2;
-        else games[game_id].turn = games[game_id].player1;
+        if (games[gameId].turn === games[gameId].player1) games[gameId].turn = games[gameId].player2;
+        else games[gameId].turn = games[gameId].player1;
         // enviar jogada aos jogadores
-        sendEvent(game_id, 'move', { name: p, cells: move, turn: games[game_id].turn });
+        sendEvent(gameId, 'move', { name: p, cells: move, turn: games[gameId].turn });
     }
 }
 
-function expandPop(x: number, y: number, game_id: number): void {
-    games[game_id].popped[y][x] = true;
+function expandPop(x: number, y: number, gameId: number): void {
+    games[gameId].popped[y][x] = true;
     // adicionar casa às destapadas nesta jogada
-    move.push([x + 1, y + 1, games[game_id].board[y][x]]);
-    let strt_i = y;
-    let strt_j = x;
-    let lm_i = y;
-    let lm_j = x;
+    move.push([x + 1, y + 1, games[gameId].board[y][x]]);
+    let startY = y;
+    let startX = x;
+    let limitY = y;
+    let limitX = x;
     // verifica os limites da tabela
-    if (x - 1 >= 0) strt_j = x - 1;
-    if (x + 1 < games[game_id].boardWidth) lm_j = x + 1;
-    if (y - 1 >= 0) strt_i = y - 1;
-    if (y + 1 < games[game_id].boardHeight) lm_i = y + 1;
-    if (games[game_id].board[y][x] === 0) {
-        for (let i = strt_i; i <= lm_i; i++) {
-            for (let j = strt_j; j <= lm_j; j++) {
-                if (!games[game_id].popped[i][j]) {
-                    expandPop(j, i, game_id);
+    if (x - 1 >= 0) startX = x - 1;
+    if (x + 1 < games[gameId].boardWidth) limitX = x + 1;
+    if (y - 1 >= 0) startY = y - 1;
+    if (y + 1 < games[gameId].boardHeight) limitY = y + 1;
+    if (games[gameId].board[y][x] === 0) {
+        for (let i = startY; i <= limitY; i++) {
+            for (let j = startX; j <= limitX; j++) {
+                if (!games[gameId].popped[i][j]) {
+                    expandPop(j, i, gameId);
                 }
             }
         }
@@ -301,11 +297,11 @@ function expandPop(x: number, y: number, game_id: number): void {
 }
 
 function increaseScore(name: string, level: string): void {
-    db_con.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], (err, result) => {
+    dbConnection.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], (err, result) => {
         if (err) logger.info(err);
 
         if (result.length > 0) {
-            db_con.query(
+            dbConnection.query(
                 'UPDATE Rankings SET score = score + 1 WHERE name = ? && level = ?',
                 [name, level],
                 (err, result) => {
@@ -316,7 +312,7 @@ function increaseScore(name: string, level: string): void {
             );
         } else {
             const post = { name, score: 1, level, timestamp: Date.now() };
-            db_con.query('INSERT INTO Rankings SET ?', [post], (err, result) => {
+            dbConnection.query('INSERT INTO Rankings SET ?', [post], (err, result) => {
                 if (err) logger.info(err);
                 logger.info('Created new ranking');
                 // resposta positiva
@@ -326,12 +322,12 @@ function increaseScore(name: string, level: string): void {
 }
 
 function decreaseScore(name: string, level: string): void {
-    db_con.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], (err, result) => {
+    dbConnection.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], (err, result) => {
         if (err) logger.info(err);
 
         if (result.length > 0) {
             if (result[0].score > 0) {
-                db_con.query(
+                dbConnection.query(
                     'UPDATE Rankings SET score = score - 1 WHERE name = ? && level = ?',
                     [name, level],
                     (err, result) => {
@@ -343,7 +339,7 @@ function decreaseScore(name: string, level: string): void {
             }
         } else {
             const post = { name, score: 0, level, timestamp: Date.now() };
-            db_con.query('INSERT INTO Rankings SET ?', [post], (err, result) => {
+            dbConnection.query('INSERT INTO Rankings SET ?', [post], (err, result) => {
                 if (err) logger.info(err);
                 logger.info('Created new ranking');
                 // resposta positiva
@@ -366,7 +362,7 @@ app.post('/register', (request, response) => {
     if (regex.test(name)) {
         // query à base de dados
         // para descobrir se o utilizador já está registado
-        db_con.query('SELECT * FROM Users WHERE name = ?', [name], (err, result) => {
+        dbConnection.query('SELECT * FROM Users WHERE name = ?', [name], (err, result) => {
             if (err) logger.info(err);
             // utilizador já existe
             if (result.length > 0) {
@@ -394,7 +390,7 @@ app.post('/register', (request, response) => {
                 const hash = createHash(pass + salt);
                 // guardar na base de dados
                 const post = { name, pass: hash, salt };
-                db_con.query('INSERT INTO Users SET ?', [post], (err, result) => {
+                dbConnection.query('INSERT INTO Users SET ?', [post], (err, result) => {
                     if (err) logger.info(err);
                     logger.info('Created new user');
                     // resposta positiva
@@ -410,7 +406,7 @@ app.post('/register', (request, response) => {
 // Ranking
 app.post('/ranking', (request, response) => {
     const level = request.body.level;
-    db_con.query(
+    dbConnection.query(
         'SELECT * FROM Rankings WHERE level = ? ORDER BY score DESC, timestamp ASC LIMIT 10;',
         [level],
         (err, result) => {
@@ -422,7 +418,7 @@ app.post('/ranking', (request, response) => {
 
 app.post('/join', (request, response) => {
     if (regex.test(request.body.name)) {
-        db_con.query('SELECT * FROM Users WHERE name = ?', [request.body.name], (err, result) => {
+        dbConnection.query('SELECT * FROM Users WHERE name = ?', [request.body.name], (err, result) => {
             if (err) logger.info(err);
             // utilizador já existe
             if (result.length > 0) {
@@ -430,7 +426,7 @@ app.post('/join', (request, response) => {
                 const user = result[0];
                 // verificar se a password está correta
                 if (createHash(request.body.pass + user.salt) === user.pass) {
-                    let game_id;
+                    let gameId;
                     let key;
                     const p1 = {} as Player;
                     let p2: Player | undefined;
@@ -441,12 +437,12 @@ app.post('/join', (request, response) => {
                     key = p1.key;
                     p2 = findOpponent(p1);
                     if (p2 === undefined) {
-                        game_id = gameVar++;
-                        p1.game = game_id;
-                        waiting_list.push(p1); // adicona p1 ao fim da fila
-                        logger.info(p1.name, ' joined waiting list.\n Waiting list:\n', waiting_list);
+                        gameId = gameVar++;
+                        p1.game = gameId;
+                        playerWaitingList.push(p1); // adicona p1 ao fim da fila
+                        logger.info(p1.name, ' joined waiting list.\n Waiting list:\n', playerWaitingList);
                     } else {
-                        game_id = p2.game;
+                        gameId = p2.game;
                         // key = p2.key;
                         startGame(p2.level, p2.game, p1.key, p2.key, p1.name, p2.name);
                         logger.info(
@@ -455,12 +451,12 @@ app.post('/join', (request, response) => {
                             ' vs ',
                             p2.name,
                             ' game number ',
-                            game_id,
+                            gameId,
                             ' on ',
                             p2.level
                         );
                     }
-                    response.json({ key, game: game_id });
+                    response.json({ key, game: gameId });
                 }
             }
         });
@@ -472,14 +468,14 @@ app.post('/join', (request, response) => {
 app.post('/leave', (request, response) => {
     const name = request.body.name;
     const key = request.body.key;
-    const game_id = request.body.game;
-    if (regex.test(name) && testKey(name, key, game_id)) {
+    const gameId = request.body.game;
+    if (regex.test(name) && testKey(name, key, gameId)) {
         let found = false;
-        for (let i = 0; i < waiting_list.length; i++) {
-            if (waiting_list[i].name === name) {
+        for (let i = 0; i < playerWaitingList.length; i++) {
+            if (playerWaitingList[i].name === name) {
                 found = true;
-                waiting_list.splice(i, 1);
-                logger.info(name, ' left waiting list. \nWaiting list:\n ', waiting_list);
+                playerWaitingList.splice(i, 1);
+                logger.info(name, ' left waiting list. \nWaiting list:\n ', playerWaitingList);
             }
         }
         response.json({});
@@ -488,7 +484,7 @@ app.post('/leave', (request, response) => {
 
 app.post('/score', (request, response) => {
     if (regex.test(request.body.name)) {
-        db_con.query(
+        dbConnection.query(
             'SELECT * FROM Rankings WHERE name = ? && level = ?',
             [request.body.name, request.body.level],
             (err, result) => {
@@ -505,23 +501,23 @@ app.post('/score', (request, response) => {
 app.post('/notify', (request, response) => {
     const row = request.body.row;
     const col = request.body.col;
-    const game_id = request.body.game;
+    const gameId = request.body.game;
     const name = request.body.name;
     const key = request.body.key;
     const cells = [];
     logger.info(name, ' plays in [', row, ',', col, ']');
     // verifica a validade do nome e da chave
-    if (regex.test(name) && testKey(name, key, game_id)) {
+    if (regex.test(name) && testKey(name, key, gameId)) {
         // verifica se a jogada é válida (turno)
-        if (name === games[game_id].turn) {
+        if (name === games[gameId].turn) {
             // verifica os limites da tabela
-            if (row > 0 && row <= games[game_id].boardHeight && col > 0 && col <= games[game_id].boardWidth) {
+            if (row > 0 && row <= games[gameId].boardHeight && col > 0 && col <= games[gameId].boardWidth) {
                 // célula já destapada
-                if (!games[game_id].popped[col - 1][row - 1]) {
+                if (!games[gameId].popped[col - 1][row - 1]) {
                     logger.info('Accepted.');
                     response.json({}); // jogada aceite
                     // rebenta casa(s)
-                    clickPop(row - 1, col - 1, game_id);
+                    clickPop(row - 1, col - 1, gameId);
                 } else {
                     response.json({ error: 'Posição ' + row + ',' + col + ' já destapada' });
                 }
@@ -534,9 +530,9 @@ app.post('/notify', (request, response) => {
 
 app.get('/update', (request, response) => {
     const name: string = request.query.name;
-    const game_id: number = parseInt(request.query.game, 10);
+    const gameId: number = parseInt(request.query.game, 10);
     const key: string = request.query.key;
-    if (regex.test(name) && testKey(name, key, game_id)) {
+    if (regex.test(name) && testKey(name, key, gameId)) {
         // impedir que a conecção se feche
         request.socket.setTimeout(6000000);
         // cabecalho da resposta
@@ -547,11 +543,11 @@ app.get('/update', (request, response) => {
         });
         response.write('\n');
         // adicionar às conecções abertas
-        const connection: Connection = { name, game: game_id, connection: response };
+        const connection: Connection = { name, game: gameId, connection: response };
         openConnections.push(connection);
-        logger.info('Added player ', name, ' to connections, game ', game_id);
+        logger.info('Added player ', name, ' to connections, game ', gameId);
 
-        if (checkGameStart(game_id)) sendEvent(game_id, 'start');
+        if (checkGameStart(gameId)) sendEvent(gameId, 'start');
 
         // no caso do cliente terminar a conecção, remover da lista
         request.on('close', () => {
