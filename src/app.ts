@@ -68,20 +68,20 @@ function findOpponent(p1: Player): Player | undefined {
 // envia eventos para os jogaores de um jogo
 function sendEvent(gameId: number, e: string, move?: Move) {
     logger.info('Sent Event:');
-    for (let i = 0; i < openConnections.length; i++) {
-        if (openConnections[i].game === gameId) {
+    for (const item of openConnections) {
+        if (item.game === gameId) {
             // se o evento for de inicio de jogo (oponente encontrado)
             // começa o jogo também
             if (e === 'start') {
-                if (openConnections[i].name === games[gameId].player1) {
-                    openConnections[i].connection.write(
+                if (item.name === games[gameId].player1) {
+                    item.connection.write(
                         'data: ' +
                             JSON.stringify({ opponent: games[gameId].player2, turn: games[gameId].turn }) +
                             '\n\n'
                     );
                     logger.info(JSON.stringify({ opponent: games[gameId].player2, turn: games[gameId].turn }) + '\n\n');
                 } else {
-                    openConnections[i].connection.write(
+                    item.connection.write(
                         'data: ' +
                             JSON.stringify({ opponent: games[gameId].player1, turn: games[gameId].turn }) +
                             '\n\n'
@@ -91,7 +91,7 @@ function sendEvent(gameId: number, e: string, move?: Move) {
             }
             // se o evento for uma jogada
             else if (e === 'move') {
-                openConnections[i].connection.write(
+                item.connection.write(
                     'data: ' +
                         JSON.stringify({ move: { name: move.name, cells: move.cells }, turn: move.turn }) +
                         '\n\n'
@@ -100,7 +100,7 @@ function sendEvent(gameId: number, e: string, move?: Move) {
             }
             // se o evento for de fim de jogo
             else if (e === 'end') {
-                openConnections[i].connection.write(
+                item.connection.write(
                     'data: ' +
                         JSON.stringify({ move: { name: move.name, cells: move.cells }, winner: move.winner }) +
                         '\n\n'
@@ -117,8 +117,7 @@ function testKey(name: string, key: string, gameId: number): boolean {
     let found = false;
 
     if (games[gameId] === undefined) {
-        for (let i = 0; i < playerWaitingList.length; i++)
-            if (playerWaitingList[i].name === name && playerWaitingList[i].key === key) found = true;
+        for (const item of playerWaitingList) if (item.name === name && item.key === key) found = true;
     } else if (
         (games[gameId].player1 === name && games[gameId].p1key === key) ||
         (games[gameId].player2 === name && games[gameId].p2key === key)
@@ -132,8 +131,8 @@ function checkGameStart(gameId: number): boolean {
     const players = [];
     if (games[gameId] === undefined) return false;
     else {
-        for (let i = 0; i < openConnections.length; i++) {
-            if (openConnections[i].game === gameId) players.push(openConnections[i].name);
+        for (const item of openConnections) {
+            if (item.game === gameId) players.push(item.name);
         }
 
         if (
