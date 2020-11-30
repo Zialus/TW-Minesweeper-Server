@@ -469,12 +469,11 @@ app.post('/leave', (request, response) => {
     const key = request.body.key;
     const gameId = request.body.game;
     if (regex.test(name) && testKey(name, key, gameId)) {
-        let found = false;
         for (let i = 0; i < playerWaitingList.length; i++) {
             if (playerWaitingList[i].name === name) {
-                found = true;
                 playerWaitingList.splice(i, 1);
                 logger.info(name, ' left waiting list. \nWaiting list:\n ', playerWaitingList);
+                break;
             }
         }
         response.json({});
