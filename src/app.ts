@@ -303,16 +303,16 @@ function increaseScore(name: string, level: string): void {
             dbConnection.query(
                 'UPDATE Rankings SET score = score + 1 WHERE name = ? && level = ?',
                 [name, level],
-                (err, result) => {
-                    if (err) logger.info(err);
+                (err2, result2) => {
+                    if (err2) logger.info(err2);
 
                     logger.info('updated score.');
                 }
             );
         } else {
             const post = { name, score: 1, level, timestamp: Date.now() };
-            dbConnection.query('INSERT INTO Rankings SET ?', [post], (err, result) => {
-                if (err) logger.info(err);
+            dbConnection.query('INSERT INTO Rankings SET ?', [post], (err2, result2) => {
+                if (err2) logger.info(err2);
                 logger.info('Created new ranking');
                 // resposta positiva
             });
@@ -329,8 +329,8 @@ function decreaseScore(name: string, level: string): void {
                 dbConnection.query(
                     'UPDATE Rankings SET score = score - 1 WHERE name = ? && level = ?',
                     [name, level],
-                    (err, result) => {
-                        if (err) logger.info(err);
+                    (err2, result2) => {
+                        if (err2) logger.info(err2);
 
                         logger.info('updated score.');
                     }
@@ -338,8 +338,8 @@ function decreaseScore(name: string, level: string): void {
             }
         } else {
             const post = { name, score: 0, level, timestamp: Date.now() };
-            dbConnection.query('INSERT INTO Rankings SET ?', [post], (err, result) => {
-                if (err) logger.info(err);
+            dbConnection.query('INSERT INTO Rankings SET ?', [post], (err2, result2) => {
+                if (err2) logger.info(err2);
                 logger.info('Created new ranking');
                 // resposta positiva
             });
@@ -389,8 +389,8 @@ app.post('/register', (request, response) => {
                 const hash = createHash(pass + salt);
                 // guardar na base de dados
                 const post = { name, pass: hash, salt };
-                dbConnection.query('INSERT INTO Users SET ?', [post], (err, result) => {
-                    if (err) logger.info(err);
+                dbConnection.query('INSERT INTO Users SET ?', [post], (err2, result2) => {
+                    if (err2) logger.info(err2);
                     logger.info('Created new user');
                     // resposta positiva
                     response.json({});
