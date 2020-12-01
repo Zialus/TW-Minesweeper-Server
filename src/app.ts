@@ -333,20 +333,20 @@ function increaseScore(name: string, level: string): void {
                 [name, level],
                 (err2, result2) => {
                     if (err2) {
-                        logger.info(err2);
+                        logger.info('Failed to updated score', err2);
+                    } else {
+                        logger.info('Updated score', result2);
                     }
-
-                    logger.info('updated score.');
                 }
             );
         } else {
             const post = { name, score: 1, level, timestamp: Date.now() };
             dbConnection.query('INSERT INTO Rankings SET ?', [post], (err2, result2) => {
                 if (err2) {
-                    logger.info(err2);
+                    logger.info('Failed to create new ranking', err2);
+                } else {
+                    logger.info('Created new ranking', result2);
                 }
-                logger.info('Created new ranking');
-                // resposta positiva
             });
         }
     });
@@ -365,10 +365,10 @@ function decreaseScore(name: string, level: string): void {
                     [name, level],
                     (err2, result2) => {
                         if (err2) {
-                            logger.info(err2);
+                            logger.info('Failed to update score', err2);
+                        } else {
+                            logger.info('Updated score', result2);
                         }
-
-                        logger.info('updated score.');
                     }
                 );
             }
@@ -376,10 +376,10 @@ function decreaseScore(name: string, level: string): void {
             const post = { name, score: 0, level, timestamp: Date.now() };
             dbConnection.query('INSERT INTO Rankings SET ?', [post], (err2, result2) => {
                 if (err2) {
-                    logger.info(err2);
+                    logger.info('Failed to create new ranking', err2);
+                } else {
+                    logger.info('Created new ranking', result2);
                 }
-                logger.info('Created new ranking');
-                // resposta positiva
             });
         }
     });
@@ -411,13 +411,9 @@ app.post('/register', (request, response) => {
                 // verificar se a password está correta
                 if (createHash(pass + user.salt) === user.pass) {
                     logger.info('Correct Password');
-                    // resposta positiva
                     response.json({});
-                }
-                // password errada
-                else {
+                } else {
                     logger.info('Incorrect Password');
-                    // resposta negativa
                     response.json({ error: 'Utilizador registado com senha diferente' });
                 }
             }
@@ -431,11 +427,12 @@ app.post('/register', (request, response) => {
                 const post = { name, pass: hash, salt };
                 dbConnection.query('INSERT INTO Users SET ?', [post], (err2, result2) => {
                     if (err2) {
-                        logger.info(err2);
+                        logger.info('Failed while creating new user', err2);
+                        response.json({ error: 'Failed to create new user' });
+                    } else {
+                        logger.info('Created new user', result2);
+                        response.json({});
                     }
-                    logger.info('Created new user');
-                    // resposta positiva
-                    response.json({});
                 });
             }
         });
