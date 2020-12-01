@@ -41,11 +41,11 @@ const port = process.env.PORT;
 // conecção e selecção da base de dados
 dbConnection.connect((err) => {
     if (err) {
-        logger.error('error connecting: ' + err.stack);
+        logger.error(`error connecting: ${err.stack}`);
         return;
     }
 
-    logger.info('connected as id ' + dbConnection.threadId);
+    logger.info(`connected as id ${dbConnection.threadId}`);
 });
 
 const server = app.listen(port, () => {
@@ -75,38 +75,30 @@ function sendEvent(gameId: number, e: string, move?: Move) {
             if (e === 'start') {
                 if (item.name === games[gameId].player1) {
                     item.connection.write(
-                        'data: ' +
-                            JSON.stringify({ opponent: games[gameId].player2, turn: games[gameId].turn }) +
-                            '\n\n'
+                        `data: ${JSON.stringify({ opponent: games[gameId].player2, turn: games[gameId].turn })}\n\n`
                     );
-                    logger.info(JSON.stringify({ opponent: games[gameId].player2, turn: games[gameId].turn }) + '\n\n');
+                    logger.info(`${JSON.stringify({ opponent: games[gameId].player2, turn: games[gameId].turn })}\n\n`);
                 } else {
                     item.connection.write(
-                        'data: ' +
-                            JSON.stringify({ opponent: games[gameId].player1, turn: games[gameId].turn }) +
-                            '\n\n'
+                        `data: ${JSON.stringify({ opponent: games[gameId].player1, turn: games[gameId].turn })}\n\n`
                     );
-                    logger.info(JSON.stringify({ opponent: games[gameId].player1, turn: games[gameId].turn }) + '\n\n');
+                    logger.info(`${JSON.stringify({ opponent: games[gameId].player1, turn: games[gameId].turn })}\n\n`);
                 }
             }
             // se o evento for uma jogada
             else if (e === 'move') {
                 item.connection.write(
-                    'data: ' +
-                        JSON.stringify({ move: { name: move.name, cells: move.cells }, turn: move.turn }) +
-                        '\n\n'
+                    `data: ${JSON.stringify({ move: { name: move.name, cells: move.cells }, turn: move.turn })}\n\n`
                 );
-                logger.info(JSON.stringify({ move: { name: move.name, cells: move.cells }, turn: move.turn }) + '\n\n');
+                logger.info(`${JSON.stringify({ move: { name: move.name, cells: move.cells }, turn: move.turn })}\n\n`);
             }
             // se o evento for de fim de jogo
             else if (e === 'end') {
                 item.connection.write(
-                    'data: ' +
-                        JSON.stringify({ move: { name: move.name, cells: move.cells }, winner: move.winner }) +
-                        '\n\n'
+                    `data: ${JSON.stringify({ move: { name: move.name, cells: move.cells }, winner: move.winner })}\n\n`
                 );
                 logger.info(
-                    JSON.stringify({ move: { name: move.name, cells: move.cells }, winner: move.winner }) + '\n\n'
+                    `${JSON.stringify({ move: { name: move.name, cells: move.cells }, winner: move.winner })}\n\n`
                 );
             }
         }
@@ -576,7 +568,7 @@ app.post('/notify', (request, response) => {
                     // rebenta casa(s)
                     clickPop(row - 1, col - 1, gameId);
                 } else {
-                    response.json({ error: 'Posição ' + row + ',' + col + ' já destapada' });
+                    response.json({ error: `Posição ${row},${col} já destapada` });
                 }
             } else {
                 response.json({ error: 'Jogada inválida!' });

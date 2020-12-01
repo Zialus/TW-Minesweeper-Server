@@ -4,6 +4,6 @@
         "tslint:recommended"
     ],
     "jsRules": {},
-    "rules": { "curly": true },
+    "rules": { "curly": true, "prefer-template": true },
     "rulesDirectory": []
 }
