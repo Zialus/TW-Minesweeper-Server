@@ -117,30 +117,39 @@ function testKey(name: string, key: string, gameId: number): boolean {
     let found = false;
 
     if (games[gameId] === undefined) {
-        for (const item of playerWaitingList) if (item.name === name && item.key === key) found = true;
+        for (const item of playerWaitingList) {
+            if (item.name === name && item.key === key) {
+                found = true;
+            }
+        }
     } else if (
         (games[gameId].player1 === name && games[gameId].p1key === key) ||
         (games[gameId].player2 === name && games[gameId].p2key === key)
-    )
+    ) {
         found = true;
+    }
 
     return found;
 }
 
 function checkGameStart(gameId: number): boolean {
     const players = [];
-    if (games[gameId] === undefined) return false;
-    else {
+    if (games[gameId] === undefined) {
+        return false;
+    } else {
         for (const item of openConnections) {
-            if (item.game === gameId) players.push(item.name);
+            if (item.game === gameId) {
+                players.push(item.name);
+            }
         }
 
         if (
             players.length === 2 &&
             ((players[0] === games[gameId].player1 && players[1] === games[gameId].player2) ||
                 (players[0] === games[gameId].player2 && players[1] === games[gameId].player1))
-        )
+        ) {
             return true;
+        }
     }
     return false;
 }
@@ -213,13 +222,23 @@ function countNeighbours(game: Game, x: number, y: number): number {
     let limitY = y;
     let limitX = x;
     // verifica os limites da tabela
-    if (x - 1 >= 0) startX = x - 1;
-    if (x + 1 < game.boardWidth) limitX = x + 1;
-    if (y - 1 >= 0) startY = y - 1;
-    if (y + 1 < game.boardHeight) limitY = y + 1;
+    if (x - 1 >= 0) {
+        startX = x - 1;
+    }
+    if (x + 1 < game.boardWidth) {
+        limitX = x + 1;
+    }
+    if (y - 1 >= 0) {
+        startY = y - 1;
+    }
+    if (y + 1 < game.boardHeight) {
+        limitY = y + 1;
+    }
     for (let i = startY; i <= limitY; i++) {
         for (let j = startX; j <= limitX; j++) {
-            if (game.board[i][j] === -1) count++;
+            if (game.board[i][j] === -1) {
+                count++;
+            }
         }
     }
     return count;
@@ -230,8 +249,11 @@ function clickPop(x: number, y: number, gameId: number): void {
     if (games[gameId].board[y][x] === -1) {
         games[gameId].popped[y][x] = true;
         // adicionar ao score do jogador
-        if (games[gameId].player1 === games[gameId].turn) games[gameId].p1score++;
-        else games[gameId].p2score++;
+        if (games[gameId].player1 === games[gameId].turn) {
+            games[gameId].p1score++;
+        } else {
+            games[gameId].p2score++;
+        }
         // se o score for maior que metade das bombas no jogo, vitória
         if (games[gameId].p1score >= games[gameId].mines / 2) {
             sendEvent(gameId, 'end', {
@@ -249,12 +271,13 @@ function clickPop(x: number, y: number, gameId: number): void {
             });
             increaseScore(games[gameId].player2, games[gameId].level);
             decreaseScore(games[gameId].player1, games[gameId].level);
-        } else
+        } else {
             sendEvent(gameId, 'move', {
                 name: games[gameId].turn,
                 cells: [[x + 1, y + 1, -1]],
                 turn: games[gameId].turn,
             });
+        }
     }
     // se for uma jogada normal
     else {
@@ -264,8 +287,11 @@ function clickPop(x: number, y: number, gameId: number): void {
         expandPop(x, y, gameId);
         const p = games[gameId].turn;
         // determinar o próximo turno
-        if (games[gameId].turn === games[gameId].player1) games[gameId].turn = games[gameId].player2;
-        else games[gameId].turn = games[gameId].player1;
+        if (games[gameId].turn === games[gameId].player1) {
+            games[gameId].turn = games[gameId].player2;
+        } else {
+            games[gameId].turn = games[gameId].player1;
+        }
         // enviar jogada aos jogadores
         sendEvent(gameId, 'move', { name: p, cells: move, turn: games[gameId].turn });
     }
@@ -280,10 +306,18 @@ function expandPop(x: number, y: number, gameId: number): void {
     let limitY = y;
     let limitX = x;
     // verifica os limites da tabela
-    if (x - 1 >= 0) startX = x - 1;
-    if (x + 1 < games[gameId].boardWidth) limitX = x + 1;
-    if (y - 1 >= 0) startY = y - 1;
-    if (y + 1 < games[gameId].boardHeight) limitY = y + 1;
+    if (x - 1 >= 0) {
+        startX = x - 1;
+    }
+    if (x + 1 < games[gameId].boardWidth) {
+        limitX = x + 1;
+    }
+    if (y - 1 >= 0) {
+        startY = y - 1;
+    }
+    if (y + 1 < games[gameId].boardHeight) {
+        limitY = y + 1;
+    }
     if (games[gameId].board[y][x] === 0) {
         for (let i = startY; i <= limitY; i++) {
             for (let j = startX; j <= limitX; j++) {
@@ -297,14 +331,18 @@ function expandPop(x: number, y: number, gameId: number): void {
 
 function increaseScore(name: string, level: string): void {
     dbConnection.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], (err, result) => {
-        if (err) logger.info(err);
+        if (err) {
+            logger.info(err);
+        }
 
         if (result.length > 0) {
             dbConnection.query(
                 'UPDATE Rankings SET score = score + 1 WHERE name = ? && level = ?',
                 [name, level],
                 (err2, result2) => {
-                    if (err2) logger.info(err2);
+                    if (err2) {
+                        logger.info(err2);
+                    }
 
                     logger.info('updated score.');
                 }
@@ -312,7 +350,9 @@ function increaseScore(name: string, level: string): void {
         } else {
             const post = { name, score: 1, level, timestamp: Date.now() };
             dbConnection.query('INSERT INTO Rankings SET ?', [post], (err2, result2) => {
-                if (err2) logger.info(err2);
+                if (err2) {
+                    logger.info(err2);
+                }
                 logger.info('Created new ranking');
                 // resposta positiva
             });
@@ -322,7 +362,9 @@ function increaseScore(name: string, level: string): void {
 
 function decreaseScore(name: string, level: string): void {
     dbConnection.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], (err, result) => {
-        if (err) logger.info(err);
+        if (err) {
+            logger.info(err);
+        }
 
         if (result.length > 0) {
             if (result[0].score > 0) {
@@ -330,7 +372,9 @@ function decreaseScore(name: string, level: string): void {
                     'UPDATE Rankings SET score = score - 1 WHERE name = ? && level = ?',
                     [name, level],
                     (err2, result2) => {
-                        if (err2) logger.info(err2);
+                        if (err2) {
+                            logger.info(err2);
+                        }
 
                         logger.info('updated score.');
                     }
@@ -339,7 +383,9 @@ function decreaseScore(name: string, level: string): void {
         } else {
             const post = { name, score: 0, level, timestamp: Date.now() };
             dbConnection.query('INSERT INTO Rankings SET ?', [post], (err2, result2) => {
-                if (err2) logger.info(err2);
+                if (err2) {
+                    logger.info(err2);
+                }
                 logger.info('Created new ranking');
                 // resposta positiva
             });
@@ -362,7 +408,9 @@ app.post('/register', (request, response) => {
         // query à base de dados
         // para descobrir se o utilizador já está registado
         dbConnection.query('SELECT * FROM Users WHERE name = ?', [name], (err, result) => {
-            if (err) logger.info(err);
+            if (err) {
+                logger.info(err);
+            }
             // utilizador já existe
             if (result.length > 0) {
                 logger.info('User exists');
@@ -390,7 +438,9 @@ app.post('/register', (request, response) => {
                 // guardar na base de dados
                 const post = { name, pass: hash, salt };
                 dbConnection.query('INSERT INTO Users SET ?', [post], (err2, result2) => {
-                    if (err2) logger.info(err2);
+                    if (err2) {
+                        logger.info(err2);
+                    }
                     logger.info('Created new user');
                     // resposta positiva
                     response.json({});
@@ -409,7 +459,9 @@ app.post('/ranking', (request, response) => {
         'SELECT * FROM Rankings WHERE level = ? ORDER BY score DESC, timestamp ASC LIMIT 10;',
         [level],
         (err, result) => {
-            if (err) logger.info(err);
+            if (err) {
+                logger.info(err);
+            }
             response.json({ ranking: result });
         }
     );
@@ -418,7 +470,9 @@ app.post('/ranking', (request, response) => {
 app.post('/join', (request, response) => {
     if (regex.test(request.body.name)) {
         dbConnection.query('SELECT * FROM Users WHERE name = ?', [request.body.name], (err, result) => {
-            if (err) logger.info(err);
+            if (err) {
+                logger.info(err);
+            }
             // utilizador já existe
             if (result.length > 0) {
                 // resultado da query
@@ -486,9 +540,14 @@ app.post('/score', (request, response) => {
             'SELECT * FROM Rankings WHERE name = ? && level = ?',
             [request.body.name, request.body.level],
             (err, result) => {
-                if (err) logger.info(err);
-                if (result.length > 0) response.json({ score: result[0].score });
-                else response.json({ score: 0 });
+                if (err) {
+                    logger.info(err);
+                }
+                if (result.length > 0) {
+                    response.json({ score: result[0].score });
+                } else {
+                    response.json({ score: 0 });
+                }
             }
         );
     } else {
@@ -522,8 +581,12 @@ app.post('/notify', (request, response) => {
             } else {
                 response.json({ error: 'Jogada inválida!' });
             }
-        } else response.json({ error: 'Não é o seu turno!' });
-    } else response.json({ error: 'Erro! Não foi possivel validar a jogada' });
+        } else {
+            response.json({ error: 'Não é o seu turno!' });
+        }
+    } else {
+        response.json({ error: 'Erro! Não foi possivel validar a jogada' });
+    }
 });
 
 app.get('/update', (request, response) => {
@@ -545,7 +608,9 @@ app.get('/update', (request, response) => {
         openConnections.push(connection);
         logger.info('Added player ', name, ' to connections, game ', gameId);
 
-        if (checkGameStart(gameId)) sendEvent(gameId, 'start');
+        if (checkGameStart(gameId)) {
+            sendEvent(gameId, 'start');
+        }
 
         // no caso do cliente terminar a conecção, remover da lista
         request.on('close', () => {
