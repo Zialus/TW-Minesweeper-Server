@@ -469,23 +469,22 @@ app.post('/join', (request, response) => {
                 // verificar se a password está correta
                 if (createHash(request.body.pass + user.salt) === user.pass) {
                     let gameId;
-                    let key;
                     const p1 = {} as Player;
-                    let p2: Player | undefined;
                     p1.name = request.body.name;
                     p1.group = request.body.group;
                     p1.level = request.body.level;
                     p1.key = createHash(chance.string({ length: 8 }));
-                    key = p1.key;
-                    p2 = findOpponent(p1);
+
+                    const p2 = findOpponent(p1);
+
                     if (p2 === undefined) {
-                        gameId = gameVar++;
+                        gameVar++;
+                        gameId = gameVar;
                         p1.game = gameId;
                         playerWaitingList.push(p1); // adicona p1 ao fim da fila
                         logger.info(p1.name, ' joined waiting list.\n Waiting list:\n', playerWaitingList);
                     } else {
                         gameId = p2.game;
-                        // key = p2.key;
                         startGame(p2.level, p2.game, p1.key, p2.key, p1.name, p2.name);
                         logger.info(
                             'Started game: ',
@@ -498,7 +497,7 @@ app.post('/join', (request, response) => {
                             p2.level
                         );
                     }
-                    response.json({ key, game: gameId });
+                    response.json({ key: p1.key, game: gameId });
                 }
             }
         });
