@@ -34,7 +34,7 @@ const games = [] as Game[];
 const regex = /^[a-z0-9_-]+$/i;
 
 // casas reveladas na última jogada
-let move = [] as number[][];
+let moveMatrix = [] as number[][];
 
 const port = process.env.PORT;
 
@@ -146,7 +146,7 @@ function checkGameStart(gameId: number): boolean {
     return false;
 }
 
-// método para espalhar minas no início de um jogo
+// espalhar minas no início de um jogo
 function startGame(level: string, gameId: number, key1: string, key2: string, p1: string, p2: string): void {
     let minesLeft;
     const game: Game = {
@@ -274,7 +274,7 @@ function clickPop(x: number, y: number, gameId: number): void {
     // se for uma jogada normal
     else {
         // limpar as celulas da jogada anterior
-        move = [];
+        moveMatrix = [];
         // função recursiva
         expandPop(x, y, gameId);
         const p = games[gameId].turn;
@@ -285,14 +285,14 @@ function clickPop(x: number, y: number, gameId: number): void {
             games[gameId].turn = games[gameId].player1;
         }
         // enviar jogada aos jogadores
-        sendEvent(gameId, 'move', { name: p, cells: move, turn: games[gameId].turn });
+        sendEvent(gameId, 'move', { name: p, cells: moveMatrix, turn: games[gameId].turn });
     }
 }
 
 function expandPop(x: number, y: number, gameId: number): void {
     games[gameId].popped[y][x] = true;
     // adicionar casa às destapadas nesta jogada
-    move.push([x + 1, y + 1, games[gameId].board[y][x]]);
+    moveMatrix.push([x + 1, y + 1, games[gameId].board[y][x]]);
     let startY = y;
     let startX = x;
     let limitY = y;
