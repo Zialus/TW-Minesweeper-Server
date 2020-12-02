@@ -549,7 +549,7 @@ app.post('/notify', (request, response) => {
     const gameId = request.body.game;
     const name = request.body.name;
     const key = request.body.key;
-    const cells = [];
+
     logger.info(name, ' plays in [', row, ',', col, ']');
     // verifica a validade do nome e da chave
     if (regex.test(name) && testKey(name, key, gameId)) {
