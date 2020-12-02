@@ -335,9 +335,9 @@ function increaseScore(name: string, level: string): void {
                 [name, level],
                 (err2, result2) => {
                     if (err2) {
-                        logger.info('Failed to updated score', err2);
+                        logger.info('Failed to update score: %o', err2);
                     } else {
-                        logger.info('Updated score', result2);
+                        logger.info('Updated score: %o', result2);
                     }
                 }
             );
@@ -345,9 +345,9 @@ function increaseScore(name: string, level: string): void {
             const post = { name, score: 1, level, timestamp: Date.now() };
             dbConnection.query('INSERT INTO Rankings SET ?', [post], (err2, result2) => {
                 if (err2) {
-                    logger.info('Failed to create new ranking', err2);
+                    logger.info('Failed to create new ranking: %o', err2);
                 } else {
-                    logger.info('Created new ranking', result2);
+                    logger.info('Created new ranking: %o', result2);
                 }
             });
         }
@@ -367,9 +367,9 @@ function decreaseScore(name: string, level: string): void {
                     [name, level],
                     (err2, result2) => {
                         if (err2) {
-                            logger.info('Failed to update score', err2);
+                            logger.info('Failed to update score: %o', err2);
                         } else {
-                            logger.info('Updated score', result2);
+                            logger.info('Updated score: %o', result2);
                         }
                     }
                 );
@@ -378,9 +378,9 @@ function decreaseScore(name: string, level: string): void {
             const post = { name, score: 0, level, timestamp: Date.now() };
             dbConnection.query('INSERT INTO Rankings SET ?', [post], (err2, result2) => {
                 if (err2) {
-                    logger.info('Failed to create new ranking', err2);
+                    logger.info('Failed to create new ranking: %o', err2);
                 } else {
-                    logger.info('Created new ranking', result2);
+                    logger.info('Created new ranking: %o', result2);
                 }
             });
         }
@@ -429,10 +429,10 @@ app.post('/register', (request, response) => {
                 const post = { name, pass: hash, salt };
                 dbConnection.query('INSERT INTO Users SET ?', [post], (err2, result2) => {
                     if (err2) {
-                        logger.info('Failed while creating new user', err2);
+                        logger.info('Failed while creating new user: %o', err2);
                         response.json({ error: 'Failed to create new user' });
                     } else {
-                        logger.info('Created new user', result2);
+                        logger.info('Created new user: %o', result2);
                         response.json({});
                     }
                 });
@@ -484,19 +484,12 @@ app.post('/join', (request, response) => {
                         gameId = gameVar;
                         p1.game = gameId;
                         playerWaitingList.push(p1); // adicona p1 ao fim da fila
-                        logger.info(p1.name, ' joined waiting list.\n Waiting list:\n', playerWaitingList);
+                        logger.info('%s joined waiting list.\n Waiting list: %o', p1.name, playerWaitingList);
                     } else {
                         gameId = p2.game;
                         startGame(p2.level, p2.game, p1.key, p2.key, p1.name, p2.name);
                         logger.info(
-                            'Started game: ',
-                            p1.name,
-                            ' vs ',
-                            p2.name,
-                            ' game number ',
-                            gameId,
-                            ' on ',
-                            p2.level
+                            `Started game: ${p1.name} vs ${p2.name} -- Game number:${gameId} -- Level:${p2.level}`
                         );
                     }
                     response.json({ key: p1.key, game: gameId });
@@ -516,7 +509,7 @@ app.post('/leave', (request, response) => {
         for (let i = 0; i < playerWaitingList.length; i++) {
             if (playerWaitingList[i].name === name) {
                 playerWaitingList.splice(i, 1);
-                logger.info(name, ' left waiting list. \nWaiting list:\n ', playerWaitingList);
+                logger.info('%s left waiting list.\n Waiting list: %o', name, playerWaitingList);
                 break;
             }
         }
@@ -552,7 +545,7 @@ app.post('/notify', (request, response) => {
     const name = request.body.name;
     const key = request.body.key;
 
-    logger.info(name, ' plays in [', row, ',', col, ']');
+    logger.info(`${name} plays in [${row},${col}]`);
     // verifica a validade do nome e da chave
     if (regex.test(name) && testKey(name, key, gameId)) {
         // verifica se a jogada é válida (turno)
@@ -596,7 +589,7 @@ app.get('/update', (request, response) => {
         // adicionar às conecções abertas
         const connection: Connection = { name, game: gameId, connection: response };
         openConnections.push(connection);
-        logger.info('Added player ', name, ' to connections, game ', gameId);
+        logger.info(`Added player: ${name} to connections -- Game: ${gameId}`);
 
         if (checkGameStart(gameId)) {
             sendEvent(gameId, 'start');
