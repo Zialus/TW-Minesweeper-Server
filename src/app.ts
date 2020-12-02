@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import Chance from 'chance';
 import helmet from 'helmet';
 import pino from 'pino';
+import { AddressInfo } from 'net';
 
 const logger = pino({
     prettyPrint: {
@@ -49,7 +50,8 @@ dbConnection.connect((err) => {
 });
 
 const server = app.listen(port, () => {
-    logger.info('Listening at http://%s:%s', server.address().address, server.address().port);
+    const serverAddress = server.address() as AddressInfo;
+    logger.info('Listening at http://%s:%s', serverAddress.address, serverAddress.port);
 });
 
 // retorna o 1º oponente válido para p1 se existir se não retorna undefined e adiciona p1 à lista
