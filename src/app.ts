@@ -7,6 +7,7 @@ import Chance from 'chance';
 import helmet from 'helmet';
 import pino from 'pino';
 import { AddressInfo } from 'net';
+import { Connection } from './Connection';
 
 const logger = pino({
     prettyPrint: {
@@ -71,11 +72,11 @@ function findOpponent(p1: Player): Player | undefined {
 function sendEvent(gameId: number, e: string, move?: Move) {
     logger.info('Sent Event:');
     for (const item of openConnections) {
-        if (item.game === gameId) {
+        if (item.gameId === gameId) {
             // se o evento for de inicio de jogo (oponente encontrado)
             // começa o jogo também
             if (e === 'start') {
-                if (item.name === games[gameId].player1) {
+                if (item.playerName === games[gameId].player1) {
                     item.connection.write(
                         `data: ${JSON.stringify({ opponent: games[gameId].player2, turn: games[gameId].turn })}\n\n`
                     );
@@ -132,8 +133,8 @@ function checkGameStart(gameId: number): boolean {
         return false;
     } else {
         for (const item of openConnections) {
-            if (item.game === gameId) {
-                players.push(item.name);
+            if (item.gameId === gameId) {
+                players.push(item.playerName);
             }
         }
 
@@ -587,7 +588,7 @@ app.get('/update', (request, response) => {
         });
         response.write('\n');
         // adicionar às conecções abertas
-        const connection: Connection = { name, game: gameId, connection: response };
+        const connection: Connection = { playerName: name, gameId, connection: response };
         openConnections.push(connection);
         logger.info(`Added player: ${name} to connections -- Game: ${gameId}`);
 
@@ -598,7 +599,7 @@ app.get('/update', (request, response) => {
         // no caso do cliente terminar a conecção, remover da lista
         request.on('close', () => {
             for (let i = 0; i < openConnections.length; i++) {
-                if (openConnections[i].name === name) {
+                if (openConnections[i].playerName === name) {
                     openConnections.splice(i, 1);
                     break;
                 }
