@@ -71,38 +71,29 @@ function findOpponent(p1: Player): Player | undefined {
 // envia eventos para os jogaores de um jogo
 function sendEvent(gameId: number, e: string, move?: Move) {
     logger.info('Sent Event:');
+
     for (const item of openConnections) {
         if (item.gameId === gameId) {
             // se o evento for de inicio de jogo (oponente encontrado)
             // começa o jogo também
             if (e === 'start') {
                 if (item.playerName === games[gameId].player1) {
-                    item.connection.write(
-                        `data: ${JSON.stringify({ opponent: games[gameId].player2, turn: games[gameId].turn })}\n\n`
-                    );
-                    logger.info(`${JSON.stringify({ opponent: games[gameId].player2, turn: games[gameId].turn })}\n\n`);
+                    const data = JSON.stringify({ opponent: games[gameId].player2, turn: games[gameId].turn });
+                    item.connection.write(`data: ${data}\n\n`);
+                    logger.info(`${data}\n\n`);
                 } else {
-                    item.connection.write(
-                        `data: ${JSON.stringify({ opponent: games[gameId].player1, turn: games[gameId].turn })}\n\n`
-                    );
-                    logger.info(`${JSON.stringify({ opponent: games[gameId].player1, turn: games[gameId].turn })}\n\n`);
+                    const data = JSON.stringify({ opponent: games[gameId].player1, turn: games[gameId].turn });
+                    item.connection.write(`data: ${data}\n\n`);
+                    logger.info(`${data}\n\n`);
                 }
-            }
-            // se o evento for uma jogada
-            else if (e === 'move') {
-                item.connection.write(
-                    `data: ${JSON.stringify({ move: { name: move.name, cells: move.cells }, turn: move.turn })}\n\n`
-                );
-                logger.info(`${JSON.stringify({ move: { name: move.name, cells: move.cells }, turn: move.turn })}\n\n`);
-            }
-            // se o evento for de fim de jogo
-            else if (e === 'end') {
-                item.connection.write(
-                    `data: ${JSON.stringify({ move: { name: move.name, cells: move.cells }, winner: move.winner })}\n\n`
-                );
-                logger.info(
-                    `${JSON.stringify({ move: { name: move.name, cells: move.cells }, winner: move.winner })}\n\n`
-                );
+            } else if (e === 'move') {
+                const data = JSON.stringify({ move: { name: move.name, cells: move.cells }, turn: move.turn });
+                item.connection.write(`data: ${data}\n\n`);
+                logger.info(`${data}\n\n`);
+            } else if (e === 'end') {
+                const data = JSON.stringify({ move: { name: move.name, cells: move.cells }, winner: move.winner });
+                item.connection.write(`data: ${data}\n\n`);
+                logger.info(`${data}\n\n`);
             }
         }
     }
