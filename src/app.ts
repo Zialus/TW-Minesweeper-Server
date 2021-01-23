@@ -8,6 +8,7 @@ import helmet from 'helmet';
 import pino from 'pino';
 import { AddressInfo } from 'net';
 import { Connection } from './Connection';
+import { EventType } from './Event';
 
 const logger = pino({
     prettyPrint: {
@@ -69,14 +70,14 @@ function findOpponent(p1: Player): Player | undefined {
 }
 
 // envia eventos para os jogaores de um jogo
-function sendEvent(gameId: number, e: string, move?: Move) {
+function sendStartEvent(gameId: number, e: EventType) {
     logger.info('Sent Event:');
 
     for (const item of openConnections) {
         if (item.gameId === gameId) {
             // se o evento for de inicio de jogo (oponente encontrado)
             // começa o jogo também
-            if (e === 'start') {
+            if (e === EventType.START) {
                 if (item.playerName === games[gameId].player1) {
                     const data = JSON.stringify({ opponent: games[gameId].player2, turn: games[gameId].turn });
                     item.connection.write(`data: ${data}\n\n`);
@@ -86,11 +87,23 @@ function sendEvent(gameId: number, e: string, move?: Move) {
                     item.connection.write(`data: ${data}\n\n`);
                     logger.info(`${data}\n\n`);
                 }
-            } else if (e === 'move') {
+            }
+        }
+    }
+}
+
+function sendMoveOrEndEvent(gameId: number, e: EventType, move: Move) {
+    logger.info('Sent Event:');
+
+    for (const item of openConnections) {
+        if (item.gameId === gameId) {
+            // se o evento for de inicio de jogo (oponente encontrado)
+            // começa o jogo também
+            if (e === EventType.MOVE) {
                 const data = JSON.stringify({ move: { name: move.name, cells: move.cells }, turn: move.turn });
                 item.connection.write(`data: ${data}\n\n`);
                 logger.info(`${data}\n\n`);
-            } else if (e === 'end') {
+            } else if (e === EventType.END) {
                 const data = JSON.stringify({ move: { name: move.name, cells: move.cells }, winner: move.winner });
                 item.connection.write(`data: ${data}\n\n`);
                 logger.info(`${data}\n\n`);
@@ -142,7 +155,7 @@ function checkGameStart(gameId: number): boolean {
 
 // espalhar minas no início de um jogo
 function startGame(level: string, gameId: number, key1: string, key2: string, p1: string, p2: string): void {
-    let minesLeft;
+    let minesLeft = 0;
     const game: Game = {
         level,
         mines: 0,
@@ -242,7 +255,7 @@ function clickPop(x: number, y: number, gameId: number): void {
         }
         // se o score for maior que metade das bombas no jogo, vitória
         if (games[gameId].p1score >= games[gameId].mines / 2) {
-            sendEvent(gameId, 'end', {
+            sendMoveOrEndEvent(gameId, EventType.END, {
                 name: games[gameId].turn,
                 cells: [[x + 1, y + 1, -1]],
                 winner: games[gameId].player1,
@@ -250,7 +263,7 @@ function clickPop(x: number, y: number, gameId: number): void {
             increaseScore(games[gameId].player1, games[gameId].level);
             decreaseScore(games[gameId].player2, games[gameId].level);
         } else if (games[gameId].p2score >= games[gameId].mines / 2) {
-            sendEvent(gameId, 'end', {
+            sendMoveOrEndEvent(gameId, EventType.END, {
                 name: games[gameId].turn,
                 cells: [[x + 1, y + 1, -1]],
                 winner: games[gameId].player2,
@@ -258,7 +271,7 @@ function clickPop(x: number, y: number, gameId: number): void {
             increaseScore(games[gameId].player2, games[gameId].level);
             decreaseScore(games[gameId].player1, games[gameId].level);
         } else {
-            sendEvent(gameId, 'move', {
+            sendMoveOrEndEvent(gameId, EventType.MOVE, {
                 name: games[gameId].turn,
                 cells: [[x + 1, y + 1, -1]],
                 turn: games[gameId].turn,
@@ -279,7 +292,7 @@ function clickPop(x: number, y: number, gameId: number): void {
             games[gameId].turn = games[gameId].player1;
         }
         // enviar jogada aos jogadores
-        sendEvent(gameId, 'move', { name: p, cells: moveMatrix, turn: games[gameId].turn });
+        sendMoveOrEndEvent(gameId, EventType.MOVE, { name: p, cells: moveMatrix, turn: games[gameId].turn });
     }
 }
 
@@ -584,7 +597,7 @@ app.get('/update', (request, response) => {
         logger.info(`Added player: ${name} to connections -- Game: ${gameId}`);
 
         if (checkGameStart(gameId)) {
-            sendEvent(gameId, 'start');
+            sendStartEvent(gameId, EventType.START);
         }
 
         // no caso do cliente terminar a conecção, remover da lista
