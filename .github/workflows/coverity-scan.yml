@@ -1,0 +1,45 @@
+name: Coverity Scan
+on:
+  schedule:
+    - cron: '0 0 * * *' # Every day at 00:00 UTC
+
+jobs:
+  latest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Download Coverity Build Tool
+        run: |
+          wget -q https://scan.coverity.com/download/javascript/linux64 --post-data "token=$TOKEN&project=Zialus%2FTW-Minesweeper-Server" -O cov-analysis-linux64.tar.gz
+          mkdir cov-analysis-linux64
+          tar xzf cov-analysis-linux64.tar.gz --strip 1 -C cov-analysis-linux64
+        env:
+          TOKEN: ${{ secrets.COVERITY_TOKEN }}
+
+      - name: Install npm depedencies
+        run: npm i
+
+      - name: Compile
+        run: tsc || exit 0
+
+      - name: Build with cov-build
+        run: |
+          export PATH=`pwd`/cov-analysis-linux64/bin:$PATH
+          cd dist
+          cov-build --dir cov-int --no-command --fs-capture-search ./
+
+      - name: Submit the result to Coverity Scan
+        run: |
+          cd dist
+          tar czvf sweeper.tgz cov-int
+          curl \
+          --form token=$TOKEN \
+          --form email=raulmendesferreira@gmail.com \
+          --form file=@sweeper.tgz \
+          --form version="trunk" \
+          --form description="Minesweeper-Server" \
+          https://scan.coverity.com/builds?project=Zialus%2FTW-Minesweeper-Server
+        env:
+          TOKEN: ${{ secrets.COVERITY_TOKEN }}
