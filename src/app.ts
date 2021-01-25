@@ -24,7 +24,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const dbConnection = mysql.createConnection(process.env.JAWSDB_MARIA_URL);
+const dbConnection = mysql.createConnection(process.env.JAWSDB_MARIA_URL || 'mysql://localhost:3306');
 const chance = new Chance();
 
 // lista de jogadores à espera para jogarem
@@ -39,8 +39,6 @@ const regex = /^[a-z0-9_-]+$/i;
 // casas reveladas na última jogada
 let moveMatrix = [] as number[][];
 
-const port = process.env.PORT;
-
 // conecção e selecção da base de dados
 dbConnection.connect((err) => {
     if (err) {
@@ -51,7 +49,7 @@ dbConnection.connect((err) => {
     logger.info(`connected as id ${dbConnection.threadId}`);
 });
 
-const server = app.listen(port, () => {
+const server = app.listen(process.env.PORT || 9876, () => {
     const serverAddress = server.address() as AddressInfo;
     logger.info('Listening at http://%s:%s', serverAddress.address, serverAddress.port);
 });
@@ -578,9 +576,9 @@ app.post('/notify', (request, response) => {
 });
 
 app.get('/update', (request, response) => {
-    const name: string = request.query.name;
-    const gameId: number = parseInt(request.query.game, 10);
-    const key: string = request.query.key;
+    const name: string = request.query.name as string;
+    const gameId: number = parseInt(request.query.game as string, 10);
+    const key: string = request.query.key as string;
     if (regex.test(name) && testKey(name, key, gameId)) {
         // impedir que a conecção se feche
         request.socket.setTimeout(6000000);
