@@ -8,7 +8,6 @@ import helmet from 'helmet';
 import pino from 'pino';
 import { AddressInfo } from 'net';
 import { Connection } from './Connection';
-import { EventType } from './Event';
 
 const logger = pino({
     prettyPrint: {
@@ -67,45 +66,44 @@ function findOpponent(p1: Player): Player | undefined {
     return p2;
 }
 
-// envia eventos para os jogaores de um jogo
-function sendStartEvent(gameId: number, e: EventType) {
+function sendStartEvent(gameId: number) {
     logger.info('Sent Event:');
 
     for (const item of openConnections) {
         if (item.gameId === gameId) {
-            // se o evento for de inicio de jogo (oponente encontrado)
-            // começa o jogo também
-            if (e === EventType.START) {
-                if (item.playerName === games[gameId].player1) {
-                    const data = JSON.stringify({ opponent: games[gameId].player2, turn: games[gameId].turn });
-                    item.connection.write(`data: ${data}\n\n`);
-                    logger.info(`${data}\n\n`);
-                } else {
-                    const data = JSON.stringify({ opponent: games[gameId].player1, turn: games[gameId].turn });
-                    item.connection.write(`data: ${data}\n\n`);
-                    logger.info(`${data}\n\n`);
-                }
+            if (item.playerName === games[gameId].player1) {
+                const data = JSON.stringify({ opponent: games[gameId].player2, turn: games[gameId].turn });
+                item.connection.write(`data: ${data}\n\n`);
+                logger.info(`${data}\n\n`);
+            } else {
+                const data = JSON.stringify({ opponent: games[gameId].player1, turn: games[gameId].turn });
+                item.connection.write(`data: ${data}\n\n`);
+                logger.info(`${data}\n\n`);
             }
         }
     }
 }
 
-function sendMoveOrEndEvent(gameId: number, e: EventType, move: Move) {
+function sendMoveEvent(gameId: number, move: Move) {
     logger.info('Sent Event:');
 
     for (const item of openConnections) {
         if (item.gameId === gameId) {
-            // se o evento for de inicio de jogo (oponente encontrado)
-            // começa o jogo também
-            if (e === EventType.MOVE) {
-                const data = JSON.stringify({ move: { name: move.name, cells: move.cells }, turn: move.turn });
-                item.connection.write(`data: ${data}\n\n`);
-                logger.info(`${data}\n\n`);
-            } else if (e === EventType.END) {
-                const data = JSON.stringify({ move: { name: move.name, cells: move.cells }, winner: move.winner });
-                item.connection.write(`data: ${data}\n\n`);
-                logger.info(`${data}\n\n`);
-            }
+            const data = JSON.stringify({ move: { name: move.name, cells: move.cells }, turn: move.turn });
+            item.connection.write(`data: ${data}\n\n`);
+            logger.info(`${data}\n\n`);
+        }
+    }
+}
+
+function sendEndEvent(gameId: number, move: Move) {
+    logger.info('Sent Event:');
+
+    for (const item of openConnections) {
+        if (item.gameId === gameId) {
+            const data = JSON.stringify({ move: { name: move.name, cells: move.cells }, winner: move.winner });
+            item.connection.write(`data: ${data}\n\n`);
+            logger.info(`${data}\n\n`);
         }
     }
 }
@@ -241,6 +239,16 @@ function countNeighbours(game: Game, x: number, y: number): number {
     return count;
 }
 
+function endGame(gameId: number, x: number, y: number, winningPlayer: string, losingPlayer: string) {
+    sendEndEvent(gameId, {
+        name: games[gameId].turn,
+        cells: [[x + 1, y + 1, -1]],
+        winner: winningPlayer,
+    });
+    increaseScore(winningPlayer, games[gameId].level);
+    decreaseScore(losingPlayer, games[gameId].level);
+}
+
 function clickPop(x: number, y: number, gameId: number): void {
     // se a jogada for uma mina
     if (games[gameId].board[y][x] === -1) {
@@ -253,23 +261,11 @@ function clickPop(x: number, y: number, gameId: number): void {
         }
         // se o score for maior que metade das bombas no jogo, vitória
         if (games[gameId].p1score >= games[gameId].mines / 2) {
-            sendMoveOrEndEvent(gameId, EventType.END, {
-                name: games[gameId].turn,
-                cells: [[x + 1, y + 1, -1]],
-                winner: games[gameId].player1,
-            });
-            increaseScore(games[gameId].player1, games[gameId].level);
-            decreaseScore(games[gameId].player2, games[gameId].level);
+            endGame(gameId, x, y, games[gameId].player1, games[gameId].player2);
         } else if (games[gameId].p2score >= games[gameId].mines / 2) {
-            sendMoveOrEndEvent(gameId, EventType.END, {
-                name: games[gameId].turn,
-                cells: [[x + 1, y + 1, -1]],
-                winner: games[gameId].player2,
-            });
-            increaseScore(games[gameId].player2, games[gameId].level);
-            decreaseScore(games[gameId].player1, games[gameId].level);
+            endGame(gameId, x, y, games[gameId].player2, games[gameId].player1);
         } else {
-            sendMoveOrEndEvent(gameId, EventType.MOVE, {
+            sendMoveEvent(gameId, {
                 name: games[gameId].turn,
                 cells: [[x + 1, y + 1, -1]],
                 turn: games[gameId].turn,
@@ -290,7 +286,7 @@ function clickPop(x: number, y: number, gameId: number): void {
             games[gameId].turn = games[gameId].player1;
         }
         // enviar jogada aos jogadores
-        sendMoveOrEndEvent(gameId, EventType.MOVE, { name: p, cells: moveMatrix, turn: games[gameId].turn });
+        sendMoveEvent(gameId, { name: p, cells: moveMatrix, turn: games[gameId].turn });
     }
 }
 
@@ -595,7 +591,7 @@ app.get('/update', (request, response) => {
         logger.info(`Added player: ${name} to connections -- Game: ${gameId}`);
 
         if (checkGameStart(gameId)) {
-            sendStartEvent(gameId, EventType.START);
+            sendStartEvent(gameId);
         }
 
         // no caso do cliente terminar a conecção, remover da lista
