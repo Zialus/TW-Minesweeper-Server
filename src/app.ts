@@ -66,20 +66,22 @@ function findOpponent(p1: Player): Player | undefined {
     return p2;
 }
 
+function getOpponent(item: Connection) {
+    if (item.playerName === games[item.gameId].player1) {
+        return games[item.gameId].player2;
+    } else {
+        return games[item.gameId].player1;
+    }
+}
+
 function sendStartEvent(gameId: number) {
     logger.info('Sent Event:');
 
     for (const item of openConnections) {
         if (item.gameId === gameId) {
-            if (item.playerName === games[gameId].player1) {
-                const data = JSON.stringify({ opponent: games[gameId].player2, turn: games[gameId].turn });
-                item.connection.write(`data: ${data}\n\n`);
-                logger.info(`${data}\n\n`);
-            } else {
-                const data = JSON.stringify({ opponent: games[gameId].player1, turn: games[gameId].turn });
-                item.connection.write(`data: ${data}\n\n`);
-                logger.info(`${data}\n\n`);
-            }
+            const data = JSON.stringify({ opponent: getOpponent(item), turn: games[gameId].turn });
+            item.connection.write(`data: ${data}\n\n`);
+            logger.info(`${data}\n\n`);
         }
     }
 }
