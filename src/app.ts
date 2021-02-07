@@ -42,11 +42,11 @@ let moveMatrix = [] as number[][];
 // conecção e selecção da base de dados
 dbConnection.connect((err) => {
     if (err) {
-        logger.error(`error connecting: ${err.stack}`);
+        logger.error(`error connecting: ${err.stack ?? 'NO STACK'}`);
         return;
     }
 
-    logger.info(`connected as id ${dbConnection.threadId}`);
+    logger.info(`connected as id ${dbConnection.threadId ?? 'NO ID'}`);
 });
 
 const server = app.listen(process.env.PORT || 9876, () => {
