@@ -8,6 +8,7 @@ import helmet from 'helmet';
 import pino from 'pino';
 import { AddressInfo } from 'net';
 import { Connection } from './Connection';
+import Joi from 'joi';
 
 const logger = pino({
     prettyPrint: {
@@ -395,9 +396,19 @@ function createHash(str: string): string {
 
 // função de registo/login
 app.post('/register', (request, response) => {
-    // extração do nome e pass do corpo do request
-    const name = request.body.name;
-    const pass = request.body.pass;
+    type requestType = { name: string; pass: string };
+
+    const bodySchema = Joi.object<requestType>({
+        name: Joi.string().required(),
+        pass: Joi.string().required().allow(''),
+    });
+
+    const { error, value } = bodySchema.validate(request.body) as { error: Joi.ValidationError; value: requestType };
+    if (error) {
+        throw error;
+    }
+    const { name, pass } = value;
+
     // verifica se o nome obedece à regex
     if (regex.test(name)) {
         // query à base de dados
@@ -444,9 +455,19 @@ app.post('/register', (request, response) => {
     }
 });
 
-// Ranking
 app.post('/ranking', (request, response) => {
-    const level = request.body.level;
+    type requestType = { level: string };
+
+    const bodySchema = Joi.object<requestType>({
+        level: Joi.string().required(),
+    });
+
+    const { error, value } = bodySchema.validate(request.body) as { error: Joi.ValidationError; value: requestType };
+    if (error) {
+        throw error;
+    }
+    const { level } = value;
+
     dbConnection.query(
         'SELECT * FROM Rankings WHERE level = ? ORDER BY score DESC, timestamp ASC LIMIT 10;',
         [level],
@@ -460,8 +481,28 @@ app.post('/ranking', (request, response) => {
 });
 
 app.post('/join', (request, response) => {
-    if (regex.test(request.body.name)) {
-        dbConnection.query('SELECT * FROM Users WHERE name = ?', [request.body.name], (err, result) => {
+    type requestType = {
+        name: string;
+        pass: string;
+        group: number;
+        level: string;
+    };
+
+    const bodySchema = Joi.object<requestType>({
+        name: Joi.string().required(),
+        pass: Joi.string().required().allow(''),
+        group: Joi.number().required(),
+        level: Joi.string().required(),
+    });
+
+    const { error, value } = bodySchema.validate(request.body) as { error: Joi.ValidationError; value: requestType };
+    if (error) {
+        throw error;
+    }
+    const { name, pass, group, level } = value;
+
+    if (regex.test(name)) {
+        dbConnection.query('SELECT * FROM Users WHERE name = ?', [name], (err, result) => {
             if (err) {
                 logger.info(err);
             }
@@ -470,12 +511,12 @@ app.post('/join', (request, response) => {
                 // resultado da query
                 const user = result[0];
                 // verificar se a password está correta
-                if (createHash(request.body.pass + user.salt) === user.pass) {
+                if (createHash(pass + user.salt) === user.pass) {
                     let gameId;
                     const p1 = {} as Player;
-                    p1.name = request.body.name;
-                    p1.group = request.body.group;
-                    p1.level = request.body.level;
+                    p1.name = name;
+                    p1.group = group;
+                    p1.level = level;
                     p1.key = createHash(chance.string({ length: 8 }));
 
                     const p2 = findOpponent(p1);
@@ -503,10 +544,21 @@ app.post('/join', (request, response) => {
 });
 
 app.post('/leave', (request, response) => {
-    const name = request.body.name;
-    const key = request.body.key;
-    const gameId = request.body.game;
-    if (regex.test(name) && testKey(name, key, gameId)) {
+    type requestType = { game: number; name: string; key: string };
+
+    const bodySchema = Joi.object<requestType>({
+        game: Joi.number().required(),
+        name: Joi.string().required(),
+        key: Joi.string().required(),
+    });
+
+    const { error, value } = bodySchema.validate(request.body) as { error: Joi.ValidationError; value: requestType };
+    if (error) {
+        throw error;
+    }
+    const { game, name, key } = value;
+
+    if (regex.test(name) && testKey(name, key, game)) {
         for (let i = 0; i < playerWaitingList.length; i++) {
             if (playerWaitingList[i].name === name) {
                 playerWaitingList.splice(i, 1);
@@ -519,46 +571,71 @@ app.post('/leave', (request, response) => {
 });
 
 app.post('/score', (request, response) => {
-    if (regex.test(request.body.name)) {
-        dbConnection.query(
-            'SELECT * FROM Rankings WHERE name = ? && level = ?',
-            [request.body.name, request.body.level],
-            (err, result) => {
-                if (err) {
-                    logger.info(err);
-                }
-                if (result.length > 0) {
-                    response.json({ score: result[0].score });
-                } else {
-                    response.json({ score: 0 });
-                }
+    type requestType = { name: string; level: string };
+
+    const bodySchema = Joi.object<requestType>({
+        name: Joi.string().required(),
+        level: Joi.string().required(),
+    });
+
+    const { error, value } = bodySchema.validate(request.body) as { error: Joi.ValidationError; value: requestType };
+    if (error) {
+        throw error;
+    }
+    const { name, level } = value;
+
+    if (regex.test(name)) {
+        dbConnection.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], (err, result) => {
+            if (err) {
+                logger.info(err);
             }
-        );
+            if (result.length > 0) {
+                response.json({ score: result[0].score });
+            } else {
+                response.json({ score: 0 });
+            }
+        });
     } else {
         response.json({ error: 'Nome de utilizador inválido!' });
     }
 });
 
 app.post('/notify', (request, response) => {
-    const row = request.body.row;
-    const col = request.body.col;
-    const gameId = request.body.game;
-    const name = request.body.name;
-    const key = request.body.key;
+    type requestType = {
+        row: number;
+        col: number;
+        game: number;
+        name: string;
+        key: string;
+    };
+
+    const bodySchema = Joi.object<requestType>({
+        row: Joi.number().required(),
+        col: Joi.number().required(),
+        game: Joi.number().required(),
+        name: Joi.string().required(),
+        key: Joi.string().required(),
+    });
+
+    const { error, value } = bodySchema.validate(request.body) as { error: Joi.ValidationError; value: requestType };
+    if (error) {
+        throw error;
+    }
+    const { row, col, game, name, key } = value;
 
     logger.info(`${name} plays in [${row},${col}]`);
     // verifica a validade do nome e da chave
-    if (regex.test(name) && testKey(name, key, gameId)) {
+    if (regex.test(name) && testKey(name, key, game)) {
         // verifica se a jogada é válida (turno)
-        if (name === games[gameId].turn) {
+        if (name === games[game].turn) {
             // verifica os limites da tabela
-            if (row > 0 && row <= games[gameId].boardHeight && col > 0 && col <= games[gameId].boardWidth) {
+            if (row > 0 && row <= games[game].boardHeight && col > 0 && col <= games[game].boardWidth) {
                 // célula já destapada
-                if (!games[gameId].popped[col - 1][row - 1]) {
+                if (!games[game].popped[col - 1][row - 1]) {
                     logger.info('Accepted.');
                     response.json({}); // jogada aceite
                     // rebenta casa(s)
-                    clickPop(row - 1, col - 1, gameId);
+                    clickPop(row - 1, col - 1, game);
                 } else {
                     response.json({ error: `Posição ${row},${col} já destapada` });
                 }
@@ -574,9 +651,26 @@ app.post('/notify', (request, response) => {
 });
 
 app.get('/update', (request, response) => {
-    const name: string = request.query.name as string;
-    const gameId: number = parseInt(request.query.game as string, 10);
-    const key: string = request.query.key as string;
+    type requestType = {
+        game: string;
+        name: string;
+        key: string;
+    };
+
+    const bodySchema = Joi.object<requestType>({
+        game: Joi.string().required(),
+        name: Joi.string().required(),
+        key: Joi.string().required(),
+    });
+
+    const { error, value } = bodySchema.validate(request.query) as { error: Joi.ValidationError; value: requestType };
+    if (error) {
+        throw error;
+    }
+    const { game, name, key } = value;
+
+    const gameId = parseInt(game, 10);
+
     if (regex.test(name) && testKey(name, key, gameId)) {
         // impedir que a conecção se feche
         request.socket.setTimeout(6000000);
