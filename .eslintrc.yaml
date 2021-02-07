@@ -7,6 +7,7 @@ extends:
   - 'plugin:@typescript-eslint/eslint-recommended'
   - 'plugin:@typescript-eslint/recommended-requiring-type-checking'
   - 'plugin:unicorn/recommended'
+  - 'plugin:sonarjs/recommended'
   - 'plugin:promise/recommended'
   - 'plugin:import/errors'
   - 'plugin:import/warnings'
@@ -15,6 +16,7 @@ parser: '@typescript-eslint/parser'
 plugins:
   - '@typescript-eslint'
   - 'unicorn'
+  - 'sonarjs'
   - 'promise'
   - 'import'
 globals:
@@ -22,6 +24,6 @@ globals:
   SharedArrayBuffer: readonly
 parserOptions:
   project: "tsconfig.json"
-  ecmaVersion: 2018
+  ecmaVersion: 2020
   sourceType: module
 rules: {}
