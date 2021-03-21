@@ -12,13 +12,11 @@ extends:
   - 'plugin:import/errors'
   - 'plugin:import/warnings'
   - 'plugin:import/typescript'
+  - 'plugin:prettier/recommended'
+  - 'plugin:security/recommended'
 parser: '@typescript-eslint/parser'
 plugins:
   - '@typescript-eslint'
-  - 'unicorn'
-  - 'sonarjs'
-  - 'promise'
-  - 'import'
 globals:
   Atomics: readonly
   SharedArrayBuffer: readonly
