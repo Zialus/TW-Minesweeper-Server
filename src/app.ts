@@ -558,7 +558,7 @@ app.post('/leave', (request, response) => {
     }
     const { game, name, key } = value;
 
-    if (regex.test(name) && testKey(name, key, game)) {
+    if (validNameAndKey(name, key, game)) {
         for (let i = 0; i < playerWaitingList.length; i++) {
             if (playerWaitingList[i].name === name) {
                 playerWaitingList.splice(i, 1);
@@ -600,6 +600,14 @@ app.post('/score', (request, response) => {
     }
 });
 
+function positionWithinTable(row: number, game: number, col: number) {
+    return row > 0 && row <= games[game].boardHeight && col > 0 && col <= games[game].boardWidth;
+}
+
+function validNameAndKey(name: string, key: string, game: number) {
+    return regex.test(name) && testKey(name, key, game);
+}
+
 app.post('/notify', (request, response) => {
     type requestType = {
         row: number;
@@ -625,29 +633,33 @@ app.post('/notify', (request, response) => {
 
     logger.info(`${name} plays in [${row},${col}]`);
     // verifica a validade do nome e da chave
-    if (regex.test(name) && testKey(name, key, game)) {
-        // verifica se a jogada é válida (turno)
-        if (name === games[game].turn) {
-            // verifica os limites da tabela
-            if (row > 0 && row <= games[game].boardHeight && col > 0 && col <= games[game].boardWidth) {
-                // célula já destapada
-                if (!games[game].popped[col - 1][row - 1]) {
-                    logger.info('Accepted.');
-                    response.json({}); // jogada aceite
-                    // rebenta casa(s)
-                    clickPop(row - 1, col - 1, game);
-                } else {
-                    response.json({ error: `Posição ${row},${col} já destapada` });
-                }
-            } else {
-                response.json({ error: 'Jogada inválida!' });
-            }
-        } else {
-            response.json({ error: 'Não é o seu turno!' });
-        }
-    } else {
+    if (!validNameAndKey(name, key, game)) {
         response.json({ error: 'Erro! Não foi possivel validar a jogada' });
+        return;
     }
+
+    // verifica se a jogada é válida (turno)
+    if (name !== games[game].turn) {
+        response.json({ error: 'Não é o seu turno!' });
+        return;
+    }
+
+    // verifica os limites da tabela
+    if (!positionWithinTable(row, game, col)) {
+        response.json({ error: 'Jogada inválida!' });
+        return;
+    }
+
+    // célula já destapada
+    if (games[game].popped[col - 1][row - 1]) {
+        response.json({ error: `Posição ${row},${col} já destapada` });
+        return;
+    }
+
+    logger.info('Accepted.');
+    response.json({}); // jogada aceite
+    // rebenta casa(s)
+    clickPop(row - 1, col - 1, game);
 });
 
 app.get('/update', (request, response) => {
