@@ -405,7 +405,8 @@ app.post('/register', (request, response) => {
 
     const { error, value } = bodySchema.validate(request.body) as { error: Joi.ValidationError; value: requestType };
     if (error) {
-        throw error;
+        response.status(400).json(error);
+        return;
     }
     const { name, pass } = value;
 
@@ -464,7 +465,8 @@ app.post('/ranking', (request, response) => {
 
     const { error, value } = bodySchema.validate(request.body) as { error: Joi.ValidationError; value: requestType };
     if (error) {
-        throw error;
+        response.status(400).json(error);
+        return;
     }
     const { level } = value;
 
@@ -497,7 +499,8 @@ app.post('/join', (request, response) => {
 
     const { error, value } = bodySchema.validate(request.body) as { error: Joi.ValidationError; value: requestType };
     if (error) {
-        throw error;
+        response.status(400).json(error);
+        return;
     }
     const { name, pass, group, level } = value;
 
@@ -554,7 +557,8 @@ app.post('/leave', (request, response) => {
 
     const { error, value } = bodySchema.validate(request.body) as { error: Joi.ValidationError; value: requestType };
     if (error) {
-        throw error;
+        response.status(400).json(error);
+        return;
     }
     const { game, name, key } = value;
 
@@ -580,7 +584,8 @@ app.post('/score', (request, response) => {
 
     const { error, value } = bodySchema.validate(request.body) as { error: Joi.ValidationError; value: requestType };
     if (error) {
-        throw error;
+        response.status(400).json(error);
+        return;
     }
     const { name, level } = value;
 
@@ -627,7 +632,8 @@ app.post('/notify', (request, response) => {
 
     const { error, value } = bodySchema.validate(request.body) as { error: Joi.ValidationError; value: requestType };
     if (error) {
-        throw error;
+        response.status(400).json(error);
+        return;
     }
     const { row, col, game, name, key } = value;
 
@@ -677,7 +683,8 @@ app.get('/update', (request, response) => {
 
     const { error, value } = bodySchema.validate(request.query) as { error: Joi.ValidationError; value: requestType };
     if (error) {
-        throw error;
+        response.status(400).json(error);
+        return;
     }
     const { game, name, key } = value;
 
