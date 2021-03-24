@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-import mysql from 'mysql';
+import mysql, { MysqlError } from 'mysql';
 import crypto from 'crypto';
 import Chance from 'chance';
 import helmet from 'helmet';
@@ -27,6 +27,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const dbConnection = mysql.createConnection(process.env.JAWSDB_MARIA_URL || 'mysql://localhost:3306');
 const chance = new Chance();
 
+const STATUS_BAD_REQUEST = 400;
+const STATUS_OK = 200;
+const DEFAULT_TIMEOUT_MS = 6000000;
+
 // lista de jogadores à espera para jogarem
 const playerWaitingList = [] as Player[];
 
@@ -40,7 +44,7 @@ const regex = /^[a-z0-9_-]+$/i;
 let moveMatrix = [] as number[][];
 
 // conecção e selecção da base de dados
-dbConnection.connect((err) => {
+dbConnection.connect((err: MysqlError) => {
     if (err) {
         logger.error(`error connecting: ${err.stack ?? 'NO STACK'}`);
         return;
@@ -49,7 +53,9 @@ dbConnection.connect((err) => {
     logger.info(`connected as id ${dbConnection.threadId ?? 'NO ID'}`);
 });
 
-const server = app.listen(process.env.PORT || 9876, () => {
+const DEFAULT_SERVER_PORT = 9876;
+
+const server = app.listen(process.env.PORT || DEFAULT_SERVER_PORT, () => {
     const serverAddress = server.address() as AddressInfo;
     logger.info('Listening at http://%s:%s', serverAddress.address, serverAddress.port);
 });
@@ -131,25 +137,31 @@ function testKey(name: string, key: string, gameId: number): boolean {
 }
 
 function checkGameStart(gameId: number): boolean {
-    const players = [];
     if (games[gameId] === undefined) {
         return false;
-    } else {
-        for (const item of openConnections) {
-            if (item.gameId === gameId) {
-                players.push(item.playerName);
-            }
-        }
+    }
+    const players = gatherPlayersFrom(gameId);
 
-        if (
-            players.length === 2 &&
-            ((players[0] === games[gameId].player1 && players[1] === games[gameId].player2) ||
-                (players[0] === games[gameId].player2 && players[1] === games[gameId].player1))
-        ) {
-            return true;
+    return players.length === 2 && checkPair(gameId, players[0], players[1]);
+}
+
+function gatherPlayersFrom(gameId: number): string[] {
+    const players = [];
+
+    for (const item of openConnections) {
+        if (item.gameId === gameId) {
+            players.push(item.playerName);
         }
     }
-    return false;
+
+    return players;
+}
+
+function checkPair(gameId: number, player: string, adversary: string): boolean {
+    return (
+        (player === games[gameId].player1 && adversary === games[gameId].player2) ||
+        (player === games[gameId].player2 && adversary === games[gameId].player1)
+    );
 }
 
 // espalhar minas no início de um jogo
@@ -405,7 +417,7 @@ app.post('/register', (request, response) => {
 
     const { error, value } = bodySchema.validate(request.body) as { error: Joi.ValidationError; value: requestType };
     if (error) {
-        response.status(400).json(error);
+        response.status(STATUS_BAD_REQUEST).json(error);
         return;
     }
     const { name, pass } = value;
@@ -465,7 +477,7 @@ app.post('/ranking', (request, response) => {
 
     const { error, value } = bodySchema.validate(request.body) as { error: Joi.ValidationError; value: requestType };
     if (error) {
-        response.status(400).json(error);
+        response.status(STATUS_BAD_REQUEST).json(error);
         return;
     }
     const { level } = value;
@@ -499,7 +511,7 @@ app.post('/join', (request, response) => {
 
     const { error, value } = bodySchema.validate(request.body) as { error: Joi.ValidationError; value: requestType };
     if (error) {
-        response.status(400).json(error);
+        response.status(STATUS_BAD_REQUEST).json(error);
         return;
     }
     const { name, pass, group, level } = value;
@@ -557,7 +569,7 @@ app.post('/leave', (request, response) => {
 
     const { error, value } = bodySchema.validate(request.body) as { error: Joi.ValidationError; value: requestType };
     if (error) {
-        response.status(400).json(error);
+        response.status(STATUS_BAD_REQUEST).json(error);
         return;
     }
     const { game, name, key } = value;
@@ -584,7 +596,7 @@ app.post('/score', (request, response) => {
 
     const { error, value } = bodySchema.validate(request.body) as { error: Joi.ValidationError; value: requestType };
     if (error) {
-        response.status(400).json(error);
+        response.status(STATUS_BAD_REQUEST).json(error);
         return;
     }
     const { name, level } = value;
@@ -632,7 +644,7 @@ app.post('/notify', (request, response) => {
 
     const { error, value } = bodySchema.validate(request.body) as { error: Joi.ValidationError; value: requestType };
     if (error) {
-        response.status(400).json(error);
+        response.status(STATUS_BAD_REQUEST).json(error);
         return;
     }
     const { row, col, game, name, key } = value;
@@ -683,7 +695,7 @@ app.get('/update', (request, response) => {
 
     const { error, value } = bodySchema.validate(request.query) as { error: Joi.ValidationError; value: requestType };
     if (error) {
-        response.status(400).json(error);
+        response.status(STATUS_BAD_REQUEST).json(error);
         return;
     }
     const { game, name, key } = value;
@@ -692,9 +704,9 @@ app.get('/update', (request, response) => {
 
     if (regex.test(name) && testKey(name, key, gameId)) {
         // impedir que a conecção se feche
-        request.socket.setTimeout(6000000);
+        request.socket.setTimeout(DEFAULT_TIMEOUT_MS);
         // cabecalho da resposta
-        response.writeHead(200, {
+        response.writeHead(STATUS_OK, {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
             Connection: 'keep-alive',
