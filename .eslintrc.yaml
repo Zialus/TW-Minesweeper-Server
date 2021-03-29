@@ -6,14 +6,14 @@ extends:
   - 'plugin:@typescript-eslint/recommended'
   - 'plugin:@typescript-eslint/eslint-recommended'
   - 'plugin:@typescript-eslint/recommended-requiring-type-checking'
-  - 'plugin:unicorn/recommended'
+#  - 'plugin:unicorn/recommended'
   - 'plugin:sonarjs/recommended'
   - 'plugin:promise/recommended'
   - 'plugin:import/errors'
   - 'plugin:import/warnings'
   - 'plugin:import/typescript'
   - 'plugin:prettier/recommended'
-  - 'plugin:security/recommended'
+#  - 'plugin:security/recommended'
 parser: '@typescript-eslint/parser'
 plugins:
   - '@typescript-eslint'
@@ -24,4 +24,5 @@ parserOptions:
   project: "tsconfig.json"
   ecmaVersion: 2020
   sourceType: module
-rules: {}
+rules:
+    "@typescript-eslint/explicit-function-return-type": error
