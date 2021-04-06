@@ -423,49 +423,50 @@ app.post('/register', (request, response) => {
     const { name, pass } = value;
 
     // verifica se o nome obedece à regex
-    if (regex.test(name)) {
-        // query à base de dados
-        // para descobrir se o utilizador já está registado
-        dbConnection.query('SELECT * FROM Users WHERE name = ?', [name], (err, result) => {
-            if (err) {
-                logger.info(err);
-            }
-            // utilizador já existe
-            if (result.length > 0) {
-                logger.info('User exists');
-                // resultado da query
-                const user = result[0];
-                // verificar se a password está correta
-                if (createHash(pass + user.salt) === user.pass) {
-                    logger.info('Correct Password');
-                    response.json({});
-                } else {
-                    logger.info('Incorrect Password');
-                    response.json({ error: 'Utilizador registado com senha diferente' });
-                }
-            }
-            // utilizador nao existe
-            else {
-                logger.info('New user');
-                // gerar salt e hash
-                const salt = chance.string({ length: 4 });
-                const hash = createHash(pass + salt);
-                // guardar na base de dados
-                const post = { name, pass: hash, salt };
-                dbConnection.query('INSERT INTO Users SET ?', [post], (err2, result2) => {
-                    if (err2) {
-                        logger.info('Failed while creating new user: %o', err2);
-                        response.json({ error: 'Failed to create new user' });
-                    } else {
-                        logger.info('Created new user: %o', result2);
-                        response.json({});
-                    }
-                });
-            }
-        });
-    } else {
+    if (!regex.test(name)) {
         response.json({ error: 'Nome de utilizador inválido!' });
+        return;
     }
+
+    // query à base de dados
+    // para descobrir se o utilizador já está registado
+    dbConnection.query('SELECT * FROM Users WHERE name = ?', [name], (err, result) => {
+        if (err) {
+            logger.info(err);
+        }
+        // utilizador já existe
+        if (result.length > 0) {
+            logger.info('User exists');
+            // resultado da query
+            const user = result[0];
+            // verificar se a password está correta
+            if (createHash(pass + user.salt) === user.pass) {
+                logger.info('Correct Password');
+                response.json({});
+            } else {
+                logger.info('Incorrect Password');
+                response.json({ error: 'Utilizador registado com senha diferente' });
+            }
+        }
+        // utilizador nao existe
+        else {
+            logger.info('New user');
+            // gerar salt e hash
+            const salt = chance.string({ length: 4 });
+            const hash = createHash(pass + salt);
+            // guardar na base de dados
+            const post = { name, pass: hash, salt };
+            dbConnection.query('INSERT INTO Users SET ?', [post], (err2, result2) => {
+                if (err2) {
+                    logger.info('Failed while creating new user: %o', err2);
+                    response.json({ error: 'Failed to create new user' });
+                } else {
+                    logger.info('Created new user: %o', result2);
+                    response.json({});
+                }
+            });
+        }
+    });
 });
 
 app.post('/ranking', (request, response) => {
@@ -516,46 +517,45 @@ app.post('/join', (request, response) => {
     }
     const { name, pass, group, level } = value;
 
-    if (regex.test(name)) {
-        dbConnection.query('SELECT * FROM Users WHERE name = ?', [name], (err, result) => {
-            if (err) {
-                logger.info(err);
-            }
-            // utilizador já existe
-            if (result.length > 0) {
-                // resultado da query
-                const user = result[0];
-                // verificar se a password está correta
-                if (createHash(pass + user.salt) === user.pass) {
-                    let gameId;
-                    const p1 = {} as Player;
-                    p1.name = name;
-                    p1.group = group;
-                    p1.level = level;
-                    p1.key = createHash(chance.string({ length: 8 }));
-
-                    const p2 = findOpponent(p1);
-
-                    if (p2 === undefined) {
-                        gameVar++;
-                        gameId = gameVar;
-                        p1.game = gameId;
-                        playerWaitingList.push(p1); // adicona p1 ao fim da fila
-                        logger.info('%s joined waiting list.\n Waiting list: %o', p1.name, playerWaitingList);
-                    } else {
-                        gameId = p2.game;
-                        startGame(p2.level, p2.game, p1.key, p2.key, p1.name, p2.name);
-                        logger.info(
-                            `Started game: ${p1.name} vs ${p2.name} -- Game number:${gameId} -- Level:${p2.level}`
-                        );
-                    }
-                    response.json({ key: p1.key, game: gameId });
-                }
-            }
-        });
-    } else {
+    if (!regex.test(name)) {
         response.json({ error: 'Jogada inválida!' });
+        return;
     }
+
+    dbConnection.query('SELECT * FROM Users WHERE name = ?', [name], (err, result) => {
+        if (err) {
+            logger.info(err);
+        }
+        // utilizador já existe
+        if (result.length > 0) {
+            // resultado da query
+            const user = result[0];
+            // verificar se a password está correta
+            if (createHash(pass + user.salt) === user.pass) {
+                let gameId;
+                const p1 = {} as Player;
+                p1.name = name;
+                p1.group = group;
+                p1.level = level;
+                p1.key = createHash(chance.string({ length: 8 }));
+
+                const p2 = findOpponent(p1);
+
+                if (p2 === undefined) {
+                    gameVar++;
+                    gameId = gameVar;
+                    p1.game = gameId;
+                    playerWaitingList.push(p1); // adicona p1 ao fim da fila
+                    logger.info('%s joined waiting list.\n Waiting list: %o', p1.name, playerWaitingList);
+                } else {
+                    gameId = p2.game;
+                    startGame(p2.level, p2.game, p1.key, p2.key, p1.name, p2.name);
+                    logger.info(`Started game: ${p1.name} vs ${p2.name} -- Game number:${gameId} -- Level:${p2.level}`);
+                }
+                response.json({ key: p1.key, game: gameId });
+            }
+        }
+    });
 });
 
 app.post('/leave', (request, response) => {
@@ -702,35 +702,36 @@ app.get('/update', (request, response) => {
 
     const gameId = parseInt(game, 10);
 
-    if (regex.test(name) && testKey(name, key, gameId)) {
-        // impedir que a conecção se feche
-        request.socket.setTimeout(DEFAULT_TIMEOUT_MS);
-        // cabecalho da resposta
-        response.writeHead(STATUS_OK, {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            Connection: 'keep-alive',
-        });
-        response.write('\n');
-        // adicionar às conecções abertas
-        const connection: Connection = { playerName: name, gameId, connection: response };
-        openConnections.push(connection);
-        logger.info(`Added player: ${name} to connections -- Game: ${gameId}`);
-
-        if (checkGameStart(gameId)) {
-            sendStartEvent(gameId);
-        }
-
-        // no caso do cliente terminar a conecção, remover da lista
-        request.on('close', () => {
-            for (let i = 0; i < openConnections.length; i++) {
-                if (openConnections[i].playerName === name) {
-                    openConnections.splice(i, 1);
-                    break;
-                }
-            }
-        });
-    } else {
+    if (!regex.test(name) || !testKey(name, key, gameId)) {
         response.json({ error: 'Erro! Não foi possivel validar o pedido' });
+        return;
     }
+
+    // impedir que a conecção se feche
+    request.socket.setTimeout(DEFAULT_TIMEOUT_MS);
+    // cabecalho da resposta
+    response.writeHead(STATUS_OK, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+    });
+    response.write('\n');
+    // adicionar às conecções abertas
+    const connection: Connection = { playerName: name, gameId, connection: response };
+    openConnections.push(connection);
+    logger.info(`Added player: ${name} to connections -- Game: ${gameId}`);
+
+    if (checkGameStart(gameId)) {
+        sendStartEvent(gameId);
+    }
+
+    // no caso do cliente terminar a conecção, remover da lista
+    request.on('close', () => {
+        for (let i = 0; i < openConnections.length; i++) {
+            if (openConnections[i].playerName === name) {
+                openConnections.splice(i, 1);
+                break;
+            }
+        }
+    });
 });
