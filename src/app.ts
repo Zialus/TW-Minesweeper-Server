@@ -73,7 +73,7 @@ function findOpponent(p1: Player): Player | undefined {
     return p2;
 }
 
-function getOpponent(item: Connection) {
+function getOpponent(item: Connection): string {
     if (item.playerName === games[item.gameId].player1) {
         return games[item.gameId].player2;
     } else {
@@ -81,7 +81,7 @@ function getOpponent(item: Connection) {
     }
 }
 
-function sendStartEvent(gameId: number) {
+function sendStartEvent(gameId: number): void {
     logger.info('Sent Event:');
 
     for (const item of openConnections) {
@@ -93,7 +93,7 @@ function sendStartEvent(gameId: number) {
     }
 }
 
-function sendMoveEvent(gameId: number, move: Move) {
+function sendMoveEvent(gameId: number, move: Move): void {
     logger.info('Sent Event:');
 
     for (const item of openConnections) {
@@ -105,7 +105,7 @@ function sendMoveEvent(gameId: number, move: Move) {
     }
 }
 
-function sendEndEvent(gameId: number, move: Move) {
+function sendEndEvent(gameId: number, move: Move): void {
     logger.info('Sent Event:');
 
     for (const item of openConnections) {
@@ -254,7 +254,7 @@ function countNeighbours(game: Game, x: number, y: number): number {
     return count;
 }
 
-function endGame(gameId: number, x: number, y: number, winningPlayer: string, losingPlayer: string) {
+function endGame(gameId: number, x: number, y: number, winningPlayer: string, losingPlayer: string): void {
     sendEndEvent(gameId, {
         name: games[gameId].turn,
         cells: [[x + 1, y + 1, -1]],
@@ -617,11 +617,11 @@ app.post('/score', (request, response) => {
     }
 });
 
-function positionWithinTable(row: number, game: number, col: number) {
+function positionWithinTable(row: number, game: number, col: number): boolean {
     return row > 0 && row <= games[game].boardHeight && col > 0 && col <= games[game].boardWidth;
 }
 
-function validNameAndKey(name: string, key: string, game: number) {
+function validNameAndKey(name: string, key: string, game: number): boolean {
     return regex.test(name) && testKey(name, key, game);
 }
 
