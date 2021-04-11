@@ -264,8 +264,8 @@ function endGame(gameId: number, x: number, y: number, winningPlayer: string, lo
 }
 
 function clickPop(x: number, y: number, gameId: number): void {
-    // se a jogada for uma mina
-    if (games[gameId].board[y][x] === -1) {
+    const mineWasFound = games[gameId].board[y][x] === -1;
+    if (mineWasFound) {
         games[gameId].popped[y][x] = true;
         // adicionar ao score do jogador
         if (games[gameId].player1 === games[gameId].turn) {
@@ -285,9 +285,7 @@ function clickPop(x: number, y: number, gameId: number): void {
                 turn: games[gameId].turn,
             });
         }
-    }
-    // se for uma jogada normal
-    else {
+    } else {
         // limpar as celulas da jogada anterior
         moveMatrix = [];
         // função recursiva
@@ -433,8 +431,8 @@ app.post('/register', (request, response) => {
         if (err) {
             logger.info(err);
         }
-        // utilizador já existe
-        if (result.length > 0) {
+        const userExists = result.length > 0;
+        if (userExists) {
             logger.info('User exists');
             // resultado da query
             const user = result[0];
@@ -446,9 +444,7 @@ app.post('/register', (request, response) => {
                 logger.info('Incorrect Password');
                 response.json({ error: 'Utilizador registado com senha diferente' });
             }
-        }
-        // utilizador nao existe
-        else {
+        } else {
             logger.info('New user');
             // gerar salt e hash
             const salt = chance.string({ length: 4 });
