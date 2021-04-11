@@ -24,7 +24,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const dbConnection = mysql.createConnection(process.env.JAWSDB_MARIA_URL || 'mysql://localhost:3306');
+const dbConnection = mysql.createConnection(process.env['JAWSDB_MARIA_URL'] || 'mysql://localhost:3306');
 const chance = new Chance();
 
 const STATUS_BAD_REQUEST = 400;
@@ -55,7 +55,7 @@ dbConnection.connect((err: MysqlError) => {
 
 const DEFAULT_SERVER_PORT = 9876;
 
-const server = app.listen(process.env.PORT || DEFAULT_SERVER_PORT, () => {
+const server = app.listen(process.env['PORT'] || DEFAULT_SERVER_PORT, () => {
     const serverAddress = server.address() as AddressInfo;
     logger.info('Listening at http://%s:%s', serverAddress.address, serverAddress.port);
 });
