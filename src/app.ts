@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import bodyParser from 'body-parser';
 import mysql, { MysqlError } from 'mysql';
 import crypto from 'crypto';
 import Chance from 'chance';
@@ -21,8 +20,8 @@ const logger = pino({
 const app = express();
 app.use(helmet());
 app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 const dbConnection = mysql.createConnection(process.env['JAWSDB_MARIA_URL'] || 'mysql://localhost:3306');
 const chance = new Chance();
