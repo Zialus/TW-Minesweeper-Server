@@ -1,9 +1,0 @@
-{
-    "defaultSeverity": "error",
-    "extends": [
-        "tslint:recommended"
-    ],
-    "jsRules": {},
-    "rules": { "curly": true, "prefer-template": true },
-    "rulesDirectory": []
-}
