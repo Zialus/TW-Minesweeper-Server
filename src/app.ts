@@ -10,10 +10,13 @@ import { Connection } from './Connection';
 import Joi from 'joi';
 
 const logger = pino({
-    prettyPrint: {
-        levelFirst: true,
-        translateTime: true,
-        colorize: true,
+    transport: {
+        target: 'pino-pretty',
+        options: {
+            levelFirst: true,
+            translateTime: true,
+            colorize: true,
+        },
     },
 });
 
