@@ -62,16 +62,22 @@ const server = app.listen(process.env['PORT'] || DEFAULT_SERVER_PORT, () => {
     logger.info('Listening at http://%s:%s', serverAddress.address, serverAddress.port);
 });
 
-// retorna o 1º oponente válido para p1 se existir se não retorna undefined e adiciona p1 à lista
+/**
+ * Returns the first valid opponent for player1, if he exists, otherwise returns undefined.
+ * The calling side will need to add player1 to the waiting list
+ */
 function findOpponent(p1: Player): Player | undefined {
-    let p2;
-    for (let i = 0; i < playerWaitingList.length; i++) {
-        if (playerWaitingList[i].level === p1.level && playerWaitingList[i].group === p1.group) {
-            p2 = playerWaitingList[i];
-            playerWaitingList.splice(i, 1); // remove elemento da lista
-            break;
+    let p2: Player | undefined = undefined;
+
+    playerWaitingList.some((playerWaiting, index) => {
+        if (playerWaiting.level === p1.level && playerWaiting.group === p1.group) {
+            playerWaitingList.splice(index, 1); // remove element from the list
+            p2 = playerWaiting;
+            return true; // found opponent, break out of the loop
         }
-    }
+        return false; // didnt find opponent, keep loop going
+    });
+
     return p2;
 }
 
@@ -144,7 +150,7 @@ function checkGameStart(gameId: number): boolean {
     }
     const players = gatherPlayersFrom(gameId);
 
-    return players.length === 2 && checkPair(gameId, players[0], players[1]);
+    return !!players[0] && !!players[1] && checkPair(gameId, players[0], players[1]);
 }
 
 function gatherPlayersFrom(gameId: number): string[] {
@@ -573,13 +579,15 @@ app.post('/leave', (request, response) => {
     const { game, name, key } = value;
 
     if (validNameAndKey(name, key, game)) {
-        for (let i = 0; i < playerWaitingList.length; i++) {
-            if (playerWaitingList[i].name === name) {
-                playerWaitingList.splice(i, 1);
+        playerWaitingList.some((playerWaiting, index) => {
+            if (playerWaiting.name === name) {
+                playerWaitingList.splice(index, 1);
                 logger.info('%s left waiting list.\n Waiting list: %o', name, playerWaitingList);
-                break;
+                return true;
             }
-        }
+            return false;
+        });
+
         response.json({});
     }
 });
@@ -725,11 +733,12 @@ app.get('/update', (request, response) => {
 
     // no caso do cliente terminar a conecção, remover da lista
     request.on('close', () => {
-        for (let i = 0; i < openConnections.length; i++) {
-            if (openConnections[i].playerName === name) {
-                openConnections.splice(i, 1);
-                break;
+        openConnections.some((connection, index) => {
+            if (connection.playerName === name) {
+                openConnections.splice(index, 1);
+                return true;
             }
-        }
+            return false;
+        });
     });
 });
