@@ -8,6 +8,8 @@ import pino from 'pino';
 import { AddressInfo } from 'net';
 import { Connection } from './Connection';
 import Joi from 'joi';
+import { User } from './User';
+import { Ranking } from './Ranking';
 
 const logger = pino({
     transport: {
@@ -344,7 +346,9 @@ function expandPop(x: number, y: number, gameId: number): void {
 }
 
 function increaseScore(name: string, level: string): void {
-    dbConnection.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], (err, result) => {
+    dbConnection.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], (err, rows) => {
+        const result = rows as Ranking[];
+
         if (err) {
             logger.info(err);
         }
@@ -375,7 +379,9 @@ function increaseScore(name: string, level: string): void {
 }
 
 function decreaseScore(name: string, level: string): void {
-    dbConnection.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], (err, result) => {
+    dbConnection.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], (err, rows) => {
+        const result = rows as Ranking[];
+
         if (err) {
             logger.info(err);
         }
@@ -439,7 +445,8 @@ app.post('/register', (request, response) => {
 
     // query à base de dados
     // para descobrir se o utilizador já está registado
-    dbConnection.query('SELECT * FROM Users WHERE name = ?', [name], (err, result) => {
+    dbConnection.query('SELECT * FROM Users WHERE name = ?', [name], (err, rows) => {
+        const result = rows as User[];
         if (err) {
             logger.info(err);
         }
@@ -496,7 +503,8 @@ app.post('/ranking', (request, response) => {
     dbConnection.query(
         'SELECT * FROM Rankings WHERE level = ? ORDER BY score DESC, timestamp ASC LIMIT 10;',
         [level],
-        (err, result) => {
+        (err, rows) => {
+            const result = rows as Ranking[];
             if (err) {
                 logger.info(err);
             }
@@ -535,7 +543,8 @@ app.post('/join', (request, response) => {
         return;
     }
 
-    dbConnection.query('SELECT * FROM Users WHERE name = ?', [name], (err, result) => {
+    dbConnection.query('SELECT * FROM Users WHERE name = ?', [name], (err, rows) => {
+        const result = rows as User[];
         if (err) {
             logger.info(err);
         }
@@ -623,7 +632,8 @@ app.post('/score', (request, response) => {
     const { name, level } = value;
 
     if (regex.test(name)) {
-        dbConnection.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], (err, result) => {
+        dbConnection.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], (err, rows) => {
+            const result = rows as Ranking[];
             if (err) {
                 logger.info(err);
             }
