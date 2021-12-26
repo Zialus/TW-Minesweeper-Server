@@ -63,6 +63,8 @@ dbConnection.connect((err: MysqlError) => {
 
 const DEFAULT_SERVER_PORT = 9876;
 
+const SELECT_FROM_RANKINGS_WHERE_NAME_AND_LEVEL = 'SELECT * FROM Rankings WHERE name = ? && level = ?';
+
 const server = app.listen(process.env['PORT'] || DEFAULT_SERVER_PORT, () => {
     const serverAddress = server.address() as AddressInfo;
     logger.info('Listening at http://%s:%s', serverAddress.address, serverAddress.port);
@@ -96,7 +98,7 @@ function getOpponent(item: Connection): string {
 }
 
 function sendStartEvent(gameId: number): void {
-    logger.info('Sent Event:');
+    logger.info('Start Sending Start Event...');
 
     for (const item of openConnections) {
         if (item.gameId === gameId) {
@@ -105,10 +107,12 @@ function sendStartEvent(gameId: number): void {
             logger.info(`${data}\n\n`);
         }
     }
+
+    logger.info('Finished Sending Start Event.');
 }
 
 function sendMoveEvent(gameId: number, move: Move): void {
-    logger.info('Sent Event:');
+    logger.info('Start Sending Move Event...');
 
     for (const item of openConnections) {
         if (item.gameId === gameId) {
@@ -117,10 +121,12 @@ function sendMoveEvent(gameId: number, move: Move): void {
             logger.info(`${data}\n\n`);
         }
     }
+
+    logger.info('Finished Sending Move Event.');
 }
 
 function sendEndEvent(gameId: number, move: Move): void {
-    logger.info('Sent Event:');
+    logger.info('Start Sending End Event...');
 
     for (const item of openConnections) {
         if (item.gameId === gameId) {
@@ -129,6 +135,8 @@ function sendEndEvent(gameId: number, move: Move): void {
             logger.info(`${data}\n\n`);
         }
     }
+
+    logger.info('Finished Sending End Event.');
 }
 
 function keyFoundOnActiveGame(gameId: number, playerName: string, playerKey: string): boolean {
@@ -355,7 +363,7 @@ function expandPop(x: number, y: number, gameId: number): void {
 }
 
 function increaseScore(name: string, level: string): void {
-    dbConnection.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], (err, rows) => {
+    dbConnection.query(SELECT_FROM_RANKINGS_WHERE_NAME_AND_LEVEL, [name, level], (err, rows) => {
         const result = rows as Ranking[];
 
         if (err) {
@@ -388,7 +396,7 @@ function increaseScore(name: string, level: string): void {
 }
 
 function decreaseScore(name: string, level: string): void {
-    dbConnection.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], (err, rows) => {
+    dbConnection.query(SELECT_FROM_RANKINGS_WHERE_NAME_AND_LEVEL, [name, level], (err, rows) => {
         const result = rows as Ranking[];
 
         if (err) {
@@ -427,7 +435,7 @@ function createHash(str: string): string {
     return crypto.createHash('md5').update(str).digest('hex');
 }
 
-// função de registo/login
+// Deals with both registration and login
 app.post('/register', (request, response) => {
     type requestType = { name: string; pass: string };
 
@@ -440,21 +448,18 @@ app.post('/register', (request, response) => {
         error: Joi.ValidationError | undefined;
         value: requestType;
     };
-
     if (error) {
         response.status(STATUS_BAD_REQUEST).json(error);
         return;
     }
     const { name, pass } = value;
 
-    // verifica se o nome obedece à regex
+    // Checks if name follows regex rules
     if (!regex.test(name)) {
         response.json({ error: 'Nome de utilizador inválido!' });
         return;
     }
 
-    // query à base de dados
-    // para descobrir se o utilizador já está registado
     dbConnection.query('SELECT * FROM Users WHERE name = ?', [name], (err, rows) => {
         const result = rows as User[];
         if (err) {
@@ -463,10 +468,9 @@ app.post('/register', (request, response) => {
         const userExists = result.length > 0;
         if (userExists) {
             logger.info('User exists');
-            // resultado da query
             const user = result[0];
-            // verificar se a password está correta
-            if (createHash(pass + user.salt) === user.pass) {
+            const checkIfPasswordIsCorrect = createHash(pass + user.salt) === user.pass;
+            if (checkIfPasswordIsCorrect) {
                 logger.info('Correct Password');
                 response.json({});
             } else {
@@ -475,10 +479,9 @@ app.post('/register', (request, response) => {
             }
         } else {
             logger.info('New user');
-            // gerar salt e hash
             const salt = chance.string({ length: 4 });
             const hash = createHash(pass + salt);
-            // guardar na base de dados
+
             const post = { name, pass: hash, salt };
             dbConnection.query('INSERT INTO Users SET ?', [post], (err2, result2) => {
                 if (err2) {
@@ -642,7 +645,7 @@ app.post('/score', (request, response) => {
     const { name, level } = value;
 
     if (regex.test(name)) {
-        dbConnection.query('SELECT * FROM Rankings WHERE name = ? && level = ?', [name, level], (err, rows) => {
+        dbConnection.query(SELECT_FROM_RANKINGS_WHERE_NAME_AND_LEVEL, [name, level], (err, rows) => {
             const result = rows as Ranking[];
             if (err) {
                 logger.info(err);
