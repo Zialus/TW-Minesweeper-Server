@@ -6,10 +6,14 @@ import Chance from 'chance';
 import helmet from 'helmet';
 import pino from 'pino';
 import { AddressInfo } from 'net';
-import { Connection } from './Connection';
 import Joi from 'joi';
+
+import { Connection } from './Connection';
 import { User } from './User';
 import { Ranking } from './Ranking';
+import { Player } from './Player';
+import { Game } from './Game';
+import { Move } from './Move';
 
 const logger = pino({
     transport: {

@@ -1,4 +1,4 @@
-export enum EventType {
+export const enum EventType {
     START,
     MOVE,
     END,

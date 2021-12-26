@@ -1,4 +1,4 @@
-interface Game {
+export interface Game {
     level: string;
     mines: number;
     board: number[][];
