@@ -743,7 +743,7 @@ app.get('/update', (request, response) => {
 
     const gameId = parseInt(game, 10);
 
-    if (!regex.test(name) || !testKey(name, key, gameId)) {
+    if (!validNameAndKey(name, key, gameId)) {
         response.json({ error: 'Erro! Não foi possivel validar o pedido' });
         return;
     }
