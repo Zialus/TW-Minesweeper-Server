@@ -89,11 +89,11 @@ function findOpponent(p1: Player): Player | undefined {
     return p2;
 }
 
-function getOpponent(item: Connection): string {
-    if (item.playerName === games[item.gameId].player1) {
-        return games[item.gameId].player2;
+function getOpponent(playerName: string, game: Game): string {
+    if (playerName === game.player1) {
+        return game.player2;
     } else {
-        return games[item.gameId].player1;
+        return game.player1;
     }
 }
 
@@ -102,7 +102,14 @@ function sendStartEvent(gameId: number): void {
 
     for (const item of openConnections) {
         if (item.gameId === gameId) {
-            const data = JSON.stringify({ opponent: getOpponent(item), turn: games[gameId].turn });
+            const game = games[gameId];
+
+            if (game === undefined) {
+                logger.error('Game with id %s not Found', gameId);
+                return;
+            }
+
+            const data = JSON.stringify({ opponent: getOpponent(item.playerName, game), turn: game.turn });
             item.connection.write(`data: ${data}\n\n`);
             logger.info(`${data}\n\n`);
         }
@@ -139,10 +146,10 @@ function sendEndEvent(gameId: number, move: Move): void {
     logger.info('Finished Sending End Event.');
 }
 
-function keyFoundOnActiveGame(gameId: number, playerName: string, playerKey: string): boolean {
+function keyFoundOnActiveGame(game: Game, playerName: string, playerKey: string): boolean {
     return (
-        (games[gameId].player1 === playerName && games[gameId].p1key === playerKey) ||
-        (games[gameId].player2 === playerName && games[gameId].p2key === playerKey)
+        (game.player1 === playerName && game.p1key === playerKey) ||
+        (game.player2 === playerName && game.p2key === playerKey)
     );
 }
 
@@ -156,20 +163,22 @@ function keyFoundOnWaitingList(playerName: string, playerKey: string): boolean {
 }
 
 function testKey(playerName: string, playerKey: string, gameId: number): boolean {
-    if (games[gameId] === undefined) {
+    const game = games[gameId];
+    if (game === undefined) {
         return keyFoundOnWaitingList(playerName, playerKey);
     } else {
-        return keyFoundOnActiveGame(gameId, playerName, playerKey);
+        return keyFoundOnActiveGame(game, playerName, playerKey);
     }
 }
 
 function checkGameStart(gameId: number): boolean {
-    if (games[gameId] === undefined) {
+    const game = games[gameId];
+    if (game === undefined) {
         return false;
     }
     const players = gatherPlayersFrom(gameId);
 
-    return !!players[0] && !!players[1] && checkPair(gameId, players[0], players[1]);
+    return !!players[0] && !!players[1] && checkPair(game, players[0], players[1]);
 }
 
 function gatherPlayersFrom(gameId: number): string[] {
@@ -184,10 +193,10 @@ function gatherPlayersFrom(gameId: number): string[] {
     return players;
 }
 
-function checkPair(gameId: number, player: string, adversary: string): boolean {
+function checkPair(game: Game, player: string, adversary: string): boolean {
     return (
-        (player === games[gameId].player1 && adversary === games[gameId].player2) ||
-        (player === games[gameId].player2 && adversary === games[gameId].player1)
+        (player === game.player1 && adversary === game.player2) ||
+        (player === game.player2 && adversary === game.player1)
     );
 }
 
@@ -282,58 +291,70 @@ function countNeighbours(game: Game, x: number, y: number): number {
 }
 
 function endGame(gameId: number, x: number, y: number, winningPlayer: string, losingPlayer: string): void {
+    const game = games[gameId];
+    if (game === undefined) {
+        logger.error('Game with id %s not Found', gameId);
+        return;
+    }
+
     sendEndEvent(gameId, {
-        name: games[gameId].turn,
+        name: game.turn,
         cells: [[x + 1, y + 1, -1]],
         winner: winningPlayer,
     });
-    increaseScore(winningPlayer, games[gameId].level);
-    decreaseScore(losingPlayer, games[gameId].level);
+    increaseScore(winningPlayer, game.level);
+    decreaseScore(losingPlayer, game.level);
 }
 
 function clickPop(x: number, y: number, gameId: number): void {
-    const mineWasFound = games[gameId].board[y][x] === -1;
+    const game = games[gameId];
+    if (game === undefined) {
+        logger.error('Game with id %s not Found', gameId);
+        return;
+    }
+
+    const mineWasFound = game.board[y][x] === -1;
     if (mineWasFound) {
-        games[gameId].popped[y][x] = true;
+        game.popped[y][x] = true;
         // adicionar ao score do jogador
-        if (games[gameId].player1 === games[gameId].turn) {
-            games[gameId].p1score++;
+        if (game.player1 === game.turn) {
+            game.p1score++;
         } else {
-            games[gameId].p2score++;
+            game.p2score++;
         }
         // se o score for maior que metade das bombas no jogo, vitória
-        if (games[gameId].p1score >= games[gameId].mines / 2) {
-            endGame(gameId, x, y, games[gameId].player1, games[gameId].player2);
-        } else if (games[gameId].p2score >= games[gameId].mines / 2) {
-            endGame(gameId, x, y, games[gameId].player2, games[gameId].player1);
+        if (game.p1score >= game.mines / 2) {
+            endGame(gameId, x, y, game.player1, game.player2);
+        } else if (game.p2score >= game.mines / 2) {
+            endGame(gameId, x, y, game.player2, game.player1);
         } else {
             sendMoveEvent(gameId, {
-                name: games[gameId].turn,
+                name: game.turn,
                 cells: [[x + 1, y + 1, -1]],
-                turn: games[gameId].turn,
+                turn: game.turn,
             });
         }
     } else {
         // limpar as celulas da jogada anterior
         moveMatrix = [];
         // função recursiva
-        expandPop(x, y, gameId);
-        const p = games[gameId].turn;
+        expandPop(x, y, game);
+        const p = game.turn;
         // determinar o próximo turno
-        if (games[gameId].turn === games[gameId].player1) {
-            games[gameId].turn = games[gameId].player2;
+        if (game.turn === game.player1) {
+            game.turn = game.player2;
         } else {
-            games[gameId].turn = games[gameId].player1;
+            game.turn = game.player1;
         }
         // enviar jogada aos jogadores
-        sendMoveEvent(gameId, { name: p, cells: moveMatrix, turn: games[gameId].turn });
+        sendMoveEvent(gameId, { name: p, cells: moveMatrix, turn: game.turn });
     }
 }
 
-function expandPop(x: number, y: number, gameId: number): void {
-    games[gameId].popped[y][x] = true;
+function expandPop(x: number, y: number, game: Game): void {
+    game.popped[y][x] = true;
     // adicionar casa às destapadas nesta jogada
-    moveMatrix.push([x + 1, y + 1, games[gameId].board[y][x]]);
+    moveMatrix.push([x + 1, y + 1, game.board[y][x]]);
     let startY = y;
     let startX = x;
     let limitY = y;
@@ -342,20 +363,20 @@ function expandPop(x: number, y: number, gameId: number): void {
     if (x - 1 >= 0) {
         startX = x - 1;
     }
-    if (x + 1 < games[gameId].boardWidth) {
+    if (x + 1 < game.boardWidth) {
         limitX = x + 1;
     }
     if (y - 1 >= 0) {
         startY = y - 1;
     }
-    if (y + 1 < games[gameId].boardHeight) {
+    if (y + 1 < game.boardHeight) {
         limitY = y + 1;
     }
-    if (games[gameId].board[y][x] === 0) {
+    if (game.board[y][x] === 0) {
         for (let i = startY; i <= limitY; i++) {
             for (let j = startX; j <= limitX; j++) {
-                if (!games[gameId].popped[i][j]) {
-                    expandPop(j, i, gameId);
+                if (!game.popped[i][j]) {
+                    expandPop(j, i, game);
                 }
             }
         }
@@ -403,7 +424,7 @@ function decreaseScore(name: string, level: string): void {
             logger.info(err);
         }
 
-        if (result.length > 0) {
+        if (result.length > 0 && result[0]) {
             if (result[0].score > 0) {
                 dbConnection.query(
                     'UPDATE Rankings SET score = score - 1 WHERE name = ? && level = ?',
@@ -465,8 +486,7 @@ app.post('/register', (request, response) => {
         if (err) {
             logger.info(err);
         }
-        const userExists = result.length > 0;
-        if (userExists) {
+        if (result.length > 0 && result[0]) {
             logger.info('User exists');
             const user = result[0];
             const checkIfPasswordIsCorrect = createHash(pass + user.salt) === user.pass;
@@ -562,7 +582,7 @@ app.post('/join', (request, response) => {
             logger.info(err);
         }
         // utilizador já existe
-        if (result.length > 0) {
+        if (result.length > 0 && result[0]) {
             // resultado da query
             const user = result[0];
             // verificar se a password está correta
@@ -650,7 +670,7 @@ app.post('/score', (request, response) => {
             if (err) {
                 logger.info(err);
             }
-            if (result.length > 0) {
+            if (result.length > 0 && result[0]) {
                 response.json({ score: result[0].score });
             } else {
                 response.json({ score: 0 });
@@ -661,8 +681,8 @@ app.post('/score', (request, response) => {
     }
 });
 
-function positionWithinTable(row: number, game: number, col: number): boolean {
-    return row > 0 && row <= games[game].boardHeight && col > 0 && col <= games[game].boardWidth;
+function positionWithinTable(row: number, game: Game, col: number): boolean {
+    return row > 0 && row <= game.boardHeight && col > 0 && col <= game.boardWidth;
 }
 
 function validNameAndKey(name: string, key: string, game: number): boolean {
@@ -703,20 +723,26 @@ app.post('/notify', (request, response) => {
         return;
     }
 
+    const gameInGamesList = games[game];
+    if (gameInGamesList === undefined) {
+        logger.error('Game with id %s not Found', game);
+        return;
+    }
+
     // verifica se a jogada é válida (turno)
-    if (name !== games[game].turn) {
+    if (name !== gameInGamesList.turn) {
         response.json({ error: 'Não é o seu turno!' });
         return;
     }
 
     // verifica os limites da tabela
-    if (!positionWithinTable(row, game, col)) {
+    if (!positionWithinTable(row, gameInGamesList, col)) {
         response.json({ error: 'Jogada inválida!' });
         return;
     }
 
     // célula já destapada
-    if (games[game].popped[col - 1][row - 1]) {
+    if (gameInGamesList.popped[col - 1][row - 1]) {
         response.json({ error: `Posição ${row},${col} já destapada` });
         return;
     }
