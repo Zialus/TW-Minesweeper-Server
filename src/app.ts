@@ -436,12 +436,13 @@ app.post('/register', (request, response) => {
         pass: Joi.string().required().allow(''),
     });
 
-    const { warning, value } = bodySchema.validate(request.body) as {
-        warning: Joi.ValidationError;
+    const { error, value } = bodySchema.validate(request.body) as {
+        error: Joi.ValidationError | undefined;
         value: requestType;
     };
-    if (warning) {
-        response.status(STATUS_BAD_REQUEST).json(warning);
+
+    if (error) {
+        response.status(STATUS_BAD_REQUEST).json(error);
         return;
     }
     const { name, pass } = value;
@@ -499,12 +500,12 @@ app.post('/ranking', (request, response) => {
         level: Joi.string().required(),
     });
 
-    const { warning, value } = bodySchema.validate(request.body) as {
-        warning: Joi.ValidationError;
+    const { error, value } = bodySchema.validate(request.body) as {
+        error: Joi.ValidationError | undefined;
         value: requestType;
     };
-    if (warning) {
-        response.status(STATUS_BAD_REQUEST).json(warning);
+    if (error) {
+        response.status(STATUS_BAD_REQUEST).json(error);
         return;
     }
     const { level } = value;
@@ -537,12 +538,12 @@ app.post('/join', (request, response) => {
         level: Joi.string().required(),
     });
 
-    const { warning, value } = bodySchema.validate(request.body) as {
-        warning: Joi.ValidationError;
+    const { error, value } = bodySchema.validate(request.body) as {
+        error: Joi.ValidationError | undefined;
         value: requestType;
     };
-    if (warning) {
-        response.status(STATUS_BAD_REQUEST).json(warning);
+    if (error) {
+        response.status(STATUS_BAD_REQUEST).json(error);
         return;
     }
     const { name, pass, group, level } = value;
@@ -598,12 +599,12 @@ app.post('/leave', (request, response) => {
         key: Joi.string().required(),
     });
 
-    const { warning, value } = bodySchema.validate(request.body) as {
-        warning: Joi.ValidationError;
+    const { error, value } = bodySchema.validate(request.body) as {
+        error: Joi.ValidationError | undefined;
         value: requestType;
     };
-    if (warning) {
-        response.status(STATUS_BAD_REQUEST).json(warning);
+    if (error) {
+        response.status(STATUS_BAD_REQUEST).json(error);
         return;
     }
     const { game, name, key } = value;
@@ -630,12 +631,12 @@ app.post('/score', (request, response) => {
         level: Joi.string().required(),
     });
 
-    const { warning, value } = bodySchema.validate(request.body) as {
-        warning: Joi.ValidationError;
+    const { error, value } = bodySchema.validate(request.body) as {
+        error: Joi.ValidationError | undefined;
         value: requestType;
     };
-    if (warning) {
-        response.status(STATUS_BAD_REQUEST).json(warning);
+    if (error) {
+        response.status(STATUS_BAD_REQUEST).json(error);
         return;
     }
     const { name, level } = value;
@@ -682,12 +683,12 @@ app.post('/notify', (request, response) => {
         key: Joi.string().required(),
     });
 
-    const { warning, value } = bodySchema.validate(request.body) as {
-        warning: Joi.ValidationError;
+    const { error, value } = bodySchema.validate(request.body) as {
+        error: Joi.ValidationError | undefined;
         value: requestType;
     };
-    if (warning) {
-        response.status(STATUS_BAD_REQUEST).json(warning);
+    if (error) {
+        response.status(STATUS_BAD_REQUEST).json(error);
         return;
     }
     const { row, col, game, name, key } = value;
@@ -736,12 +737,12 @@ app.get('/update', (request, response) => {
         key: Joi.string().required(),
     });
 
-    const { warning, value } = bodySchema.validate(request.query) as {
-        warning: Joi.ValidationError;
+    const { error, value } = bodySchema.validate(request.query) as {
+        error: Joi.ValidationError | undefined;
         value: requestType;
     };
-    if (warning) {
-        response.status(STATUS_BAD_REQUEST).json(warning);
+    if (error) {
+        response.status(STATUS_BAD_REQUEST).json(error);
         return;
     }
     const { game, name, key } = value;
