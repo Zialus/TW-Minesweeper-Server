@@ -19,7 +19,7 @@ const logger = pino({
     transport: {
         target: 'pino-pretty',
         options: {
-            levelFirst: true,
+            ignore: 'hostname',
             translateTime: true,
             colorize: true,
         },
