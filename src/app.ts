@@ -131,23 +131,28 @@ function sendEndEvent(gameId: number, move: Move): void {
     }
 }
 
-function testKey(name: string, key: string, gameId: number): boolean {
-    let found = false;
+function keyFoundOnActiveGame(gameId: number, playerName: string, playerKey: string): boolean {
+    return (
+        (games[gameId].player1 === playerName && games[gameId].p1key === playerKey) ||
+        (games[gameId].player2 === playerName && games[gameId].p2key === playerKey)
+    );
+}
 
-    if (games[gameId] === undefined) {
-        for (const item of playerWaitingList) {
-            if (item.name === name && item.key === key) {
-                found = true;
-            }
+function keyFoundOnWaitingList(playerName: string, playerKey: string): boolean {
+    for (const player of playerWaitingList) {
+        if (player.name === playerName && player.key === playerKey) {
+            return true;
         }
-    } else if (
-        (games[gameId].player1 === name && games[gameId].p1key === key) ||
-        (games[gameId].player2 === name && games[gameId].p2key === key)
-    ) {
-        found = true;
     }
+    return false;
+}
 
-    return found;
+function testKey(playerName: string, playerKey: string, gameId: number): boolean {
+    if (games[gameId] === undefined) {
+        return keyFoundOnWaitingList(playerName, playerKey);
+    } else {
+        return keyFoundOnActiveGame(gameId, playerName, playerKey);
+    }
 }
 
 function checkGameStart(gameId: number): boolean {
