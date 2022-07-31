@@ -6,7 +6,7 @@ import Chance from 'chance';
 import helmet from 'helmet';
 import pino from 'pino';
 import { AddressInfo } from 'net';
-import Joi from 'joi';
+import z from 'zod';
 
 import { Connection } from './Connection';
 import { User } from './User';
@@ -458,22 +458,18 @@ function createHash(str: string): string {
 
 // Deals with both registration and login
 app.post('/register', (request, response) => {
-    type requestType = { name: string; pass: string };
-
-    const bodySchema = Joi.object<requestType>({
-        name: Joi.string().required(),
-        pass: Joi.string().required().allow(''),
+    const bodySchema = z.object({
+        name: z.string().min(1),
+        pass: z.string(),
     });
 
-    const { error, value } = bodySchema.validate(request.body) as {
-        error: Joi.ValidationError | undefined;
-        value: requestType;
-    };
-    if (error) {
-        response.status(STATUS_BAD_REQUEST).json(error);
+    const parse = bodySchema.safeParse(request.body);
+
+    if (!parse.success) {
+        response.status(STATUS_BAD_REQUEST).json(parse.error);
         return;
     }
-    const { name, pass } = value;
+    const { name, pass } = parse.data;
 
     // Checks if name follows regex rules
     if (!regex.test(name)) {
@@ -517,21 +513,17 @@ app.post('/register', (request, response) => {
 });
 
 app.post('/ranking', (request, response) => {
-    type requestType = { level: string };
-
-    const bodySchema = Joi.object<requestType>({
-        level: Joi.string().required(),
+    const bodySchema = z.object({
+        level: z.string().min(1),
     });
 
-    const { error, value } = bodySchema.validate(request.body) as {
-        error: Joi.ValidationError | undefined;
-        value: requestType;
-    };
-    if (error) {
-        response.status(STATUS_BAD_REQUEST).json(error);
+    const parse = bodySchema.safeParse(request.body);
+
+    if (!parse.success) {
+        response.status(STATUS_BAD_REQUEST).json(parse.error);
         return;
     }
-    const { level } = value;
+    const { level } = parse.data;
 
     dbConnection.query(
         'SELECT * FROM Rankings WHERE level = ? ORDER BY score DESC, timestamp ASC LIMIT 10;',
@@ -547,29 +539,20 @@ app.post('/ranking', (request, response) => {
 });
 
 app.post('/join', (request, response) => {
-    type requestType = {
-        name: string;
-        pass: string;
-        group: number;
-        level: string;
-    };
-
-    const bodySchema = Joi.object<requestType>({
-        name: Joi.string().required(),
-        pass: Joi.string().required().allow(''),
-        group: Joi.number().required(),
-        level: Joi.string().required(),
+    const bodySchema = z.object({
+        name: z.string().min(1),
+        pass: z.string(),
+        group: z.number().nonnegative(),
+        level: z.string().min(1),
     });
 
-    const { error, value } = bodySchema.validate(request.body) as {
-        error: Joi.ValidationError | undefined;
-        value: requestType;
-    };
-    if (error) {
-        response.status(STATUS_BAD_REQUEST).json(error);
+    const parse = bodySchema.safeParse(request.body);
+
+    if (!parse.success) {
+        response.status(STATUS_BAD_REQUEST).json(parse.error);
         return;
     }
-    const { name, pass, group, level } = value;
+    const { name, pass, group, level } = parse.data;
 
     if (!regex.test(name)) {
         response.json({ error: 'Jogada inválida!' });
@@ -614,23 +597,19 @@ app.post('/join', (request, response) => {
 });
 
 app.post('/leave', (request, response) => {
-    type requestType = { game: number; name: string; key: string };
-
-    const bodySchema = Joi.object<requestType>({
-        game: Joi.number().required(),
-        name: Joi.string().required(),
-        key: Joi.string().required(),
+    const bodySchema = z.object({
+        game: z.number().nonnegative(),
+        name: z.string().min(1),
+        key: z.string().min(1),
     });
 
-    const { error, value } = bodySchema.validate(request.body) as {
-        error: Joi.ValidationError | undefined;
-        value: requestType;
-    };
-    if (error) {
-        response.status(STATUS_BAD_REQUEST).json(error);
+    const parse = bodySchema.safeParse(request.body);
+
+    if (!parse.success) {
+        response.status(STATUS_BAD_REQUEST).json(parse.error);
         return;
     }
-    const { game, name, key } = value;
+    const { game, name, key } = parse.data;
 
     if (validNameAndKey(name, key, game)) {
         playerWaitingList.some((playerWaiting, index) => {
@@ -647,22 +626,18 @@ app.post('/leave', (request, response) => {
 });
 
 app.post('/score', (request, response) => {
-    type requestType = { name: string; level: string };
-
-    const bodySchema = Joi.object<requestType>({
-        name: Joi.string().required(),
-        level: Joi.string().required(),
+    const bodySchema = z.object({
+        name: z.string().min(1),
+        level: z.string().min(1),
     });
 
-    const { error, value } = bodySchema.validate(request.body) as {
-        error: Joi.ValidationError | undefined;
-        value: requestType;
-    };
-    if (error) {
-        response.status(STATUS_BAD_REQUEST).json(error);
+    const parse = bodySchema.safeParse(request.body);
+
+    if (!parse.success) {
+        response.status(STATUS_BAD_REQUEST).json(parse.error);
         return;
     }
-    const { name, level } = value;
+    const { name, level } = parse.data;
 
     if (regex.test(name)) {
         dbConnection.query(SELECT_FROM_RANKINGS_WHERE_NAME_AND_LEVEL, [name, level], (err, rows) => {
@@ -690,31 +665,21 @@ function validNameAndKey(name: string, key: string, game: number): boolean {
 }
 
 app.post('/notify', (request, response) => {
-    type requestType = {
-        row: number;
-        col: number;
-        game: number;
-        name: string;
-        key: string;
-    };
-
-    const bodySchema = Joi.object<requestType>({
-        row: Joi.number().required(),
-        col: Joi.number().required(),
-        game: Joi.number().required(),
-        name: Joi.string().required(),
-        key: Joi.string().required(),
+    const bodySchema = z.object({
+        row: z.number().nonnegative(),
+        col: z.number().nonnegative(),
+        game: z.number().nonnegative(),
+        name: z.string().min(1),
+        key: z.string().min(1),
     });
 
-    const { error, value } = bodySchema.validate(request.body) as {
-        error: Joi.ValidationError | undefined;
-        value: requestType;
-    };
-    if (error) {
-        response.status(STATUS_BAD_REQUEST).json(error);
+    const parse = bodySchema.safeParse(request.body);
+
+    if (!parse.success) {
+        response.status(STATUS_BAD_REQUEST).json(parse.error);
         return;
     }
-    const { row, col, game, name, key } = value;
+    const { row, col, game, name, key } = parse.data;
 
     logger.info(`${name} plays in [${row},${col}]`);
     // verifica a validade do nome e da chave
@@ -754,27 +719,19 @@ app.post('/notify', (request, response) => {
 });
 
 app.get('/update', (request, response) => {
-    type requestType = {
-        game: string;
-        name: string;
-        key: string;
-    };
-
-    const bodySchema = Joi.object<requestType>({
-        game: Joi.string().required(),
-        name: Joi.string().required(),
-        key: Joi.string().required(),
+    const bodySchema = z.object({
+        game: z.string().min(1),
+        name: z.string().min(1),
+        key: z.string().min(1),
     });
 
-    const { error, value } = bodySchema.validate(request.query) as {
-        error: Joi.ValidationError | undefined;
-        value: requestType;
-    };
-    if (error) {
-        response.status(STATUS_BAD_REQUEST).json(error);
+    const parse = bodySchema.safeParse(request.body);
+
+    if (!parse.success) {
+        response.status(STATUS_BAD_REQUEST).json(parse.error);
         return;
     }
-    const { game, name, key } = value;
+    const { game, name, key } = parse.data;
 
     const gameId = parseInt(game, 10);
 
