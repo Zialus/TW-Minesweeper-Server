@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import mysql, { MysqlError } from 'mysql';
+import mysql from 'mysql2';
 import crypto from 'crypto';
 import Chance from 'chance';
 import helmet from 'helmet';
@@ -52,7 +52,7 @@ const regex = /^[a-z0-9_-]+$/i;
 let moveMatrix = [] as number[][];
 
 // conecção e selecção da base de dados
-dbConnection.connect((err: MysqlError) => {
+dbConnection.connect((err) => {
     if (err) {
         logger.error(`error connecting: ${err.stack ?? 'NO STACK'}`);
         return;
