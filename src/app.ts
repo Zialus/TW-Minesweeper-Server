@@ -725,7 +725,7 @@ app.get('/update', (request, response) => {
         key: z.string().min(1),
     });
 
-    const parse = bodySchema.safeParse(request.body);
+    const parse = bodySchema.safeParse(request.query);
 
     if (!parse.success) {
         response.status(STATUS_BAD_REQUEST).json(parse.error);
