@@ -32,12 +32,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const dbConnection = mysql.createConnection(process.env['JAWSDB_MARIA_URL'] || 'mysql://localhost:3306');
+const dbConnection = mysql.createConnection(process.env['JAWSDB_MARIA_URL'] ?? 'mysql://localhost:3306');
 const chance = new Chance();
 
 const STATUS_BAD_REQUEST = 400;
 const STATUS_OK = 200;
-const DEFAULT_TIMEOUT_MS = 6000000;
+const DEFAULT_TIMEOUT_MS = 6_000_000;
 
 // lista de jogadores à espera para jogarem
 const playerWaitingList = [] as Player[];
@@ -46,7 +46,7 @@ const playerWaitingList = [] as Player[];
 const openConnections = [] as Connection[];
 let gameVar = 0;
 const games = [] as Game[];
-const regex = /^[a-z0-9_-]+$/i;
+const regex = /^[\w-]+$/i;
 
 // casas reveladas na última jogada
 let moveMatrix = [] as number[][];
@@ -58,14 +58,14 @@ dbConnection.connect((err) => {
         return;
     }
 
-    logger.info(`connected as id ${dbConnection.threadId ?? 'NO ID'}`);
+    logger.info(`connected as id ${dbConnection.threadId}`);
 });
 
 const DEFAULT_SERVER_PORT = 9876;
 
 const SELECT_FROM_RANKINGS_WHERE_NAME_AND_LEVEL = 'SELECT * FROM Rankings WHERE name = ? && level = ?';
 
-const server = app.listen(process.env['PORT'] || DEFAULT_SERVER_PORT, () => {
+const server = app.listen(process.env['PORT'] ?? DEFAULT_SERVER_PORT, () => {
     const serverAddress = server.address() as AddressInfo;
     logger.info('Listening at http://%s:%s', serverAddress.address, serverAddress.port);
 });
@@ -75,7 +75,7 @@ const server = app.listen(process.env['PORT'] || DEFAULT_SERVER_PORT, () => {
  * The calling side will need to add player1 to the waiting list
  */
 function findOpponent(p1: Player): Player | undefined {
-    let p2: Player | undefined = undefined;
+    let p2: Player | undefined;
 
     playerWaitingList.some((playerWaiting, index) => {
         if (playerWaiting.level === p1.level && playerWaiting.group === p1.group) {
