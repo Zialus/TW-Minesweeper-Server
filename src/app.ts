@@ -401,7 +401,7 @@ function increaseScore(name: string, level: string): void {
                     } else {
                         logger.info('Updated score: %o', result2);
                     }
-                }
+                },
             );
         } else {
             const post = { name, score: 1, level, timestamp: Date.now() };
@@ -435,7 +435,7 @@ function decreaseScore(name: string, level: string): void {
                         } else {
                             logger.info('Updated score: %o', result2);
                         }
-                    }
+                    },
                 );
             }
         } else {
@@ -534,7 +534,7 @@ app.post('/ranking', (request, response) => {
                 logger.info(err);
             }
             response.json({ ranking: result });
-        }
+        },
     );
 });
 
