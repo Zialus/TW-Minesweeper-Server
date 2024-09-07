@@ -3,12 +3,11 @@ env:
   node: true
 extends:
   - 'eslint:recommended'
-  - 'plugin:@typescript-eslint/recommended'
   - 'plugin:@typescript-eslint/eslint-recommended'
-  - 'plugin:@typescript-eslint/recommended-requiring-type-checking'
-#  - 'plugin:@typescript-eslint/strict'
-#  - 'plugin:unicorn/recommended'
-  - 'plugin:sonarjs/recommended'
+  - 'plugin:@typescript-eslint/strict-type-checked'
+  - 'plugin:@typescript-eslint/stylistic-type-checked'
+  # - 'plugin:unicorn/recommended'
+  - 'plugin:sonarjs/recommended-legacy'
   - 'plugin:promise/recommended'
   - 'plugin:import/recommended'
   - 'plugin:import/typescript'
@@ -28,3 +27,4 @@ rules:
     "curly": error
     "prefer-template": error
     "@typescript-eslint/explicit-function-return-type": error
+    "sonarjs/prefer-enum-initializers": off
