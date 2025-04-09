@@ -2,7 +2,8 @@ import globals from 'globals';
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import sonarjs from 'eslint-plugin-sonarjs';
-import importPlugin from 'eslint-plugin-import';
+import eslintPluginImportX from 'eslint-plugin-import-x';
+import * as tsResolver from 'eslint-import-resolver-typescript';
 import pluginPromise from 'eslint-plugin-promise';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 import pluginSecurity from 'eslint-plugin-security';
@@ -10,6 +11,12 @@ import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 
 /** @type {import('@typescript-eslint/utils').TSESLint.FlatConfig.ConfigFile} */
 export default tseslint.config({
+    settings: {
+        'import-x/resolver': {
+            name: 'tsResolver',
+            resolver: tsResolver,
+        },
+    },
     extends: [
         eslint.configs.recommended,
         tseslint.configs.eslintRecommended,
@@ -18,8 +25,8 @@ export default tseslint.config({
         eslintPluginUnicorn.configs['flat/recommended'],
         sonarjs.configs.recommended,
         pluginPromise.configs['flat/recommended'],
-        importPlugin.flatConfigs.recommended,
-        importPlugin.flatConfigs.typescript,
+        eslintPluginImportX.flatConfigs.recommended,
+        eslintPluginImportX.flatConfigs.typescript,
         eslintPluginPrettierRecommended,
         pluginSecurity.configs.recommended,
     ],
