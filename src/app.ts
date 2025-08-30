@@ -67,7 +67,7 @@ const SELECT_FROM_RANKINGS_WHERE_NAME_AND_LEVEL = 'SELECT * FROM Rankings WHERE 
 
 const server = app.listen(process.env['PORT'] ?? DEFAULT_SERVER_PORT, () => {
     const serverAddress = server.address() as AddressInfo;
-    logger.info('Listening at http://%s:%s', serverAddress.address, serverAddress.port);
+    logger.info('Listening at http://%s:%d', serverAddress.address, serverAddress.port);
 });
 
 /**
@@ -105,7 +105,7 @@ function sendStartEvent(gameId: number): void {
             const game = games[gameId];
 
             if (game === undefined) {
-                logger.error('Game with id %s not Found', gameId);
+                logger.error('Game with id %d not Found', gameId);
                 return;
             }
 
@@ -293,7 +293,7 @@ function countNeighbours(game: Game, x: number, y: number): number {
 function endGame(gameId: number, x: number, y: number, winningPlayer: string, losingPlayer: string): void {
     const game = games[gameId];
     if (game === undefined) {
-        logger.error('Game with id %s not Found', gameId);
+        logger.error('Game with id %d not Found', gameId);
         return;
     }
 
@@ -309,7 +309,7 @@ function endGame(gameId: number, x: number, y: number, winningPlayer: string, lo
 function clickPop(x: number, y: number, gameId: number): void {
     const game = games[gameId];
     if (game === undefined) {
-        logger.error('Game with id %s not Found', gameId);
+        logger.error('Game with id %d not Found', gameId);
         return;
     }
 
@@ -690,7 +690,7 @@ app.post('/notify', (request, response) => {
 
     const gameInGamesList = games[game];
     if (gameInGamesList === undefined) {
-        logger.error('Game with id %s not Found', game);
+        logger.error('Game with id %d not Found', game);
         return;
     }
 
