@@ -8,9 +8,9 @@ import pluginPromise from 'eslint-plugin-promise';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 import pluginSecurity from 'eslint-plugin-security';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
+import { defineConfig } from 'eslint/config';
 
-/** @type {import('@typescript-eslint/utils').TSESLint.FlatConfig.ConfigFile} */
-export default tseslint.config({
+export default defineConfig({
     settings: {
         'import-x/resolver': {
             name: 'tsResolver',
@@ -20,9 +20,9 @@ export default tseslint.config({
     extends: [
         eslint.configs.recommended,
         tseslint.configs.eslintRecommended,
-        tseslint.configs.strictTypeChecked,
-        tseslint.configs.stylisticTypeChecked,
-        eslintPluginUnicorn.configs['flat/recommended'],
+        ...tseslint.configs.strictTypeChecked,
+        ...tseslint.configs.stylisticTypeChecked,
+        eslintPluginUnicorn.configs.recommended,
         sonarjs.configs.recommended,
         pluginPromise.configs['flat/recommended'],
         eslintPluginImportX.flatConfigs.recommended,
