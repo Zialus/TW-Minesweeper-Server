@@ -17,11 +17,11 @@
     "zod": "^4.2.1"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.2",
+    "@eslint/js": "^10.0.0",
     "@types/chance": "^1.1.7",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
-    "eslint": "^9.39.2",
+    "eslint": "^10.0.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import-x": "^4.16.1",
