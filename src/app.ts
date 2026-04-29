@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import Chance from 'chance';
 import helmet from 'helmet';
 import pino from 'pino';
+import rateLimit from 'express-rate-limit';
 import { AddressInfo } from 'net';
 import z from 'zod';
 
@@ -24,6 +25,16 @@ const logger = pino({
             colorize: true,
         },
     },
+});
+
+const generalRateLimit = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+});
+
+const notifyRateLimit = rateLimit({
+    windowMs: 60 * 1000,
+    max: 100,
 });
 
 const app = express();
@@ -457,7 +468,7 @@ function createHash(str: string): string {
 }
 
 // Deals with both registration and login
-app.post('/register', (request, response) => {
+app.post('/register', generalRateLimit, (request, response) => {
     const bodySchema = z.object({
         name: z.string().min(1),
         pass: z.string(),
@@ -512,7 +523,7 @@ app.post('/register', (request, response) => {
     });
 });
 
-app.post('/ranking', (request, response) => {
+app.post('/ranking', generalRateLimit, (request, response) => {
     const bodySchema = z.object({
         level: z.string().min(1),
     });
@@ -538,7 +549,7 @@ app.post('/ranking', (request, response) => {
     );
 });
 
-app.post('/join', (request, response) => {
+app.post('/join', generalRateLimit, (request, response) => {
     const bodySchema = z.object({
         name: z.string().min(1),
         pass: z.string(),
@@ -625,7 +636,7 @@ app.post('/leave', (request, response) => {
     }
 });
 
-app.post('/score', (request, response) => {
+app.post('/score', generalRateLimit, (request, response) => {
     const bodySchema = z.object({
         name: z.string().min(1),
         level: z.string().min(1),
@@ -664,7 +675,7 @@ function validNameAndKey(name: string, key: string, game: number): boolean {
     return regex.test(name) && testKey(name, key, game);
 }
 
-app.post('/notify', (request, response) => {
+app.post('/notify', notifyRateLimit, (request, response) => {
     const bodySchema = z.object({
         row: z.number().nonnegative(),
         col: z.number().nonnegative(),
