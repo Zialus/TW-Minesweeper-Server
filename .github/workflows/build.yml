@@ -1,0 +1,29 @@
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e # v6.0.3
+      with:
+        cache: true
+
+    - name: Install dependencies
+      run: pnpm install --ignore-scripts --frozen-lockfile
+
+    - name: Run build
+      run: pnpm run build
+
+    - name: Run lint
+      run: pnpm run lint
+      continue-on-error: true # to be fixed later
