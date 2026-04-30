@@ -1,4 +1,5 @@
 {
+  "packageManager": "pnpm@10.33.2",
   "private": true,
   "main": "dist/app.js",
   "scripts": {
@@ -38,7 +39,7 @@
     "typescript-eslint": "^8.59.1"
   },
   "engines": {
-    "node": ">=20",
-    "npm": ">=10"
+    "node": ">=22",
+    "npm": ">=11"
   }
 }
