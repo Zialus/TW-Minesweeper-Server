@@ -12,6 +12,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@8912a9102ac27614460f54aedde9e1e7f9aec20d # v6.0.5
+        with:
+          cache: true
+
+      - name: Install dependencies
+        run: pnpm install --ignore-scripts --frozen-lockfile
+
+      - name: Run build
+        run: pnpm run build
+
       - name: Download Coverity Build Tool
         run: |
           wget -q https://scan.coverity.com/download/javascript/linux64 --post-data "token=$TOKEN&project=Zialus%2FTW-Minesweeper-Server" -O cov-analysis-linux64.tar.gz
@@ -19,13 +30,7 @@ jobs:
           tar xzf cov-analysis-linux64.tar.gz --strip 1 -C cov-analysis-linux64
         env:
           TOKEN: ${{ secrets.COVERITY_TOKEN }}
-
-      - name: Install npm depedencies
-        run: npm i
-
-      - name: Compile
-        run: tsc || exit 0
-
+      
       - name: Build with cov-build
         run: |
           export PATH=`pwd`/cov-analysis-linux64/bin:$PATH
