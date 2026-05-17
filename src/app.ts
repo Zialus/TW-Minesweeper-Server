@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import mysql from 'mysql2';
-import crypto from 'crypto';
 import Chance from 'chance';
 import helmet from 'helmet';
 import pino from 'pino';
@@ -15,6 +14,18 @@ import { Ranking } from './Ranking';
 import { Player } from './Player';
 import { Game } from './Game';
 import { Move } from './Move';
+import {
+    expandPop,
+    initializeBoard,
+    getOpponent,
+    positionWithinTable,
+    checkPair,
+    keyFoundOnActiveGame,
+    findOpponent,
+    createHash,
+} from './game-logic';
+
+// Re-export to suppress unused import warnings for functions used indirectly
 
 const logger = pino({
     transport: {
@@ -81,33 +92,6 @@ const server = app.listen(process.env['PORT'] ?? DEFAULT_SERVER_PORT, () => {
     logger.info('Listening at http://%s:%d', serverAddress.address, serverAddress.port);
 });
 
-/**
- * Returns the first valid opponent for player1, if he exists, otherwise returns undefined.
- * The calling side will need to add player1 to the waiting list
- */
-function findOpponent(p1: Player): Player | undefined {
-    let p2: Player | undefined;
-
-    playerWaitingList.some((playerWaiting, index) => {
-        if (playerWaiting.level === p1.level && playerWaiting.group === p1.group) {
-            playerWaitingList.splice(index, 1); // remove element from the list
-            p2 = playerWaiting;
-            return true; // found opponent, break out of the loop
-        }
-        return false; // didnt find opponent, keep loop going
-    });
-
-    return p2;
-}
-
-function getOpponent(playerName: string, game: Game): string {
-    if (playerName === game.player1) {
-        return game.player2;
-    } else {
-        return game.player1;
-    }
-}
-
 function sendStartEvent(gameId: number): void {
     logger.info('Start Sending Start Event...');
 
@@ -157,13 +141,6 @@ function sendEndEvent(gameId: number, move: Move): void {
     logger.info('Finished Sending End Event.');
 }
 
-function keyFoundOnActiveGame(game: Game, playerName: string, playerKey: string): boolean {
-    return (
-        (game.player1 === playerName && game.p1key === playerKey) ||
-        (game.player2 === playerName && game.p2key === playerKey)
-    );
-}
-
 function keyFoundOnWaitingList(playerName: string, playerKey: string): boolean {
     for (const player of playerWaitingList) {
         if (player.name === playerName && player.key === playerKey) {
@@ -182,123 +159,15 @@ function testKey(playerName: string, playerKey: string, gameId: number): boolean
     }
 }
 
-function checkGameStart(gameId: number): boolean {
-    const game = games[gameId];
-    if (game === undefined) {
-        return false;
-    }
-    const players = gatherPlayersFrom(gameId);
-
-    return !!players[0] && !!players[1] && checkPair(game, players[0], players[1]);
-}
-
-function gatherPlayersFrom(gameId: number): string[] {
-    const players = [];
-
-    for (const item of openConnections) {
-        if (item.gameId === gameId) {
-            players.push(item.playerName);
-        }
-    }
-
-    return players;
-}
-
-function checkPair(game: Game, player: string, adversary: string): boolean {
-    return (
-        (player === game.player1 && adversary === game.player2) ||
-        (player === game.player2 && adversary === game.player1)
-    );
-}
-
 // espalhar minas no início de um jogo
 function startGame(level: string, gameId: number, key1: string, key2: string, p1: string, p2: string): void {
-    let minesLeft = 0;
-    const game: Game = {
-        level,
-        mines: 0,
-        board: [[]],
-        popped: [[]],
-        boardWidth: 0,
-        boardHeight: 0,
-        player1: p1,
-        p1score: 0,
-        p1key: key1,
-        player2: p2,
-        p2key: key2,
-        p2score: 0,
-        turn: p1,
-    };
-    if (level === 'beginner') {
-        minesLeft = 10;
-        game.mines = 10;
-        game.boardHeight = 9;
-        game.boardWidth = 9;
-    } else if (level === 'intermediate') {
-        minesLeft = 40;
-        game.mines = 40;
-        game.boardWidth = 16;
-        game.boardHeight = 16;
-    } else if (level === 'expert') {
-        minesLeft = 99;
-        game.mines = 99;
-        game.boardWidth = 30;
-        game.boardHeight = 16;
-    }
-    game.board = Array.from({ length: game.boardHeight });
-    game.popped = Array.from({ length: game.boardHeight });
-    for (let i = 0; i < game.boardHeight; i++) {
-        game.board[i] = Array.from({ length: game.boardWidth });
-        game.popped[i] = Array.from({ length: game.boardWidth });
-    }
-    while (minesLeft > 0) {
-        // escolhe duas coordenadas aleatórias
-        const x = Math.floor(Math.random() * game.boardWidth);
-        const y = Math.floor(Math.random() * game.boardHeight);
-        if (game.board[y][x] !== -1) {
-            game.board[y][x] = -1;
-            minesLeft--;
-        }
-    }
-    // contagem das minas que rodeiam cada casa
-    for (let i = 0; i < game.boardHeight; i++) {
-        for (let j = 0; j < game.boardWidth; j++) {
-            if (game.board[i][j] !== -1) {
-                game.board[i][j] = countNeighbours(game, j, i);
-            }
-            game.popped[i][j] = false; // inicializa todas as células da matriz popped
-        }
-    }
+    const game = initializeBoard(level);
+    game.player1 = p1;
+    game.p1key = key1;
+    game.player2 = p2;
+    game.p2key = key2;
+    game.turn = p1;
     games[gameId] = game;
-}
-
-function countNeighbours(game: Game, x: number, y: number): number {
-    let count = 0;
-    let startY = y;
-    let startX = x;
-    let limitY = y;
-    let limitX = x;
-    // verifica os limites da tabela
-    if (x - 1 >= 0) {
-        startX = x - 1;
-    }
-    if (x + 1 < game.boardWidth) {
-        limitX = x + 1;
-    }
-    if (y - 1 >= 0) {
-        startY = y - 1;
-    }
-    if (y + 1 < game.boardHeight) {
-        limitY = y + 1;
-    }
-    for (let i = startY; i <= limitY; i++) {
-        for (let j = startX; j <= limitX; j++) {
-            if (game.board[i][j] === -1) {
-                count++;
-            }
-        }
-    }
-    return count;
 }
 
 function endGame(gameId: number, x: number, y: number, winningPlayer: string, losingPlayer: string): void {
@@ -349,7 +218,7 @@ function clickPop(x: number, y: number, gameId: number): void {
         // limpar as celulas da jogada anterior
         moveMatrix = [];
         // função recursiva
-        expandPop(x, y, game);
+        expandPop(x, y, game, moveMatrix);
         const p = game.turn;
         // determinar o próximo turno
         if (game.turn === game.player1) {
@@ -362,36 +231,26 @@ function clickPop(x: number, y: number, gameId: number): void {
     }
 }
 
-function expandPop(x: number, y: number, game: Game): void {
-    game.popped[y][x] = true;
-    // adicionar casa às destapadas nesta jogada
-    moveMatrix.push([x + 1, y + 1, game.board[y][x]]);
-    let startY = y;
-    let startX = x;
-    let limitY = y;
-    let limitX = x;
-    // verifica os limites da tabela
-    if (x - 1 >= 0) {
-        startX = x - 1;
+function checkGameStart(gameId: number): boolean {
+    const game = games[gameId];
+    if (game === undefined) {
+        return false;
     }
-    if (x + 1 < game.boardWidth) {
-        limitX = x + 1;
-    }
-    if (y - 1 >= 0) {
-        startY = y - 1;
-    }
-    if (y + 1 < game.boardHeight) {
-        limitY = y + 1;
-    }
-    if (game.board[y][x] === 0) {
-        for (let i = startY; i <= limitY; i++) {
-            for (let j = startX; j <= limitX; j++) {
-                if (!game.popped[i][j]) {
-                    expandPop(j, i, game);
-                }
-            }
+    const players = gatherPlayersFrom(gameId);
+
+    return !!players[0] && !!players[1] && checkPair(game, players[0], players[1]);
+}
+
+function gatherPlayersFrom(gameId: number): string[] {
+    const players = [];
+
+    for (const item of openConnections) {
+        if (item.gameId === gameId) {
+            players.push(item.playerName);
         }
     }
+
+    return players;
 }
 
 function increaseScore(name: string, level: string): void {
@@ -460,11 +319,6 @@ function decreaseScore(name: string, level: string): void {
             });
         }
     });
-}
-
-// função para criar hashes a partir de password e salt
-function createHash(str: string): string {
-    return crypto.createHash('md5').update(str).digest('hex');
 }
 
 // Deals with both registration and login
@@ -588,7 +442,7 @@ app.post('/join', generalRateLimit, (request, response) => {
                 p1.level = level;
                 p1.key = createHash(chance.string({ length: 8 }));
 
-                const p2 = findOpponent(p1);
+                const p2 = findOpponent(playerWaitingList, p1);
 
                 if (p2 === undefined) {
                     gameVar++;
@@ -666,10 +520,6 @@ app.post('/score', generalRateLimit, (request, response) => {
         response.json({ error: 'Nome de utilizador inválido!' });
     }
 });
-
-function positionWithinTable(row: number, game: Game, col: number): boolean {
-    return row > 0 && row <= game.boardHeight && col > 0 && col <= game.boardWidth;
-}
 
 function validNameAndKey(name: string, key: string, game: number): boolean {
     return regex.test(name) && testKey(name, key, game);
