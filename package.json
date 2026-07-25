@@ -1,12 +1,16 @@
 {
-  "packageManager": "pnpm@11.1.2",
+  "packageManager": "pnpm@11.7.0",
   "private": true,
   "main": "dist/app.js",
   "scripts": {
     "build": "tsc",
     "start": "node dist/app.js",
     "postinstall": "tsc",
-    "lint": "eslint src"
+    "lint": "pnpm run lint:prettier src && pnpm run lint:eslint",
+    "lint:prettier": "prettier --check src",
+    "lint:prettier:fix": "prettier --write src",
+    "lint:eslint": "eslint src",
+    "lint:eslint:fix": "eslint src --fix"
   },
   "dependencies": {
     "chance": "^1.1.13",
@@ -35,7 +39,7 @@
     "eslint-plugin-unicorn": "^72.0.0",
     "globals": "^17.7.0",
     "prettier": "^3.9.6",
-    "typescript": "^7.0.2",
+    "typescript": "^6.0.3",
     "typescript-eslint": "^8.65.0"
   },
   "engines": {
