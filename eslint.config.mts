@@ -1,7 +1,7 @@
 import globals from 'globals';
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
-import sonarjs from 'eslint-plugin-sonarjs';
+import * as sonarjs from 'eslint-plugin-sonarjs';
 import eslintPluginImportX from 'eslint-plugin-import-x';
 import * as tsResolver from 'eslint-import-resolver-typescript';
 import pluginPromise from 'eslint-plugin-promise';
