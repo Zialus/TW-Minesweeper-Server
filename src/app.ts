@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import mysql from 'mysql2';
+import { Pool } from 'pg';
 import crypto from 'crypto';
 import Chance from 'chance';
 import helmet from 'helmet';
@@ -43,7 +43,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const dbConnection = mysql.createConnection(process.env['JAWSDB_MARIA_URL'] ?? 'mysql://localhost:3306');
+const dbConnection = new Pool({
+    connectionString: process.env['POSTGRES_URL'] ?? 'postgresql://localhost:5432/minesweeper',
+});
 const chance = new Chance();
 
 const STATUS_BAD_REQUEST = 400;
@@ -63,18 +65,18 @@ const regex = /^[\w-]+$/i;
 let moveMatrix = [] as number[][];
 
 // conecção e selecção da base de dados
-dbConnection.connect((err) => {
+void dbConnection.query('SELECT NOW()', (err) => {
     if (err) {
         logger.error(`error connecting: ${err.stack ?? 'NO STACK'}`);
         return;
     }
 
-    logger.info(`connected as id ${dbConnection.threadId}`);
+    logger.info('connected to PostgreSQL');
 });
 
 const DEFAULT_SERVER_PORT = 9876;
 
-const SELECT_FROM_RANKINGS_WHERE_NAME_AND_LEVEL = 'SELECT * FROM Rankings WHERE name = ? && level = ?';
+const SELECT_FROM_RANKINGS_WHERE_NAME_AND_LEVEL = 'SELECT * FROM rankings WHERE name = $1 AND level = $2';
 
 const server = app.listen(process.env['PORT'] ?? DEFAULT_SERVER_PORT, () => {
     const serverAddress = server.address() as AddressInfo;
@@ -395,8 +397,8 @@ function expandPop(x: number, y: number, game: Game): void {
 }
 
 function increaseScore(name: string, level: string): void {
-    dbConnection.query(SELECT_FROM_RANKINGS_WHERE_NAME_AND_LEVEL, [name, level], (err, rows) => {
-        const result = rows as Ranking[];
+    dbConnection.query<Ranking>(SELECT_FROM_RANKINGS_WHERE_NAME_AND_LEVEL, [name, level], (err, queryResult) => {
+        const result = queryResult.rows;
 
         if (err) {
             logger.info(err);
@@ -404,7 +406,7 @@ function increaseScore(name: string, level: string): void {
 
         if (result.length > 0) {
             dbConnection.query(
-                'UPDATE Rankings SET score = score + 1 WHERE name = ? && level = ?',
+                'UPDATE rankings SET score = score + 1 WHERE name = $1 AND level = $2',
                 [name, level],
                 (err2, result2) => {
                     if (err2) {
@@ -416,20 +418,24 @@ function increaseScore(name: string, level: string): void {
             );
         } else {
             const post = { name, score: 1, level, timestamp: Date.now() };
-            dbConnection.query('INSERT INTO Rankings SET ?', [post], (err2, result2) => {
-                if (err2) {
-                    logger.info('Failed to create new ranking: %o', err2);
-                } else {
-                    logger.info('Created new ranking: %o', result2);
-                }
-            });
+            dbConnection.query(
+                'INSERT INTO rankings (name, score, level, timestamp) VALUES ($1, $2, $3, $4)',
+                [post.name, post.score, post.level, post.timestamp],
+                (err2, result2) => {
+                    if (err2) {
+                        logger.info('Failed to create new ranking: %o', err2);
+                    } else {
+                        logger.info('Created new ranking: %o', result2);
+                    }
+                },
+            );
         }
     });
 }
 
 function decreaseScore(name: string, level: string): void {
-    dbConnection.query(SELECT_FROM_RANKINGS_WHERE_NAME_AND_LEVEL, [name, level], (err, rows) => {
-        const result = rows as Ranking[];
+    dbConnection.query<Ranking>(SELECT_FROM_RANKINGS_WHERE_NAME_AND_LEVEL, [name, level], (err, queryResult) => {
+        const result = queryResult.rows;
 
         if (err) {
             logger.info(err);
@@ -438,7 +444,7 @@ function decreaseScore(name: string, level: string): void {
         if (result.length > 0 && result[0]) {
             if (result[0].score > 0) {
                 dbConnection.query(
-                    'UPDATE Rankings SET score = score - 1 WHERE name = ? && level = ?',
+                    'UPDATE rankings SET score = score - 1 WHERE name = $1 AND level = $2',
                     [name, level],
                     (err2, result2) => {
                         if (err2) {
@@ -451,13 +457,17 @@ function decreaseScore(name: string, level: string): void {
             }
         } else {
             const post = { name, score: 0, level, timestamp: Date.now() };
-            dbConnection.query('INSERT INTO Rankings SET ?', [post], (err2, result2) => {
-                if (err2) {
-                    logger.info('Failed to create new ranking: %o', err2);
-                } else {
-                    logger.info('Created new ranking: %o', result2);
-                }
-            });
+            dbConnection.query(
+                'INSERT INTO rankings (name, score, level, timestamp) VALUES ($1, $2, $3, $4)',
+                [post.name, post.score, post.level, post.timestamp],
+                (err2, result2) => {
+                    if (err2) {
+                        logger.info('Failed to create new ranking: %o', err2);
+                    } else {
+                        logger.info('Created new ranking: %o', result2);
+                    }
+                },
+            );
         }
     });
 }
@@ -488,8 +498,8 @@ app.post('/register', generalRateLimit, (request, response) => {
         return;
     }
 
-    dbConnection.query('SELECT * FROM Users WHERE name = ?', [name], (err, rows) => {
-        const result = rows as User[];
+    dbConnection.query<User>('SELECT * FROM users WHERE name = $1', [name], (err, queryResult) => {
+        const result = queryResult.rows;
         if (err) {
             logger.info(err);
         }
@@ -510,15 +520,19 @@ app.post('/register', generalRateLimit, (request, response) => {
             const hash = createHash(pass + salt);
 
             const post = { name, pass: hash, salt };
-            dbConnection.query('INSERT INTO Users SET ?', [post], (err2, result2) => {
-                if (err2) {
-                    logger.info('Failed while creating new user: %o', err2);
-                    response.json({ error: 'Failed to create new user' });
-                } else {
-                    logger.info('Created new user: %o', result2);
-                    response.json({});
-                }
-            });
+            dbConnection.query(
+                'INSERT INTO users (name, pass, salt) VALUES ($1, $2, $3)',
+                [post.name, post.pass, post.salt],
+                (err2, result2) => {
+                    if (err2) {
+                        logger.info('Failed while creating new user: %o', err2);
+                        response.json({ error: 'Failed to create new user' });
+                    } else {
+                        logger.info('Created new user: %o', result2);
+                        response.json({});
+                    }
+                },
+            );
         }
     });
 });
@@ -536,11 +550,11 @@ app.post('/ranking', generalRateLimit, (request, response) => {
     }
     const { level } = parse.data;
 
-    dbConnection.query(
-        'SELECT * FROM Rankings WHERE level = ? ORDER BY score DESC, timestamp ASC LIMIT 10;',
+    dbConnection.query<Ranking>(
+        'SELECT * FROM rankings WHERE level = $1 ORDER BY score DESC, timestamp ASC LIMIT 10;',
         [level],
-        (err, rows) => {
-            const result = rows as Ranking[];
+        (err, queryResult) => {
+            const result = queryResult.rows;
             if (err) {
                 logger.info(err);
             }
@@ -570,8 +584,8 @@ app.post('/join', generalRateLimit, (request, response) => {
         return;
     }
 
-    dbConnection.query('SELECT * FROM Users WHERE name = ?', [name], (err, rows) => {
-        const result = rows as User[];
+    dbConnection.query<User>('SELECT * FROM users WHERE name = $1', [name], (err, queryResult) => {
+        const result = queryResult.rows;
         if (err) {
             logger.info(err);
         }
@@ -651,8 +665,8 @@ app.post('/score', generalRateLimit, (request, response) => {
     const { name, level } = parse.data;
 
     if (regex.test(name)) {
-        dbConnection.query(SELECT_FROM_RANKINGS_WHERE_NAME_AND_LEVEL, [name, level], (err, rows) => {
-            const result = rows as Ranking[];
+        dbConnection.query<Ranking>(SELECT_FROM_RANKINGS_WHERE_NAME_AND_LEVEL, [name, level], (err, queryResult) => {
+            const result = queryResult.rows;
             if (err) {
                 logger.info(err);
             }
