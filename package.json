@@ -1,5 +1,5 @@
 {
-  "packageManager": "pnpm@11.21.0",
+  "packageManager": "pnpm@11.22.0",
   "private": true,
   "main": "dist/app.js",
   "scripts": {
@@ -40,11 +40,11 @@
     "eslint-plugin-security": "^4.0.1",
     "eslint-plugin-sonarjs": "^4.2.0",
     "eslint-plugin-unicorn": "^73.0.0",
-    "globals": "^17.9.0",
+    "globals": "^17.11.0",
     "jiti": "^2.7.0",
     "prettier": "^3.9.6",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.66.0"
+    "typescript-eslint": "^8.67.0"
   },
   "engines": {
     "node": ">=22",
