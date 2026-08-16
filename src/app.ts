@@ -65,7 +65,7 @@ const regex = /^[\w-]+$/i;
 let moveMatrix = [] as number[][];
 
 // conecção e selecção da base de dados
-void dbConnection.query('SELECT NOW()', (err) => {
+dbConnection.query('SELECT NOW()', (err) => {
     if (err) {
         logger.error(`error connecting: ${err.stack ?? 'NO STACK'}`);
         return;
@@ -613,7 +613,9 @@ app.post('/join', generalRateLimit, (request, response) => {
                 } else {
                     gameId = p2.game;
                     startGame(p2.level, p2.game, p1.key, p2.key, p1.name, p2.name);
-                    logger.info(`Started game: ${p1.name} vs ${p2.name} -- Game number:${gameId} -- Level:${p2.level}`);
+                    logger.info(
+                        `Started game: ${p1.name} vs ${p2.name} -- Game number:${String(gameId)} -- Level:${p2.level}`,
+                    );
                 }
                 response.json({ key: p1.key, game: gameId });
             }
@@ -706,7 +708,7 @@ app.post('/notify', notifyRateLimit, (request, response) => {
     }
     const { row, col, game, name, key } = parse.data;
 
-    logger.info(`${name} plays in [${row},${col}]`);
+    logger.info(`${name} plays in [${String(row)},${String(col)}]`);
     // verifica a validade do nome e da chave
     if (!validNameAndKey(name, key, game)) {
         response.json({ error: 'Erro! Não foi possivel validar a jogada' });
@@ -733,7 +735,7 @@ app.post('/notify', notifyRateLimit, (request, response) => {
 
     // célula já destapada
     if (gameInGamesList.popped[col - 1][row - 1]) {
-        response.json({ error: `Posição ${row},${col} já destapada` });
+        response.json({ error: `Posição ${String(row)},${String(col)} já destapada` });
         return;
     }
 
@@ -777,7 +779,7 @@ app.get('/update', (request, response) => {
     // adicionar às conecções abertas
     const connection: Connection = { playerName: name, gameId, connection: response };
     openConnections.push(connection);
-    logger.info(`Added player: ${name} to connections -- Game: ${gameId}`);
+    logger.info(`Added player: ${name} to connections -- Game: ${String(gameId)}`);
 
     if (checkGameStart(gameId)) {
         sendStartEvent(gameId);
