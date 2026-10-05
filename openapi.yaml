@@ -323,6 +323,10 @@ components:
     EmptyResult:
       type: object
       additionalProperties: false
+    Result:
+      oneOf:
+        - $ref: '#/components/schemas/EmptyResult'
+        - $ref: '#/components/schemas/ErrorResult'
     ErrorResult:
       type: object
       required:
