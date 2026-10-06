@@ -1,5 +1,5 @@
 {
-  "exclude": ["dist", "node_modules", "eslint.config.mts"],
+  "exclude": ["dist", "node_modules", "eslint.config.mts", "tests"],
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig to read more about this file */
 

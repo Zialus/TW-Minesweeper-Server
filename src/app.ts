@@ -15,6 +15,7 @@ import type { Ranking } from './Ranking';
 import type { Player } from './Player';
 import type { Game } from './Game';
 import type { Move } from './Move';
+import { countNeighbours, expandPop } from './board';
 
 const logger = pino({
     transport: {
@@ -60,9 +61,6 @@ const openConnections = [] as Connection[];
 let gameVar = 0;
 const games = [] as Game[];
 const regex = /^[\w-]+$/i;
-
-// casas reveladas na última jogada
-let moveMatrix = [] as number[][];
 
 // conecção e selecção da base de dados
 dbConnection.query('SELECT NOW()', (err) => {
@@ -274,35 +272,6 @@ function startGame(level: string, gameId: number, key1: string, key2: string, p1
     games[gameId] = game;
 }
 
-function countNeighbours(game: Game, x: number, y: number): number {
-    let count = 0;
-    let startY = y;
-    let startX = x;
-    let limitY = y;
-    let limitX = x;
-    // verifica os limites da tabela
-    if (x - 1 >= 0) {
-        startX = x - 1;
-    }
-    if (x + 1 < game.boardWidth) {
-        limitX = x + 1;
-    }
-    if (y - 1 >= 0) {
-        startY = y - 1;
-    }
-    if (y + 1 < game.boardHeight) {
-        limitY = y + 1;
-    }
-    for (let i = startY; i <= limitY; i++) {
-        for (let j = startX; j <= limitX; j++) {
-            if (game.board[i][j] === -1) {
-                count++;
-            }
-        }
-    }
-    return count;
-}
-
 function endGame(gameId: number, x: number, y: number, winningPlayer: string, losingPlayer: string): void {
     const game = games[gameId];
     if (game === undefined) {
@@ -348,10 +317,7 @@ function clickPop(x: number, y: number, gameId: number): void {
             });
         }
     } else {
-        // limpar as celulas da jogada anterior
-        moveMatrix = [];
-        // função recursiva
-        expandPop(x, y, game);
+        const moveMatrix = expandPop(x, y, game);
         const p = game.turn;
         // determinar o próximo turno
         if (game.turn === game.player1) {
@@ -361,38 +327,6 @@ function clickPop(x: number, y: number, gameId: number): void {
         }
         // enviar jogada aos jogadores
         sendMoveEvent(gameId, { name: p, cells: moveMatrix, turn: game.turn });
-    }
-}
-
-function expandPop(x: number, y: number, game: Game): void {
-    game.popped[y][x] = true;
-    // adicionar casa às destapadas nesta jogada
-    moveMatrix.push([x + 1, y + 1, game.board[y][x]]);
-    let startY = y;
-    let startX = x;
-    let limitY = y;
-    let limitX = x;
-    // verifica os limites da tabela
-    if (x - 1 >= 0) {
-        startX = x - 1;
-    }
-    if (x + 1 < game.boardWidth) {
-        limitX = x + 1;
-    }
-    if (y - 1 >= 0) {
-        startY = y - 1;
-    }
-    if (y + 1 < game.boardHeight) {
-        limitY = y + 1;
-    }
-    if (game.board[y][x] === 0) {
-        for (let i = startY; i <= limitY; i++) {
-            for (let j = startX; j <= limitX; j++) {
-                if (!game.popped[i][j]) {
-                    expandPop(j, i, game);
-                }
-            }
-        }
     }
 }
 
