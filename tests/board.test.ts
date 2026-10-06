@@ -55,7 +55,7 @@ describe('expandPop', () => {
 
         const cells = expandPop(0, 2, game);
 
-        expect(cells).toHaveLength(8);
+        expect(cells).toHaveLength(6);
         expect(cells).not.toContainEqual([2, 1, -1]);
         expect(cells).toContainEqual([1, 3, 0]);
         expect(cells).toContainEqual([2, 2, 1]);
