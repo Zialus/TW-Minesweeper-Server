@@ -191,6 +191,7 @@ paths:
           schema:
             type: "string"
             minLength: 1
+            pattern: "^[\\w-]+$"
         -
           name: "key"
           in: "query"
@@ -247,6 +248,7 @@ components:
         name:
           type: "string"
           minLength: 1
+          pattern: "^[\\w-]+$"
         pass:
           type: "string"
       required:
@@ -268,6 +270,7 @@ components:
         name:
           type: "string"
           minLength: 1
+          pattern: "^[\\w-]+$"
         pass:
           type: "string"
         group:
@@ -291,6 +294,7 @@ components:
         name:
           type: "string"
           minLength: 1
+          pattern: "^[\\w-]+$"
         key:
           type: "string"
           minLength: 1
@@ -305,6 +309,7 @@ components:
         name:
           type: "string"
           minLength: 1
+          pattern: "^[\\w-]+$"
         level:
           type: "string"
           minLength: 1
@@ -321,15 +326,16 @@ components:
         name:
           type: "string"
           minLength: 1
+          pattern: "^[\\w-]+$"
         key:
           type: "string"
           minLength: 1
         row:
           type: "number"
-          minimum: 0
+          minimum: 1
         col:
           type: "number"
-          minimum: 0
+          minimum: 1
       required:
         - "game"
         - "name"
@@ -346,6 +352,7 @@ components:
         name:
           type: "string"
           minLength: 1
+          pattern: "^[\\w-]+$"
         key:
           type: "string"
           minLength: 1

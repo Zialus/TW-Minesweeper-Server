@@ -1,6 +1,9 @@
 import { z } from 'zod';
 
-const playerNameSchema = z.string().min(1).meta({ pattern: '^[\\w-]+$' });
+const playerNameSchema = z
+    .string()
+    .min(1)
+    .meta({ pattern: String.raw`^[\w-]+$` });
 
 export const registerRequestSchema = z.object({
     name: playerNameSchema,
