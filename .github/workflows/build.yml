@@ -24,6 +24,14 @@ jobs:
     - name: Run build
       run: pnpm run build
 
+    - name: Verify generated OpenAPI spec
+      run: |
+        pnpm run openapi:generate
+        git diff --exit-code -- openapi.yaml
+
+    - name: Lint OpenAPI spec
+      run: pnpm run openapi:lint
+
     - name: Run lint
       run: pnpm run lint
       continue-on-error: true # to be fixed later

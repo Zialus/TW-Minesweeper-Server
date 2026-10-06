@@ -6,6 +6,8 @@
     "build": "tsc",
     "start": "node dist/app.js",
     "postinstall": "tsc",
+    "openapi:generate": "pnpm run build && node scripts/generate-openapi.cjs",
+    "openapi:lint": "node scripts/lint-openapi.cjs",
     "lint": "pnpm run lint:prettier src && pnpm run lint:eslint",
     "lint:prettier": "prettier --check src",
     "lint:prettier:fix": "prettier --write src",
