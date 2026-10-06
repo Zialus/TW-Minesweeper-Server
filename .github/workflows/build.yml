@@ -21,12 +21,11 @@ jobs:
     - name: Install dependencies
       run: pnpm install --ignore-scripts --frozen-lockfile
 
-    - name: Run build
-      run: pnpm run build
+    - name: Build and generate OpenAPI spec
+      run: pnpm run openapi:generate
 
     - name: Verify generated OpenAPI spec
       run: |
-        node scripts/generate-openapi.cjs
         if [ -n "$(git status --porcelain -- openapi.yaml)" ]; then
           echo "openapi.yaml is out of date; regenerate it and commit the result."
           git diff -- openapi.yaml

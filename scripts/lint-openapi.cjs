@@ -57,7 +57,13 @@ async function installVacuum() {
 
     try {
         execFileSync('tar', ['-xzf', archivePath, '-C', temporaryDirectory], { stdio: 'inherit' });
-        renameSync(join(temporaryDirectory, executableName), vacuumExecutable);
+        try {
+            renameSync(join(temporaryDirectory, executableName), vacuumExecutable);
+        } catch (error) {
+            if (!existsSync(vacuumExecutable)) {
+                throw error;
+            }
+        }
         if (platform() !== 'win32') {
             chmodSync(vacuumExecutable, 0o755);
         }

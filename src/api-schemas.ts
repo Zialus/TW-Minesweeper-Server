@@ -14,12 +14,12 @@ export const rankingRequestSchema = z.object({
 export const joinRequestSchema = z.object({
     name: playerNameSchema,
     pass: z.string(),
-    group: z.number().nonnegative(),
+    group: z.number().int().nonnegative(),
     level: z.string().min(1),
 });
 
 export const playerCredentialsSchema = z.object({
-    game: z.number().nonnegative(),
+    game: z.number().int().nonnegative(),
     name: playerNameSchema,
     key: z.string().min(1),
 });
@@ -30,8 +30,8 @@ export const scoreRequestSchema = z.object({
 });
 
 export const notifyRequestSchema = playerCredentialsSchema.extend({
-    row: z.number().nonnegative(),
-    col: z.number().nonnegative(),
+    row: z.number().int().nonnegative(),
+    col: z.number().int().nonnegative(),
 });
 
 export const updateRequestSchema = z.object({
