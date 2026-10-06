@@ -1,6 +1,16 @@
-const { writeFileSync } = require('node:fs');
+const { existsSync, statSync, writeFileSync } = require('node:fs');
 const { resolve } = require('node:path');
 const { toJSONSchema } = require('zod');
+const compiledApiSchemasPath = resolve(__dirname, '../dist/api-schemas.js');
+const sourceApiSchemasPath = resolve(__dirname, '../src/api-schemas.ts');
+
+if (
+    !existsSync(compiledApiSchemasPath) ||
+    statSync(sourceApiSchemasPath).mtimeMs > statSync(compiledApiSchemasPath).mtimeMs
+) {
+    throw new Error('API schemas are not built or are out of date; run `pnpm run build` before generation.');
+}
+
 const {
     apiOperations,
     joinRequestSchema,
@@ -10,7 +20,7 @@ const {
     registerRequestSchema,
     scoreRequestSchema,
     updateRequestSchema,
-} = require('../dist/api-schemas.js');
+} = require(compiledApiSchemasPath);
 
 const requestSchemas = {
     RegisterRequest: registerRequestSchema,
@@ -123,16 +133,16 @@ const responses = {
                         type: 'string',
                         description:
                             'Stream of data events whose JSON payload is one of GameStartEvent, MoveEvent, or GameEndEvent.',
-                        examples: {
-                            start: {
-                                value: 'data: {"opponent":"player2","turn":"player1"}\n\n',
-                            },
-                            move: {
-                                value: 'data: {"move":{"name":"player1","cells":[[1,1,0]]},"turn":"player2"}\n\n',
-                            },
-                            end: {
-                                value: 'data: {"move":{"name":"player1","cells":[[1,1,-1]]},"winner":"player1"}\n\n',
-                            },
+                    },
+                    examples: {
+                        start: {
+                            value: 'data: {"opponent":"player2","turn":"player1"}\n\n',
+                        },
+                        move: {
+                            value: 'data: {"move":{"name":"player1","cells":[[1,1,0]]},"turn":"player2"}\n\n',
+                        },
+                        end: {
+                            value: 'data: {"move":{"name":"player1","cells":[[1,1,-1]]},"winner":"player1"}\n\n',
                         },
                     },
                 },

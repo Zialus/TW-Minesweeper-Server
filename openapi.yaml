@@ -206,13 +206,13 @@ paths:
               schema:
                 type: "string"
                 description: "Stream of data events whose JSON payload is one of GameStartEvent, MoveEvent, or GameEndEvent."
-                examples:
-                  start:
-                    value: "data: {\"opponent\":\"player2\",\"turn\":\"player1\"}\n\n"
-                  move:
-                    value: "data: {\"move\":{\"name\":\"player1\",\"cells\":[[1,1,0]]},\"turn\":\"player2\"}\n\n"
-                  end:
-                    value: "data: {\"move\":{\"name\":\"player1\",\"cells\":[[1,1,-1]]},\"winner\":\"player1\"}\n\n"
+              examples:
+                start:
+                  value: "data: {\"opponent\":\"player2\",\"turn\":\"player1\"}\n\n"
+                move:
+                  value: "data: {\"move\":{\"name\":\"player1\",\"cells\":[[1,1,0]]},\"turn\":\"player2\"}\n\n"
+                end:
+                  value: "data: {\"move\":{\"name\":\"player1\",\"cells\":[[1,1,-1]]},\"winner\":\"player1\"}\n\n"
             "application/json":
               schema:
                 "$ref": "#/components/schemas/ErrorResult"

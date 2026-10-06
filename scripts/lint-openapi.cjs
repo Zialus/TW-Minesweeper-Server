@@ -36,6 +36,7 @@ async function installVacuum() {
         return;
     }
 
+    // Vacuum v0.30.6 publishes Windows executables as tar.gz archives too.
     const archiveName = `vacuum_${version}_${goOS}_${goArch}.tar.gz`;
     const downloadUrl = `https://github.com/daveshanley/vacuum/releases/download/v${version}/${archiveName}`;
     const response = await fetch(downloadUrl);
