@@ -204,6 +204,7 @@ const schemas = Object.fromEntries(
     Object.entries(requestSchemas).map(([name, schema]) => {
         const jsonSchema = toJSONSchema(schema);
         delete jsonSchema.$schema;
+        // Zod strips unknown request keys, so the JSON Schema should not reject them.
         delete jsonSchema.additionalProperties;
         return [name, jsonSchema];
     }),
@@ -262,6 +263,12 @@ schemas.Move = {
         winner: { type: 'string' },
     },
 };
+
+for (const name of Object.keys(apiOperations)) {
+    if (!responses[name]?.['200']) {
+        throw new Error(`Missing success response definition for API operation: ${name}`);
+    }
+}
 
 const paths = {};
 for (const [name, operation] of Object.entries(apiOperations)) {
