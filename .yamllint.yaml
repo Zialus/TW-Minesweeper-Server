@@ -1,0 +1,11 @@
+extends: default
+
+ignore: |
+  pnpm-lock.yaml
+
+rules:
+  document-start: disable
+  line-length:
+    max: 140
+  truthy:
+    check-keys: false
