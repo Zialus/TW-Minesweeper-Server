@@ -24,6 +24,9 @@ jobs:
       - name: Run build
         run: pnpm run build
 
+      - name: Run tests
+        run: pnpm test
+
       - name: Run lint
         run: pnpm run lint
-        continue-on-error: true  # to be fixed later
+        continue-on-error: true # to be fixed later
