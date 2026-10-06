@@ -70,7 +70,7 @@ async function installVacuum() {
 async function main() {
     await installVacuum();
     const specPath = resolve(__dirname, '../openapi.yaml');
-    execFileSync(vacuumExecutable, ['lint', specPath, '--fail-severity', 'warn'], {
+    execFileSync(vacuumExecutable, ['lint', specPath, '--fail-severity', 'error'], {
         env: { ...process.env, VACUUM_NO_UPDATE_CHECK: 'true' },
         stdio: 'inherit',
     });

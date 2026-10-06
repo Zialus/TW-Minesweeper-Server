@@ -1,7 +1,9 @@
-import z from 'zod';
+import { z } from 'zod';
+
+const playerNameSchema = z.string().min(1).meta({ pattern: '^[\\w-]+$' });
 
 export const registerRequestSchema = z.object({
-    name: z.string().min(1),
+    name: playerNameSchema,
     pass: z.string(),
 });
 
@@ -10,7 +12,7 @@ export const rankingRequestSchema = z.object({
 });
 
 export const joinRequestSchema = z.object({
-    name: z.string().min(1),
+    name: playerNameSchema,
     pass: z.string(),
     group: z.number().nonnegative(),
     level: z.string().min(1),
@@ -18,23 +20,23 @@ export const joinRequestSchema = z.object({
 
 export const playerCredentialsSchema = z.object({
     game: z.number().nonnegative(),
-    name: z.string().min(1),
+    name: playerNameSchema,
     key: z.string().min(1),
 });
 
 export const scoreRequestSchema = z.object({
-    name: z.string().min(1),
+    name: playerNameSchema,
     level: z.string().min(1),
 });
 
 export const notifyRequestSchema = playerCredentialsSchema.extend({
-    row: z.number().nonnegative(),
-    col: z.number().nonnegative(),
+    row: z.number().nonnegative().meta({ minimum: 1 }),
+    col: z.number().nonnegative().meta({ minimum: 1 }),
 });
 
 export const updateRequestSchema = z.object({
     game: z.string().min(1),
-    name: z.string().min(1),
+    name: playerNameSchema,
     key: z.string().min(1),
 });
 

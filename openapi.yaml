@@ -1,228 +1,211 @@
-openapi: 3.1.0
+openapi: "3.1.0"
 info:
-  title: TW Minesweeper Server API
-  version: 1.0.0
-  description: HTTP and server-sent event API implemented by the Minesweeper server.
+  title: "TW Minesweeper Server API"
+  version: "1.0.0"
+  description: "HTTP and server-sent event API implemented by the Minesweeper server."
 servers:
-  - url: /
+  -
+    url: "/"
 paths:
-  /register:
+  "/register":
     post:
-      operationId: register
-      summary: Register a user or log in an existing user
-      description: |
-        Creates a user when the name is new. For an existing user, validates
-        the password. Application-level errors are returned as JSON with HTTP
-        200; malformed request bodies return HTTP 400.
+      operationId: "register"
+      summary: "Register a user or log in an existing user"
+      description: "Creates a user when the name is new. For an existing user, validates the password. Application-level errors are returned as JSON with HTTP 200; malformed request bodies return HTTP 400."
       requestBody:
         required: true
         content:
-          application/json:
+          "application/json":
             schema:
-              $ref: '#/components/schemas/RegisterRequest'
+              "$ref": "#/components/schemas/RegisterRequest"
       responses:
-        '200':
-          description: Registration or login result
+        "200":
+          description: "Registration or login result"
           content:
-            application/json:
+            "application/json":
               schema:
-                $ref: '#/components/schemas/Result'
+                "$ref": "#/components/schemas/Result"
               examples:
                 success:
                   value: {}
                 failure:
                   value:
-                    error: Utilizador registado com senha diferente
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-  /ranking:
+                    error: "Utilizador registado com senha diferente"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "429":
+          "$ref": "#/components/responses/TooManyRequests"
+  "/ranking":
     post:
-      operationId: getRanking
-      summary: Get the top ten rankings for a level
+      operationId: "getRanking"
+      summary: "Get the top ten rankings for a level"
       requestBody:
         required: true
         content:
-          application/json:
+          "application/json":
             schema:
-              type: object
-              required:
-                - level
-              properties:
-                level:
-                  type: string
-                  minLength: 1
+              "$ref": "#/components/schemas/RankingRequest"
       responses:
-        '200':
-          description: Rankings ordered by score and timestamp
+        "200":
+          description: "Rankings ordered by score and timestamp"
           content:
-            application/json:
+            "application/json":
               schema:
-                type: object
+                type: "object"
                 required:
-                  - ranking
+                  - "ranking"
                 properties:
                   ranking:
-                    type: array
+                    type: "array"
                     maxItems: 10
                     items:
-                      $ref: '#/components/schemas/Ranking'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-  /join:
+                      "$ref": "#/components/schemas/Ranking"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "429":
+          "$ref": "#/components/responses/TooManyRequests"
+  "/join":
     post:
-      operationId: joinGame
-      summary: Join the waiting queue for a game
-      description: Returns a game identifier and player key when the credentials are valid.
+      operationId: "joinGame"
+      summary: "Join the waiting queue for a game"
+      description: "Returns a game identifier and player key when the credentials are valid."
       requestBody:
         required: true
         content:
-          application/json:
+          "application/json":
             schema:
-              $ref: '#/components/schemas/JoinRequest'
+              "$ref": "#/components/schemas/JoinRequest"
       responses:
-        '200':
-          description: Game and player credentials
+        "200":
+          description: "Game and player credentials"
           content:
-            application/json:
+            "application/json":
               schema:
-                type: object
+                type: "object"
                 required:
-                  - key
-                  - game
+                  - "key"
+                  - "game"
                 properties:
                   key:
-                    type: string
+                    type: "string"
                   game:
-                    type: integer
+                    type: "integer"
                     minimum: 0
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-  /leave:
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "429":
+          "$ref": "#/components/responses/TooManyRequests"
+  "/leave":
     post:
-      operationId: leaveQueue
-      summary: Leave the waiting queue
+      operationId: "leaveQueue"
+      summary: "Leave the waiting queue"
       requestBody:
         required: true
         content:
-          application/json:
+          "application/json":
             schema:
-              $ref: '#/components/schemas/PlayerCredentials'
+              "$ref": "#/components/schemas/PlayerCredentials"
       responses:
-        '200':
-          description: Request accepted
+        "200":
+          description: "Request accepted"
           content:
-            application/json:
+            "application/json":
               schema:
-                $ref: '#/components/schemas/EmptyResult'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-  /score:
+                "$ref": "#/components/schemas/EmptyResult"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+  "/score":
     post:
-      operationId: getScore
-      summary: Get a player's score for a level
+      operationId: "getScore"
+      summary: "Get a player's score for a level"
       requestBody:
         required: true
         content:
-          application/json:
+          "application/json":
             schema:
-              type: object
-              required:
-                - name
-                - level
-              properties:
-                name:
-                  type: string
-                  minLength: 1
-                level:
-                  type: string
-                  minLength: 1
+              "$ref": "#/components/schemas/ScoreRequest"
       responses:
-        '200':
-          description: Player score or an application-level error
+        "200":
+          description: "Player score or an application-level error"
           content:
-            application/json:
+            "application/json":
               schema:
                 oneOf:
-                  - type: object
+                  -
+                    type: "object"
                     required:
-                      - score
+                      - "score"
                     properties:
                       score:
-                        type: integer
+                        type: "integer"
                         minimum: 0
-                  - $ref: '#/components/schemas/ErrorResult'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-  /notify:
+                  -
+                    "$ref": "#/components/schemas/ErrorResult"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "429":
+          "$ref": "#/components/responses/TooManyRequests"
+  "/notify":
     post:
-      operationId: notifyMove
-      summary: Submit a move in a game
-      description: Coordinates are one-based row and column positions.
+      operationId: "notifyMove"
+      summary: "Submit a move in a game"
+      description: "Coordinates are one-based row and column positions."
       requestBody:
         required: true
         content:
-          application/json:
+          "application/json":
             schema:
-              $ref: '#/components/schemas/NotifyRequest'
+              "$ref": "#/components/schemas/NotifyRequest"
       responses:
-        '200':
-          description: Move accepted, or an application-level error
+        "200":
+          description: "Move accepted, or an application-level error"
           content:
-            application/json:
+            "application/json":
               schema:
                 oneOf:
-                  - $ref: '#/components/schemas/EmptyResult'
-                  - $ref: '#/components/schemas/ErrorResult'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-  /update:
+                  -
+                    "$ref": "#/components/schemas/EmptyResult"
+                  -
+                    "$ref": "#/components/schemas/ErrorResult"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "429":
+          "$ref": "#/components/responses/TooManyRequests"
+  "/update":
     get:
-      operationId: subscribeToGame
-      summary: Subscribe to game updates
-      description: |
-        Opens a server-sent events connection. Events are sent as `data:` lines
-        containing JSON. The event payload may be a game start, move, or end
-        notification. Invalid credentials produce an application-level JSON
-        error with HTTP 200 instead of an event stream.
+      operationId: "subscribeToGame"
+      summary: "Subscribe to game updates"
+      description: "Opens a server-sent events connection. Events are sent as data lines containing JSON for a game start, move, or end. Invalid credentials produce an application-level JSON error with HTTP 200 instead of an event stream."
       parameters:
-        - name: game
-          in: query
+        -
+          name: "game"
+          in: "query"
           required: true
           schema:
-            type: string
+            type: "string"
             minLength: 1
-        - name: name
-          in: query
+        -
+          name: "name"
+          in: "query"
           required: true
           schema:
-            type: string
+            type: "string"
             minLength: 1
-        - name: key
-          in: query
+        -
+          name: "key"
+          in: "query"
           required: true
           schema:
-            type: string
+            type: "string"
             minLength: 1
       responses:
-        '200':
-          description: Server-sent game events, or a JSON application-level error
+        "200":
+          description: "Server-sent game events, or a JSON application-level error"
           content:
-            text/event-stream:
+            "text/event-stream":
               schema:
-                type: string
-                description: |
-                  Stream of data events whose JSON payload is one of GameStartEvent,
-                  MoveEvent, or GameEndEvent.
+                type: "string"
+                description: "Stream of data events whose JSON payload is one of GameStartEvent, MoveEvent, or GameEndEvent."
                 examples:
                   start:
                     value: "data: {\"opponent\":\"player2\",\"turn\":\"player1\"}\n\n"
@@ -230,175 +213,228 @@ paths:
                     value: "data: {\"move\":{\"name\":\"player1\",\"cells\":[[1,1,0]]},\"turn\":\"player2\"}\n\n"
                   end:
                     value: "data: {\"move\":{\"name\":\"player1\",\"cells\":[[1,1,-1]]},\"winner\":\"player1\"}\n\n"
-            application/json:
+            "application/json":
               schema:
-                $ref: '#/components/schemas/ErrorResult'
-        '400':
-          $ref: '#/components/responses/BadRequest'
+                "$ref": "#/components/schemas/ErrorResult"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
 components:
   responses:
     BadRequest:
-      description: Request data failed validation
+      description: "Request data failed validation"
       content:
-        application/json:
+        "application/json":
           schema:
-            type: object
-            description: Zod validation error
+            type: "object"
+            description: "Zod validation error"
             additionalProperties: true
     TooManyRequests:
-      description: Rate limit exceeded
+      description: "Rate limit exceeded"
       content:
-        application/json:
+        "application/json":
           schema:
-            type: object
+            type: "object"
             required:
-              - message
+              - "message"
             properties:
               message:
-                type: string
-                example: Too many requests, please try again later.
+                type: "string"
+                example: "Too many requests, please try again later."
   schemas:
     RegisterRequest:
-      type: object
-      required:
-        - name
-        - pass
+      type: "object"
       properties:
         name:
-          type: string
+          type: "string"
           minLength: 1
-          pattern: '^[\w-]+$'
         pass:
-          type: string
+          type: "string"
+      required:
+        - "name"
+        - "pass"
+      additionalProperties: false
+    RankingRequest:
+      type: "object"
+      properties:
+        level:
+          type: "string"
+          minLength: 1
+      required:
+        - "level"
+      additionalProperties: false
     JoinRequest:
-      type: object
-      required:
-        - name
-        - pass
-        - group
-        - level
+      type: "object"
       properties:
         name:
-          type: string
+          type: "string"
           minLength: 1
-          pattern: '^[\w-]+$'
         pass:
-          type: string
+          type: "string"
         group:
-          type: number
+          type: "number"
           minimum: 0
         level:
-          type: string
+          type: "string"
           minLength: 1
-    PlayerCredentials:
-      type: object
       required:
-        - game
-        - name
-        - key
+        - "name"
+        - "pass"
+        - "group"
+        - "level"
+      additionalProperties: false
+    PlayerCredentials:
+      type: "object"
       properties:
         game:
-          type: number
+          type: "number"
           minimum: 0
         name:
-          type: string
+          type: "string"
           minLength: 1
         key:
-          type: string
+          type: "string"
           minLength: 1
+      required:
+        - "game"
+        - "name"
+        - "key"
+      additionalProperties: false
+    ScoreRequest:
+      type: "object"
+      properties:
+        name:
+          type: "string"
+          minLength: 1
+        level:
+          type: "string"
+          minLength: 1
+      required:
+        - "name"
+        - "level"
+      additionalProperties: false
     NotifyRequest:
-      allOf:
-        - $ref: '#/components/schemas/PlayerCredentials'
-        - type: object
-          required:
-            - row
-            - col
-          properties:
-            row:
-              type: number
-              minimum: 0
-            col:
-              type: number
-              minimum: 0
+      type: "object"
+      properties:
+        game:
+          type: "number"
+          minimum: 0
+        name:
+          type: "string"
+          minLength: 1
+        key:
+          type: "string"
+          minLength: 1
+        row:
+          type: "number"
+          minimum: 0
+        col:
+          type: "number"
+          minimum: 0
+      required:
+        - "game"
+        - "name"
+        - "key"
+        - "row"
+        - "col"
+      additionalProperties: false
+    UpdateRequest:
+      type: "object"
+      properties:
+        game:
+          type: "string"
+          minLength: 1
+        name:
+          type: "string"
+          minLength: 1
+        key:
+          type: "string"
+          minLength: 1
+      required:
+        - "game"
+        - "name"
+        - "key"
+      additionalProperties: false
     EmptyResult:
-      type: object
+      type: "object"
       additionalProperties: false
     Result:
       oneOf:
-        - $ref: '#/components/schemas/EmptyResult'
-        - $ref: '#/components/schemas/ErrorResult'
+        -
+          "$ref": "#/components/schemas/EmptyResult"
+        -
+          "$ref": "#/components/schemas/ErrorResult"
     ErrorResult:
-      type: object
+      type: "object"
       required:
-        - error
+        - "error"
       properties:
         error:
-          type: string
+          type: "string"
     Ranking:
-      type: object
+      type: "object"
       required:
-        - name
-        - level
-        - score
-        - timestamp
+        - "name"
+        - "level"
+        - "score"
+        - "timestamp"
       properties:
         name:
-          type: string
+          type: "string"
         level:
-          type: string
+          type: "string"
           enum:
-            - beginner
-            - intermediate
-            - expert
+            - "beginner"
+            - "intermediate"
+            - "expert"
         score:
-          type: integer
+          type: "integer"
         timestamp:
-          type: integer
-          format: int64
+          type: "integer"
+          format: "int64"
     GameStartEvent:
-      type: object
+      type: "object"
       required:
-        - opponent
-        - turn
+        - "opponent"
+        - "turn"
       properties:
         opponent:
-          type: string
+          type: "string"
         turn:
-          type: string
+          type: "string"
     MoveEvent:
-      type: object
+      type: "object"
       required:
-        - move
-        - turn
+        - "move"
+        - "turn"
       properties:
         move:
-          $ref: '#/components/schemas/Move'
+          "$ref": "#/components/schemas/Move"
         turn:
-          type: string
+          type: "string"
     GameEndEvent:
-      type: object
+      type: "object"
       required:
-        - move
-        - winner
+        - "move"
+        - "winner"
       properties:
         move:
-          $ref: '#/components/schemas/Move'
+          "$ref": "#/components/schemas/Move"
         winner:
-          type: string
+          type: "string"
     Move:
-      type: object
+      type: "object"
       required:
-        - name
-        - cells
+        - "name"
+        - "cells"
       properties:
         name:
-          type: string
+          type: "string"
         cells:
-          type: array
+          type: "array"
           items:
-            type: array
+            type: "array"
             items:
-              type: integer
+              type: "integer"
               minimum: -1
         winner:
-          type: string
+          type: "string"

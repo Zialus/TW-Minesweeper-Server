@@ -23,7 +23,7 @@ import {
     scoreRequestSchema,
     playerCredentialsSchema,
     updateRequestSchema,
-} from './apiSchemas';
+} from './api-schemas';
 
 const logger = pino({
     transport: {

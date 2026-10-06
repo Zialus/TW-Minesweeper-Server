@@ -10,7 +10,7 @@ const {
     registerRequestSchema,
     scoreRequestSchema,
     updateRequestSchema,
-} = require('../dist/apiSchemas.js');
+} = require('../dist/api-schemas.js');
 
 const requestSchemas = {
     RegisterRequest: registerRequestSchema,
@@ -150,6 +150,10 @@ function toYamlScalar(value) {
     return String(value);
 }
 
+function toYamlKey(key) {
+    return /^[A-Za-z_-][A-Za-z0-9_-]*$/.test(key) ? key : JSON.stringify(key);
+}
+
 function toYaml(value, indentation = 0) {
     const indent = ' '.repeat(indentation);
 
@@ -177,7 +181,7 @@ function toYaml(value, indentation = 0) {
 
         return entries
             .map(([key, item]) => {
-                const yamlKey = JSON.stringify(key);
+                const yamlKey = toYamlKey(key);
                 if (item !== null && typeof item === 'object') {
                     if (Array.isArray(item) && item.length === 0) {
                         return `${indent}${yamlKey}: []`;
