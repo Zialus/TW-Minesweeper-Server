@@ -1,9 +1,6 @@
 import { z } from 'zod';
 
-const playerNameSchema = z
-    .string()
-    .min(1)
-    .meta({ pattern: String.raw`^[\w-]+$` });
+const playerNameSchema = z.string().min(1);
 
 export const registerRequestSchema = z.object({
     name: playerNameSchema,
@@ -33,8 +30,8 @@ export const scoreRequestSchema = z.object({
 });
 
 export const notifyRequestSchema = playerCredentialsSchema.extend({
-    row: z.number().nonnegative().meta({ minimum: 1 }),
-    col: z.number().nonnegative().meta({ minimum: 1 }),
+    row: z.number().nonnegative(),
+    col: z.number().nonnegative(),
 });
 
 export const updateRequestSchema = z.object({

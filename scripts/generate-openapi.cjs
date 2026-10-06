@@ -204,6 +204,7 @@ const schemas = Object.fromEntries(
     Object.entries(requestSchemas).map(([name, schema]) => {
         const jsonSchema = toJSONSchema(schema);
         delete jsonSchema.$schema;
+        delete jsonSchema.additionalProperties;
         return [name, jsonSchema];
     }),
 );

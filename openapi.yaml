@@ -191,7 +191,6 @@ paths:
           schema:
             type: "string"
             minLength: 1
-            pattern: "^[\\w-]+$"
         -
           name: "key"
           in: "query"
@@ -248,13 +247,11 @@ components:
         name:
           type: "string"
           minLength: 1
-          pattern: "^[\\w-]+$"
         pass:
           type: "string"
       required:
         - "name"
         - "pass"
-      additionalProperties: false
     RankingRequest:
       type: "object"
       properties:
@@ -263,14 +260,12 @@ components:
           minLength: 1
       required:
         - "level"
-      additionalProperties: false
     JoinRequest:
       type: "object"
       properties:
         name:
           type: "string"
           minLength: 1
-          pattern: "^[\\w-]+$"
         pass:
           type: "string"
         group:
@@ -284,7 +279,6 @@ components:
         - "pass"
         - "group"
         - "level"
-      additionalProperties: false
     PlayerCredentials:
       type: "object"
       properties:
@@ -294,7 +288,6 @@ components:
         name:
           type: "string"
           minLength: 1
-          pattern: "^[\\w-]+$"
         key:
           type: "string"
           minLength: 1
@@ -302,21 +295,18 @@ components:
         - "game"
         - "name"
         - "key"
-      additionalProperties: false
     ScoreRequest:
       type: "object"
       properties:
         name:
           type: "string"
           minLength: 1
-          pattern: "^[\\w-]+$"
         level:
           type: "string"
           minLength: 1
       required:
         - "name"
         - "level"
-      additionalProperties: false
     NotifyRequest:
       type: "object"
       properties:
@@ -326,23 +316,21 @@ components:
         name:
           type: "string"
           minLength: 1
-          pattern: "^[\\w-]+$"
         key:
           type: "string"
           minLength: 1
         row:
           type: "number"
-          minimum: 1
+          minimum: 0
         col:
           type: "number"
-          minimum: 1
+          minimum: 0
       required:
         - "game"
         - "name"
         - "key"
         - "row"
         - "col"
-      additionalProperties: false
     UpdateRequest:
       type: "object"
       properties:
@@ -352,7 +340,6 @@ components:
         name:
           type: "string"
           minLength: 1
-          pattern: "^[\\w-]+$"
         key:
           type: "string"
           minLength: 1
@@ -360,7 +347,6 @@ components:
         - "game"
         - "name"
         - "key"
-      additionalProperties: false
     EmptyResult:
       type: "object"
       additionalProperties: false

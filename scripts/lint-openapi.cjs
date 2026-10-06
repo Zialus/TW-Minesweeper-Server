@@ -53,7 +53,6 @@ async function installVacuum() {
     const temporaryDirectory = join(cacheDirectory, `install-${process.pid}`);
     const archivePath = join(temporaryDirectory, archiveName);
     mkdirSync(temporaryDirectory, { recursive: true });
-    mkdirSync(cacheDirectory, { recursive: true });
     writeFileSync(archivePath, archive);
 
     try {
