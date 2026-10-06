@@ -27,6 +27,9 @@ jobs:
       - name: Run tests
         run: pnpm test
 
+      - name: Run Stryker
+        run: pnpm run test:mutate
+
       - name: Run lint
         run: pnpm run lint
         continue-on-error: true # to be fixed later
