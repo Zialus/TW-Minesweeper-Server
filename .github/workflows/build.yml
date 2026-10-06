@@ -29,8 +29,6 @@ jobs:
 
       - name: Run Stryker
         run: pnpm run test:mutate
-        env:
-          GITHUB_STEP_SUMMARY: /dev/null
 
       - name: Run lint
         run: pnpm run lint

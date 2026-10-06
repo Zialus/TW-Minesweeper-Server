@@ -4,6 +4,9 @@
     "testRunner": "vitest",
     "checkers": ["typescript"],
     "tsconfigFile": "tsconfig.stryker.json",
+    "vitest": {
+        "configFile": "tests/vitest.stryker.config.ts"
+    },
     "coverageAnalysis": "perTest",
     "mutate": ["src/board.ts"]
 }
