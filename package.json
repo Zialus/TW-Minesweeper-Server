@@ -7,6 +7,7 @@
     "start": "node dist/app.js",
     "postinstall": "tsc",
     "test": "vitest run",
+    "test:mutate": "stryker run",
     "lint": "pnpm run lint:prettier src && pnpm run lint:eslint",
     "lint:prettier": "prettier --check src",
     "lint:prettier:fix": "prettier --write src",
@@ -27,6 +28,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@stryker-mutator/core": "10.0.0",
+    "@stryker-mutator/vitest-runner": "10.0.0",
     "@types/chance": "^1.1.8",
     "@types/cors": "^2.8.19",
     "@types/eslint-plugin-promise": "^7.3.0",
