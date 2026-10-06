@@ -43,6 +43,15 @@ describe('countNeighbours', () => {
 
         expect(countNeighbours(game, 0, 0)).toBe(2);
     });
+
+    it('counts mines at the bottom-right edge without reading outside the board', () => {
+        const game = createGame([
+            [-1, 0],
+            [0, 0],
+        ]);
+
+        expect(countNeighbours(game, 1, 1)).toBe(1);
+    });
 });
 
 describe('expandPop', () => {
