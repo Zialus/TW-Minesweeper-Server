@@ -1,20 +1,20 @@
-import express from 'express';
+import express, { json, urlencoded } from 'express';
 import cors from 'cors';
 import { Pool } from 'pg';
 import crypto from 'crypto';
 import Chance from 'chance';
 import helmet from 'helmet';
 import pino from 'pino';
-import rateLimit from 'express-rate-limit';
-import { AddressInfo } from 'net';
-import z from 'zod';
+import { rateLimit } from 'express-rate-limit';
+import type { AddressInfo } from 'net';
+import { z } from 'zod';
 
-import { Connection } from './Connection';
-import { User } from './User';
-import { Ranking } from './Ranking';
-import { Player } from './Player';
-import { Game } from './Game';
-import { Move } from './Move';
+import type { Connection } from './Connection';
+import type { User } from './User';
+import type { Ranking } from './Ranking';
+import type { Player } from './Player';
+import type { Game } from './Game';
+import type { Move } from './Move';
 
 const logger = pino({
     transport: {
@@ -40,8 +40,8 @@ const notifyRateLimit = rateLimit({
 const app = express();
 app.use(helmet());
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(json());
+app.use(urlencoded({ extended: true }));
 
 const dbConnection = new Pool({
     connectionString: process.env['POSTGRES_URL'] ?? 'postgresql://localhost:5432/minesweeper',
