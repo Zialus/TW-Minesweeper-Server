@@ -1,0 +1,52 @@
+name: Coverity Scan
+on:
+  schedule:
+    - cron: '0 0 * * *' # Every day at 00:00 UTC
+
+  workflow_dispatch:
+
+jobs:
+  latest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          cache: true
+
+      - name: Install dependencies
+        run: pnpm install --ignore-scripts --frozen-lockfile
+
+      - name: Run build
+        run: pnpm run build
+
+      - name: Download Coverity Build Tool
+        run: |
+          wget -q https://scan.coverity.com/download/javascript/linux64 --post-data "token=$TOKEN&project=Zialus%2FTW-Minesweeper-Server" -O cov-analysis-linux64.tar.gz
+          mkdir cov-analysis-linux64
+          tar xzf cov-analysis-linux64.tar.gz --strip 1 -C cov-analysis-linux64
+        env:
+          TOKEN: ${{ secrets.COVERITY_TOKEN }}
+      
+      - name: Build with cov-build
+        run: |
+          export PATH=`pwd`/cov-analysis-linux64/bin:$PATH
+          cd dist
+          cov-build --dir cov-int --no-command --fs-capture-search ./
+
+      - name: Submit the result to Coverity Scan
+        run: |
+          cd dist
+          tar czvf sweeper.tgz cov-int
+          curl \
+          --form token=$TOKEN \
+          --form email=raulmendesferreira@gmail.com \
+          --form file=@sweeper.tgz \
+          --form version="trunk" \
+          --form description="Minesweeper-Server" \
+          https://scan.coverity.com/builds?project=Zialus%2FTW-Minesweeper-Server
+        env:
+          TOKEN: ${{ secrets.COVERITY_TOKEN }}
