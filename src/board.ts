@@ -1,4 +1,4 @@
-import { Game } from './Game';
+import type { Game } from './Game';
 
 export function countNeighbours(game: Game, x: number, y: number): number {
     let count = 0;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { Game } from '../src/Game';
+import type { Game } from '../src/Game';
 import { countNeighbours, expandPop } from '../src/board';
 
 function createGame(board: number[][]): Game {
