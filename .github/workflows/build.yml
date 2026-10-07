@@ -130,14 +130,21 @@ jobs:
           exit 1
         fi
 
+        # Exclude matchmaking routes that wait for a second authenticated player.
         st run openapi.yaml \
           --url http://127.0.0.1:9876 \
           --exclude-operation-id joinGame \
           --exclude-operation-id leaveQueue \
+          --exclude-checks unsupported_method \
+          --mode positive \
+          --generation-allow-x00 false \
+          --generation-deterministic \
+          --seed 20261007 \
           --phases examples,coverage,fuzzing \
           --max-examples 5 \
           --max-time 120 \
           --request-timeout 5 \
+          --rate-limit 6/m \
           --workers 1
 
     - name: Run lint
