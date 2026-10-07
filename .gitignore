@@ -1,6 +1,4 @@
 node_modules/
 .idea/
 dist/
-coverage/
 .stryker-tmp/
-reports/

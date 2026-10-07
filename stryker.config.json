@@ -3,10 +3,14 @@
     "plugins": ["@stryker-mutator/vitest-runner", "@stryker-mutator/typescript-checker"],
     "testRunner": "vitest",
     "checkers": ["typescript"],
-    "tsconfigFile": "tsconfig.stryker.json",
+    "tsconfigFile": "tsconfig.tests.json",
     "vitest": {
-        "configFile": "tests/vitest.stryker.config.ts"
+        "configFile": "vitest.stryker.config.mts"
     },
     "coverageAnalysis": "perTest",
+    "ignorePatterns": ["dist"],
+    "htmlReporter": {
+        "fileName": "dist/stryker/mutation.html"
+    },
     "mutate": ["src/board.ts"]
 }
