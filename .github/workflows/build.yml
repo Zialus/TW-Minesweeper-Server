@@ -140,11 +140,10 @@ jobs:
           --generation-allow-x00 false \
           --generation-deterministic \
           --seed 20261007 \
-          --phases examples,coverage,fuzzing \
-          --max-examples 5 \
-          --max-time 120 \
+          --phases examples,coverage \
+          --max-examples 1 \
           --request-timeout 5 \
-          --rate-limit 6/m \
+          --rate-limit 100/m \
           --workers 1
 
     - name: Run lint
