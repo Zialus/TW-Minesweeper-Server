@@ -5,6 +5,5 @@
         "rootDir": ".",
         "noEmit": true
     },
-    "include": ["src/**/*.ts", "tests/**/*.ts"],
-    "exclude": ["node_modules", "dist", "eslint.config.mts"],
+    "include": ["src/**/*.ts", "tests/**/*.ts"]
 }
