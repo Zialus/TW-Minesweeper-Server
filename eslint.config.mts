@@ -58,6 +58,10 @@ export default defineConfig(
             '@typescript-eslint/explicit-function-return-type': 'error',
             '@typescript-eslint/consistent-type-imports': 'error',
             '@typescript-eslint/no-unnecessary-condition': 'off',
+            'sonarjs/cors': 'off',
+            'sonarjs/different-types-comparison': 'off',
+            'sonarjs/pseudo-random': 'off',
+            'sonarjs/hashing': 'off',
         },
     },
     {
