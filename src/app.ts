@@ -54,12 +54,12 @@ const STATUS_OK = 200;
 const DEFAULT_TIMEOUT_MS = 6_000_000;
 
 // lista de jogadores à espera para jogarem
-const playerWaitingList = [] as Player[];
+const playerWaitingList: Player[] = [];
 
 // lista de ligações para server-side events
-const openConnections = [] as Connection[];
+const openConnections: Connection[] = [];
 let gameVar = 0;
-const games = [] as Game[];
+const games: Game[] = [];
 const regex = /^[\w-]+$/i;
 
 // conecção e selecção da base de dados

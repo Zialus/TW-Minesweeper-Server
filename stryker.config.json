@@ -3,7 +3,7 @@
     "plugins": ["@stryker-mutator/vitest-runner", "@stryker-mutator/typescript-checker"],
     "testRunner": "vitest",
     "checkers": ["typescript"],
-    "tsconfigFile": "tsconfig.tests.json",
+    "tsconfigFile": "tsconfig.json",
     "vitest": {
         "configFile": "vitest.stryker.config.mts"
     },
@@ -12,5 +12,5 @@
     "htmlReporter": {
         "fileName": "dist/stryker/mutation.html"
     },
-    "mutate": ["src/board.ts"]
+    "mutate": ["src/**.ts"]
 }

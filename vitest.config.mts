@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+    tsconfig: './tsconfig.tests.json',
     test: {
         include: ['tests/**/*.test.ts'],
         coverage: {
