@@ -10,24 +10,12 @@ jobs:
     build:
         name: Build and Test
         runs-on: 'ubuntu-26.04'
-        services:
-            postgres:
-                image: postgres:17
-                env:
-                    POSTGRES_DB: minesweeper
-                    POSTGRES_USER: minesweeper
-                    POSTGRES_PASSWORD: ci-password
-                ports:
-                    - 5432:5432
-                options: >-
-                    --health-cmd "pg_isready -U minesweeper -d minesweeper"
-                    --health-interval 10s
-                    --health-timeout 5s
-                    --health-retries 5
-
         steps:
             - name: 📥 Checkout repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+            - name: Start PostgreSQL with Docker Compose
+              run: docker compose up --detach --wait postgres
 
             - name: 🟢 Setup Node.js 24
               uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
@@ -55,31 +43,6 @@ jobs:
 
             - name: Lint OpenAPI spec
               run: pnpm run openapi:lint
-
-            - name: Initialize integration database
-              env:
-                  PGHOST: 127.0.0.1
-                  PGPORT: 5432
-                  PGDATABASE: minesweeper
-                  PGUSER: minesweeper
-                  PGPASSWORD: ci-password
-              run: |
-                  node <<'NODE'
-                  const { readFileSync } = require('node:fs');
-                  const { Pool } = require('pg');
-
-                  const pool = new Pool();
-                  (async () => {
-                    try {
-                      await pool.query(readFileSync('DB/minesweeperDB.sql', 'utf8'));
-                    } finally {
-                      await pool.end();
-                    }
-                  })().catch((error) => {
-                    console.error(error);
-                    process.exitCode = 1;
-                  });
-                  NODE
 
             - name: 🏗️ Run build
               run: pnpm run build
@@ -168,3 +131,8 @@ jobs:
 
             - name: 🔍 Run lint
               run: pnpm run lint
+
+            - name: Stop PostgreSQL with Docker Compose
+              if: always()
+              run: docker compose down --volumes --remove-orphans
+              continue-on-error: true
