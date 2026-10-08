@@ -24,6 +24,21 @@ jobs:
       - name: Run build
         run: pnpm run build
 
+      - name: Run tests
+        run: pnpm test
+
+      - name: Run Stryker
+        run: pnpm run test:mutate
+
+      - name: Upload Stryker report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: stryker-mutation-report
+          path: dist/stryker/mutation.html
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Run lint
         run: pnpm run lint
-        continue-on-error: true  # to be fixed later
+        continue-on-error: true # to be fixed later

@@ -1,0 +1,16 @@
+{
+    "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+    "plugins": ["@stryker-mutator/vitest-runner", "@stryker-mutator/typescript-checker"],
+    "testRunner": "vitest",
+    "checkers": ["typescript"],
+    "tsconfigFile": "tsconfig.json",
+    "vitest": {
+        "configFile": "vitest.stryker.config.mts"
+    },
+    "coverageAnalysis": "perTest",
+    "ignorePatterns": ["dist"],
+    "htmlReporter": {
+        "fileName": "dist/stryker/mutation.html"
+    },
+    "mutate": ["src/**.ts"]
+}
