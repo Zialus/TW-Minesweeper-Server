@@ -1,5 +1,6 @@
 {
-  "exclude": ["dist", "node_modules", "eslint.config.mts"],
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "exclude": ["dist", "node_modules", "eslint.config.mts", "vitest*.config.mts", "tests"],
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig to read more about this file */
 

@@ -1,5 +1,6 @@
 allowBuilds:
-  '@quobix/vacuum': true
-  unrs-resolver: false
+    unrs-resolver: false
+    '@quobix/vacuum': true
+minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
-  - eslint-plugin-unicorn@77.0.0
+    - eslint-plugin-unicorn@77.0.0

@@ -1,5 +1,6 @@
 node_modules/
-.schemathesis/
 .idea/
 dist/
 .stryker-tmp/
+pnpm-lock.yaml
+tsconfig*.json
