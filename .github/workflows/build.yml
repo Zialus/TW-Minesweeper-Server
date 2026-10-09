@@ -172,7 +172,6 @@ jobs:
                       --seed 20261007
                       --request-timeout 5
                       --rate-limit 100/m
-                      --workers 1
 
             - name: 🛑 Stop API
               if: always()
