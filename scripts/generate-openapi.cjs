@@ -39,7 +39,7 @@ const rateLimitResponse = { $ref: '#/components/responses/TooManyRequests' };
 
 const responses = {
     register: {
-        '200': {
+        200: {
             description: 'Registration or login result',
             content: {
                 'application/json': {
@@ -53,7 +53,7 @@ const responses = {
         },
     },
     ranking: {
-        '200': {
+        200: {
             description: 'Rankings ordered by score and timestamp',
             content: {
                 'application/json': {
@@ -73,7 +73,7 @@ const responses = {
         },
     },
     join: {
-        '200': {
+        200: {
             description: 'Game and player credentials',
             content: {
                 'application/json': {
@@ -90,13 +90,13 @@ const responses = {
         },
     },
     leave: {
-        '200': {
+        200: {
             description: 'Request accepted',
             content: { 'application/json': { schema: emptyResult } },
         },
     },
     score: {
-        '200': {
+        200: {
             description: 'Player score or an application-level error',
             content: {
                 'application/json': {
@@ -115,7 +115,7 @@ const responses = {
         },
     },
     notify: {
-        '200': {
+        200: {
             description: 'Move accepted, or an application-level error',
             content: {
                 'application/json': {
@@ -125,7 +125,7 @@ const responses = {
         },
     },
     update: {
-        '200': {
+        200: {
             description: 'Server-sent game events, or a JSON application-level error',
             content: {
                 'text/event-stream': {
@@ -321,8 +321,8 @@ for (const [name, operation] of Object.entries(apiOperations)) {
             : { parameters }),
         responses: {
             ...responses[name],
-            '400': badRequestResponse,
-            ...(operation.rateLimited ? { '429': rateLimitResponse } : {}),
+            400: badRequestResponse,
+            ...(operation.rateLimited ? { 429: rateLimitResponse } : {}),
         },
     };
 }
