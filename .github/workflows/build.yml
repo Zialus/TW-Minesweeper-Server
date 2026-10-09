@@ -167,6 +167,7 @@ jobs:
                   version: 4.29.4
                   coverage: 'true'
                   args: >-
+                      --workers auto
                       --exclude-checks unsupported_method
                       --generation-allow-x00 false
                       --seed 20261007

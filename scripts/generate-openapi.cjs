@@ -227,8 +227,7 @@ const responses = {
                 'text/event-stream': {
                     schema: {
                         type: 'string',
-                        description:
-                            'Stream of data events whose JSON payload is one of GameStartEvent, MoveEvent, or GameEndEvent.',
+                        description: 'Each data event contains a JSON game-start, move, or end payload.',
                     },
                     examples: {
                         start: {
@@ -326,15 +325,10 @@ const schemaDescriptions = {
     PlayerCredentials: 'Credentials identifying a player in a game.',
     ScoreRequest: 'Player name and difficulty level for a score lookup.',
     NotifyRequest: 'Player credentials and board position for a move.',
-    UpdateRequest: 'Query parameters identifying a player and game update stream.',
     EmptyResult: 'Empty JSON object returned when an operation succeeds without additional data.',
     Result: 'Successful empty result or an application-level error.',
     ErrorResult: 'Application-level error message.',
     Ranking: 'A player score and its ranking level and timestamp.',
-    GameStartEvent: 'JSON payload sent when a game starts.',
-    MoveEvent: 'JSON payload sent when a player makes a move.',
-    GameEndEvent: 'JSON payload sent when a game ends.',
-    Move: 'A player move and the affected board cells.',
 };
 
 schemas.EmptyResult = { type: 'object', additionalProperties: false };
@@ -352,42 +346,6 @@ schemas.Ranking = {
         level: { type: 'string', enum: ['beginner', 'intermediate', 'expert'] },
         score: { type: 'integer' },
         timestamp: { type: 'integer', format: 'int64' },
-    },
-};
-schemas.GameStartEvent = {
-    type: 'object',
-    required: ['opponent', 'turn'],
-    properties: { opponent: { type: 'string' }, turn: { type: 'string' } },
-};
-schemas.MoveEvent = {
-    type: 'object',
-    required: ['move', 'turn'],
-    properties: {
-        move: { $ref: '#/components/schemas/Move' },
-        turn: { type: 'string' },
-    },
-};
-schemas.GameEndEvent = {
-    type: 'object',
-    required: ['move', 'winner'],
-    properties: {
-        move: { $ref: '#/components/schemas/Move' },
-        winner: { type: 'string' },
-    },
-};
-schemas.Move = {
-    type: 'object',
-    required: ['name', 'cells'],
-    properties: {
-        name: { type: 'string' },
-        cells: {
-            type: 'array',
-            items: {
-                type: 'array',
-                items: { type: 'integer', minimum: -1 },
-            },
-        },
-        winner: { type: 'string' },
     },
 };
 for (const name of [...Object.keys(requestSchemas), 'ErrorResult']) {
@@ -500,7 +458,7 @@ const document = {
                 },
             },
         },
-        schemas,
+        schemas: Object.fromEntries(Object.entries(schemas).filter(([name]) => name !== 'UpdateRequest')),
     },
 };
 
