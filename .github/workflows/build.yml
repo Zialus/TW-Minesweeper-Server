@@ -30,12 +30,12 @@ jobs:
                   cache: true
 
             - name: 📦 Install dependencies
-              run: pnpm install --frozen-lockfile
+              run: pnpm install --ignore-scripts --frozen-lockfile
 
-            - name: Generate OpenAPI spec
+            - name: 📄 Generate OpenAPI spec
               run: pnpm run openapi:generate
 
-            - name: Verify generated OpenAPI spec
+            - name: ✅ Verify generated OpenAPI spec
               run: |
                   if [ -n "$(git status --porcelain -- openapi.yaml)" ]; then
                     echo "openapi.yaml is out of date; regenerate it and commit the result."
@@ -43,7 +43,7 @@ jobs:
                     exit 1
                   fi
 
-            - name: Lint OpenAPI spec
+            - name: 🔍 Lint OpenAPI spec
               run: pnpm run openapi:lint
 
             - name: 🏗️ Run build
@@ -81,12 +81,14 @@ jobs:
         runs-on: 'ubuntu-26.04'
         permissions:
             contents: read
-            pull-requests: write
+            pull-requests: write  # Schemathesis action posts its report as a PR comment
         steps:
             - name: 📥 Checkout repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+              with:
+                  persist-credentials: false
 
-            - name: Start PostgreSQL with Docker Compose
+            - name: 🐘 Start PostgreSQL with Docker Compose
               run: docker compose up --detach --wait postgres
 
             - name: 🟢 Setup Node.js 26
@@ -100,12 +102,12 @@ jobs:
                   cache: true
 
             - name: 📦 Install dependencies
-              run: pnpm install --frozen-lockfile
+              run: pnpm install --ignore-scripts --frozen-lockfile
 
-            - name: Build API and generate OpenAPI spec
+            - name: 🏗️ Build API and generate OpenAPI spec
               run: pnpm run openapi:generate
 
-            - name: Start API for Schemathesis
+            - name: 🚀 Start API for Schemathesis
               env:
                   PGHOST: 127.0.0.1
                   PGPORT: 5432
@@ -127,7 +129,7 @@ jobs:
                     node dist/app.js >"$server_log" 2>&1 &
                   echo "$!" >"$server_pid_file"
 
-                  for attempt in $(seq 1 30); do
+                  for _ in $(seq 1 30); do
                     if curl --silent --fail \
                       --header 'Content-Type: application/json' \
                       --data '{"level":"beginner"}' \
@@ -150,14 +152,14 @@ jobs:
                     exit 1
                   fi
 
-            - name: Prepare Schemathesis fixtures
+            - name: 🧰 Prepare Schemathesis fixtures
               run: |
                   curl --silent --show-error --fail \
                     --header 'Content-Type: application/json' \
                     --data '{"name":"schemathesis-player","pass":"schemathesis-password"}' \
                     http://127.0.0.1:9876/register
 
-            - name: Test live API with Schemathesis
+            - name: 🧪 Test live API with Schemathesis
               uses: schemathesis/action@806cace2053cbbac93188e1281ff7da415643160  # v3.0.0
               with:
                   schema: openapi.yaml
@@ -166,15 +168,13 @@ jobs:
                   coverage: 'true'
                   args: >-
                       --exclude-checks unsupported_method
-                      --mode all
                       --generation-allow-x00 false
                       --seed 20261007
-                      --phases examples,coverage
                       --request-timeout 5
                       --rate-limit 100/m
                       --workers 1
 
-            - name: Stop API
+            - name: 🛑 Stop API
               if: always()
               run: |
                   if [ -f "$RUNNER_TEMP/minesweeper-api.pid" ]; then
@@ -185,7 +185,7 @@ jobs:
                   fi
               continue-on-error: true
 
-            - name: Stop PostgreSQL with Docker Compose
+            - name: 🛑 Stop PostgreSQL with Docker Compose
               if: always()
               run: docker compose down --volumes --remove-orphans
               continue-on-error: true
