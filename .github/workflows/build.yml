@@ -166,7 +166,7 @@ jobs:
                   coverage: 'true'
                   args: >-
                       --exclude-checks unsupported_method
-                      --mode positive
+                      --mode all
                       --generation-allow-x00 false
                       --seed 20261007
                       --phases examples,coverage
