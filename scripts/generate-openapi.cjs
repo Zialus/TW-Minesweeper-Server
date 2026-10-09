@@ -313,28 +313,25 @@ for (const [name, operation] of Object.entries(apiOperations)) {
                   name: parameterName,
                   in: 'query',
                   required: schemas[operation.requestSchemaName].required.includes(parameterName),
+                  description: {
+                      game: 'Game identifier.',
+                      name: 'Player name.',
+                      key: 'Player key.',
+                  }[parameterName],
                   schema,
               }))
             : undefined;
-    const description =
-        name === 'register'
-            ? 'Creates a user when the name is new. For an existing user, validates the password. Application-level errors are returned as JSON with HTTP 200; malformed request bodies return HTTP 400.'
-            : name === 'join'
-              ? 'Returns a game identifier and player key when the credentials are valid.'
-              : name === 'notify'
-                ? 'Coordinates are one-based row and column positions.'
-                : name === 'update'
-                  ? 'Opens a server-sent events connection. Events are sent as data lines containing JSON for a game start, move, or end. Invalid credentials produce an application-level JSON error with HTTP 200 instead of an event stream.'
-                  : undefined;
 
     pathItem[operation.method] = {
         operationId: operation.operationId,
         summary: operation.summary,
-        ...(description === undefined ? {} : { description }),
+        description: operation.description,
+        tags: [operation.tag],
         ...(parameters === undefined
             ? {
                   requestBody: {
                       required: true,
+                      description: operation.requestDescription,
                       content: {
                           'application/json': {
                               schema: { $ref: `#/components/schemas/${operation.requestSchemaName}` },
@@ -359,6 +356,11 @@ const document = {
         version: '1.0.0',
         description: 'HTTP and server-sent event API implemented by the Minesweeper server.',
     },
+    tags: [
+        { name: 'Games', description: 'Game and matchmaking operations.' },
+        { name: 'Rankings', description: 'Player rankings and scores.' },
+        { name: 'Users', description: 'User registration and authentication.' },
+    ],
     servers: [{ url: '/' }],
     paths,
     components: {

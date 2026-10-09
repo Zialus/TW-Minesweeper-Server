@@ -160,7 +160,6 @@ jobs:
                   schema: openapi.yaml
                   base-url: http://127.0.0.1:9876
                   version: 4.29.4
-                  max-examples: '1'
                   coverage: 'true'
                   args: >-
                       --exclude-checks unsupported_method
