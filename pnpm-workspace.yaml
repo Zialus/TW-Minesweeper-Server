@@ -1,3 +1,4 @@
 allowBuilds:
+    '@quobix/vacuum': false
     unrs-resolver: false
 minimumReleaseAge: 1440
