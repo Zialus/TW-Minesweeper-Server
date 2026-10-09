@@ -14,16 +14,7 @@ import type { Ranking } from './Ranking';
 import type { Player } from './Player';
 import type { Game } from './Game';
 import type { Move } from './Move';
-import {
-    apiOperations,
-    joinRequestSchema,
-    notifyRequestSchema,
-    rankingRequestSchema,
-    registerRequestSchema,
-    scoreRequestSchema,
-    playerCredentialsSchema,
-    updateRequestSchema,
-} from './api-schemas';
+import { apiOperations } from './api-schemas';
 import { countNeighbours, expandPop } from './board';
 
 const logger = pino({
@@ -422,7 +413,7 @@ function createHash(str: string): string {
 
 // Deals with both registration and login
 app.post(apiOperations.register.path, generalRateLimit, (request, response) => {
-    const parse = registerRequestSchema.safeParse(request.body);
+    const parse = apiOperations.register.requestSchema.safeParse(request.body);
 
     if (!parse.success) {
         response.status(STATUS_BAD_REQUEST).json(parse.error);
@@ -476,7 +467,7 @@ app.post(apiOperations.register.path, generalRateLimit, (request, response) => {
 });
 
 app.post(apiOperations.ranking.path, generalRateLimit, (request, response) => {
-    const parse = rankingRequestSchema.safeParse(request.body);
+    const parse = apiOperations.ranking.requestSchema.safeParse(request.body);
 
     if (!parse.success) {
         response.status(STATUS_BAD_REQUEST).json(parse.error);
@@ -498,7 +489,7 @@ app.post(apiOperations.ranking.path, generalRateLimit, (request, response) => {
 });
 
 app.post(apiOperations.join.path, generalRateLimit, (request, response) => {
-    const parse = joinRequestSchema.safeParse(request.body);
+    const parse = apiOperations.join.requestSchema.safeParse(request.body);
 
     if (!parse.success) {
         response.status(STATUS_BAD_REQUEST).json(parse.error);
@@ -551,7 +542,7 @@ app.post(apiOperations.join.path, generalRateLimit, (request, response) => {
 });
 
 app.post(apiOperations.leave.path, (request, response) => {
-    const parse = playerCredentialsSchema.safeParse(request.body);
+    const parse = apiOperations.leave.requestSchema.safeParse(request.body);
 
     if (!parse.success) {
         response.status(STATUS_BAD_REQUEST).json(parse.error);
@@ -574,7 +565,7 @@ app.post(apiOperations.leave.path, (request, response) => {
 });
 
 app.post(apiOperations.score.path, generalRateLimit, (request, response) => {
-    const parse = scoreRequestSchema.safeParse(request.body);
+    const parse = apiOperations.score.requestSchema.safeParse(request.body);
 
     if (!parse.success) {
         response.status(STATUS_BAD_REQUEST).json(parse.error);
@@ -608,7 +599,7 @@ function validNameAndKey(name: string, key: string, game: number): boolean {
 }
 
 app.post(apiOperations.notify.path, notifyRateLimit, (request, response) => {
-    const parse = notifyRequestSchema.safeParse(request.body);
+    const parse = apiOperations.notify.requestSchema.safeParse(request.body);
 
     if (!parse.success) {
         response.status(STATUS_BAD_REQUEST).json(parse.error);
@@ -654,7 +645,7 @@ app.post(apiOperations.notify.path, notifyRateLimit, (request, response) => {
 });
 
 app.get(apiOperations.update.path, (request, response) => {
-    const parse = updateRequestSchema.safeParse(request.query);
+    const parse = apiOperations.update.requestSchema.safeParse(request.query);
 
     if (!parse.success) {
         response.status(STATUS_BAD_REQUEST).json(parse.error);
