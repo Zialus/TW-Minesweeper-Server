@@ -125,7 +125,7 @@ export const apiOperations = {
         operationId: 'subscribeToGame',
         summary: 'Subscribe to game updates',
         description:
-            'Opens a server-sent events connection. Events are sent as data lines containing JSON for a game start, move, or end. Invalid credentials produce an application-level JSON error with HTTP 200 instead of an event stream.',
+            'Streams JSON game-start, move, and end events via SSE; invalid credentials return a JSON error with HTTP 200.',
         tag: 'Games',
         requestSource: 'query',
         requestSchemaName: 'UpdateRequest',
