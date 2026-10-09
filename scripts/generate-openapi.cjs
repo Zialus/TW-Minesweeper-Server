@@ -244,6 +244,24 @@ const schemas = Object.fromEntries(
     }),
 );
 
+const schemaDescriptions = {
+    RegisterRequest: 'User name and password used to register or log in.',
+    RankingRequest: 'Request for rankings at a difficulty level.',
+    JoinRequest: 'User credentials and game settings used to join matchmaking.',
+    PlayerCredentials: 'Credentials identifying a player in a game.',
+    ScoreRequest: 'Player name and difficulty level for a score lookup.',
+    NotifyRequest: 'Player credentials and board position for a move.',
+    UpdateRequest: 'Query parameters identifying a player and game update stream.',
+    EmptyResult: 'Empty JSON object returned when an operation succeeds without additional data.',
+    Result: 'Successful empty result or an application-level error.',
+    ErrorResult: 'Application-level error message.',
+    Ranking: 'A player score and its ranking level and timestamp.',
+    GameStartEvent: 'JSON payload sent when a game starts.',
+    MoveEvent: 'JSON payload sent when a player makes a move.',
+    GameEndEvent: 'JSON payload sent when a game ends.',
+    Move: 'A player move and the affected board cells.',
+};
+
 schemas.EmptyResult = { type: 'object', additionalProperties: false };
 schemas.Result = { oneOf: [emptyResult, errorResult] };
 schemas.ErrorResult = {
@@ -297,6 +315,9 @@ schemas.Move = {
         winner: { type: 'string' },
     },
 };
+for (const [name, description] of Object.entries(schemaDescriptions)) {
+    schemas[name].description = description;
+}
 
 for (const name of Object.keys(apiOperations)) {
     if (!responses[name]?.['200']) {

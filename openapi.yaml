@@ -3,6 +3,16 @@ info:
   title: "TW Minesweeper Server API"
   version: "1.0.0"
   description: "HTTP and server-sent event API implemented by the Minesweeper server."
+tags:
+  -
+    name: "Games"
+    description: "Game and matchmaking operations."
+  -
+    name: "Rankings"
+    description: "Player rankings and scores."
+  -
+    name: "Users"
+    description: "User registration and authentication."
 servers:
   -
     url: "/"
@@ -11,9 +21,12 @@ paths:
     post:
       operationId: "register"
       summary: "Register a user or log in an existing user"
-      description: "Creates a user when the name is new. For an existing user, validates the password. Application-level errors are returned as JSON with HTTP 200; malformed request bodies return HTTP 400."
+      description: "Creates a user when the name is new. For an existing user, validates the password."
+      tags:
+        - "Users"
       requestBody:
         required: true
+        description: "User name and password."
         content:
           "application/json":
             schema:
@@ -39,8 +52,12 @@ paths:
     post:
       operationId: "getRanking"
       summary: "Get the top ten rankings for a level"
+      description: "Returns the top ten rankings for the requested difficulty level."
+      tags:
+        - "Rankings"
       requestBody:
         required: true
+        description: "Difficulty level for which to retrieve rankings."
         content:
           "application/json":
             schema:
@@ -69,8 +86,11 @@ paths:
       operationId: "joinGame"
       summary: "Join the waiting queue for a game"
       description: "Returns a game identifier and player key when the credentials are valid."
+      tags:
+        - "Games"
       requestBody:
         required: true
+        description: "User credentials and desired game settings."
         content:
           "application/json":
             schema:
@@ -107,8 +127,12 @@ paths:
     post:
       operationId: "leaveQueue"
       summary: "Leave the waiting queue"
+      description: "Removes a player from the waiting queue when the game credentials are valid."
+      tags:
+        - "Games"
       requestBody:
         required: true
+        description: "Game identifier and player credentials."
         content:
           "application/json":
             schema:
@@ -133,8 +157,12 @@ paths:
     post:
       operationId: "getScore"
       summary: "Get a player's score for a level"
+      description: "Returns the player score for the requested difficulty level."
+      tags:
+        - "Rankings"
       requestBody:
         required: true
+        description: "Player name and difficulty level."
         content:
           "application/json":
             schema:
@@ -164,9 +192,12 @@ paths:
     post:
       operationId: "notifyMove"
       summary: "Submit a move in a game"
-      description: "Coordinates are one-based row and column positions."
+      description: "Submits a one-based row and column position for the current game."
+      tags:
+        - "Games"
       requestBody:
         required: true
+        description: "Game credentials and the row and column of the move."
         content:
           "application/json":
             schema:
@@ -191,11 +222,14 @@ paths:
       operationId: "subscribeToGame"
       summary: "Subscribe to game updates"
       description: "Opens a server-sent events connection. Events are sent as data lines containing JSON for a game start, move, or end. Invalid credentials produce an application-level JSON error with HTTP 200 instead of an event stream."
+      tags:
+        - "Games"
       parameters:
         -
           name: "game"
           in: "query"
           required: true
+          description: "Game identifier."
           schema:
             type: "string"
             minLength: 1
@@ -203,6 +237,7 @@ paths:
           name: "name"
           in: "query"
           required: true
+          description: "Player name."
           schema:
             type: "string"
             minLength: 1
@@ -210,6 +245,7 @@ paths:
           name: "key"
           in: "query"
           required: true
+          description: "Player key."
           schema:
             type: "string"
             minLength: 1
@@ -267,6 +303,7 @@ components:
       required:
         - "name"
         - "pass"
+      description: "User name and password used to register or log in."
     RankingRequest:
       type: "object"
       properties:
@@ -275,6 +312,7 @@ components:
           minLength: 1
       required:
         - "level"
+      description: "Request for rankings at a difficulty level."
     JoinRequest:
       type: "object"
       properties:
@@ -295,6 +333,7 @@ components:
         - "pass"
         - "group"
         - "level"
+      description: "User credentials and game settings used to join matchmaking."
     PlayerCredentials:
       type: "object"
       properties:
@@ -312,6 +351,7 @@ components:
         - "game"
         - "name"
         - "key"
+      description: "Credentials identifying a player in a game."
     ScoreRequest:
       type: "object"
       properties:
@@ -324,6 +364,7 @@ components:
       required:
         - "name"
         - "level"
+      description: "Player name and difficulty level for a score lookup."
     NotifyRequest:
       type: "object"
       properties:
@@ -351,6 +392,7 @@ components:
         - "key"
         - "row"
         - "col"
+      description: "Player credentials and board position for a move."
     UpdateRequest:
       type: "object"
       properties:
@@ -367,15 +409,18 @@ components:
         - "game"
         - "name"
         - "key"
+      description: "Query parameters identifying a player and game update stream."
     EmptyResult:
       type: "object"
       additionalProperties: false
+      description: "Empty JSON object returned when an operation succeeds without additional data."
     Result:
       oneOf:
         -
           "$ref": "#/components/schemas/EmptyResult"
         -
           "$ref": "#/components/schemas/ErrorResult"
+      description: "Successful empty result or an application-level error."
     ErrorResult:
       type: "object"
       required:
@@ -383,6 +428,7 @@ components:
       properties:
         error:
           type: "string"
+      description: "Application-level error message."
     Ranking:
       type: "object"
       required:
@@ -404,6 +450,7 @@ components:
         timestamp:
           type: "integer"
           format: "int64"
+      description: "A player score and its ranking level and timestamp."
     GameStartEvent:
       type: "object"
       required:
@@ -414,6 +461,7 @@ components:
           type: "string"
         turn:
           type: "string"
+      description: "JSON payload sent when a game starts."
     MoveEvent:
       type: "object"
       required:
@@ -424,6 +472,7 @@ components:
           "$ref": "#/components/schemas/Move"
         turn:
           type: "string"
+      description: "JSON payload sent when a player makes a move."
     GameEndEvent:
       type: "object"
       required:
@@ -434,6 +483,7 @@ components:
           "$ref": "#/components/schemas/Move"
         winner:
           type: "string"
+      description: "JSON payload sent when a game ends."
     Move:
       type: "object"
       required:
@@ -451,3 +501,4 @@ components:
               minimum: -1
         winner:
           type: "string"
+      description: "A player move and the affected board cells."
