@@ -147,6 +147,13 @@ jobs:
                     exit 1
                   fi
 
+            - name: Prepare Schemathesis fixtures
+              run: |
+                  curl --silent --show-error --fail \
+                    --header 'Content-Type: application/json' \
+                    --data '{"name":"schemathesis-player","pass":"schemathesis-password"}' \
+                    http://127.0.0.1:9876/register
+
             - name: Test live API with Schemathesis
               uses: schemathesis/action@806cace2053cbbac93188e1281ff7da415643160  # v3.0.0
               with:
@@ -156,8 +163,6 @@ jobs:
                   max-examples: '1'
                   coverage: 'true'
                   args: >-
-                      --exclude-operation-id joinGame
-                      --exclude-operation-id leaveQueue
                       --exclude-checks unsupported_method
                       --mode positive
                       --generation-allow-x00 false

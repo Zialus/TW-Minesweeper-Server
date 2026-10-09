@@ -37,6 +37,30 @@ const emptyResult = { $ref: '#/components/schemas/EmptyResult' };
 const badRequestResponse = { $ref: '#/components/responses/BadRequest' };
 const rateLimitResponse = { $ref: '#/components/responses/TooManyRequests' };
 
+const requestExamples = {
+    join: {
+        waitingPlayer: {
+            summary: 'Join the queue as the CI test player',
+            value: {
+                name: 'schemathesis-player',
+                pass: 'schemathesis-password',
+                group: 0,
+                level: 'beginner',
+            },
+        },
+    },
+    leave: {
+        unknownPlayer: {
+            summary: 'Credentials for a player who is not in a game',
+            value: {
+                game: 0,
+                name: 'unknown-player',
+                key: 'unknown-key',
+            },
+        },
+    },
+};
+
 const responses = {
     register: {
         200: {
@@ -314,6 +338,7 @@ for (const [name, operation] of Object.entries(apiOperations)) {
                       content: {
                           'application/json': {
                               schema: { $ref: `#/components/schemas/${operation.requestSchemaName}` },
+                              ...(requestExamples[name] === undefined ? {} : { examples: requestExamples[name] }),
                           },
                       },
                   },

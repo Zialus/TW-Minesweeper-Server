@@ -75,6 +75,14 @@ paths:
           "application/json":
             schema:
               "$ref": "#/components/schemas/JoinRequest"
+            examples:
+              waitingPlayer:
+                summary: "Join the queue as the CI test player"
+                value:
+                  name: "schemathesis-player"
+                  pass: "schemathesis-password"
+                  group: 0
+                  level: "beginner"
       responses:
         "200":
           description: "Game and player credentials"
@@ -105,6 +113,13 @@ paths:
           "application/json":
             schema:
               "$ref": "#/components/schemas/PlayerCredentials"
+            examples:
+              unknownPlayer:
+                summary: "Credentials for a player who is not in a game"
+                value:
+                  game: 0
+                  name: "unknown-player"
+                  key: "unknown-key"
       responses:
         "200":
           description: "Request accepted"
