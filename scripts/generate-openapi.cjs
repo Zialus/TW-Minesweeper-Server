@@ -504,4 +504,4 @@ const document = {
     },
 };
 
-writeFileSync(resolve(__dirname, '../openapi.yaml'), `${toYaml(document)}\n`);
+writeFileSync(resolve(__dirname, '../docs/openapi.yaml'), `${toYaml(document)}\n`);

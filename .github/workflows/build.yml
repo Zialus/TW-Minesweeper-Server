@@ -98,9 +98,9 @@ jobs:
 
             - name: ✅ Verify generated OpenAPI spec
               run: |
-                  if [ -n "$(git status --porcelain -- openapi.yaml)" ]; then
-                    echo "openapi.yaml is out of date; regenerate it and commit the result."
-                    git diff -- openapi.yaml
+                  if [ -n "$(git status --porcelain -- docs/openapi.yaml)" ]; then
+                    echo "docs/openapi.yaml is out of date; regenerate it and commit the result."
+                    git diff -- docs/openapi.yaml
                     exit 1
                   fi
 
@@ -162,7 +162,7 @@ jobs:
             - name: 🧪 Test live API with Schemathesis
               uses: schemathesis/action@806cace2053cbbac93188e1281ff7da415643160  # v3.0.0
               with:
-                  schema: openapi.yaml
+                  schema: docs/openapi.yaml
                   base-url: http://127.0.0.1:9876
                   version: 4.29.4
                   coverage: 'true'
