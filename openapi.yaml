@@ -31,6 +31,12 @@ paths:
           "application/json":
             schema:
               "$ref": "#/components/schemas/RegisterRequest"
+            examples:
+              existingUser:
+                summary: "Log in as the CI test player"
+                value:
+                  name: "schemathesis-player"
+                  pass: "schemathesis-password"
       responses:
         "200":
           description: "Registration or login result"
@@ -62,6 +68,11 @@ paths:
           "application/json":
             schema:
               "$ref": "#/components/schemas/RankingRequest"
+            examples:
+              beginner:
+                summary: "Get beginner rankings"
+                value:
+                  level: "beginner"
       responses:
         "200":
           description: "Rankings ordered by score and timestamp"
@@ -167,6 +178,12 @@ paths:
           "application/json":
             schema:
               "$ref": "#/components/schemas/ScoreRequest"
+            examples:
+              beginner:
+                summary: "Get beginner score for the CI test player"
+                value:
+                  name: "schemathesis-player"
+                  level: "beginner"
       responses:
         "200":
           description: "Player score or an application-level error"
@@ -202,6 +219,15 @@ paths:
           "application/json":
             schema:
               "$ref": "#/components/schemas/NotifyRequest"
+            examples:
+              invalidPlayer:
+                summary: "Submit a move with unknown player credentials"
+                value:
+                  game: 0
+                  name: "unknown-player"
+                  key: "unknown-key"
+                  row: 1
+                  col: 1
       responses:
         "200":
           description: "Move accepted, or an application-level error"
@@ -230,6 +256,7 @@ paths:
           in: "query"
           required: true
           description: "Game identifier."
+          example: "0"
           schema:
             type: "string"
             minLength: 1
@@ -238,6 +265,7 @@ paths:
           in: "query"
           required: true
           description: "Player name."
+          example: "unknown-player"
           schema:
             type: "string"
             minLength: 1
@@ -246,6 +274,7 @@ paths:
           in: "query"
           required: true
           description: "Player key."
+          example: "unknown-key"
           schema:
             type: "string"
             minLength: 1

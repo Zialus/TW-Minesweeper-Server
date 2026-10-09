@@ -38,6 +38,21 @@ const badRequestResponse = { $ref: '#/components/responses/BadRequest' };
 const rateLimitResponse = { $ref: '#/components/responses/TooManyRequests' };
 
 const requestExamples = {
+    register: {
+        existingUser: {
+            summary: 'Log in as the CI test player',
+            value: {
+                name: 'schemathesis-player',
+                pass: 'schemathesis-password',
+            },
+        },
+    },
+    ranking: {
+        beginner: {
+            summary: 'Get beginner rankings',
+            value: { level: 'beginner' },
+        },
+    },
     join: {
         waitingPlayer: {
             summary: 'Join the queue as the CI test player',
@@ -58,6 +73,35 @@ const requestExamples = {
                 key: 'unknown-key',
             },
         },
+    },
+    score: {
+        beginner: {
+            summary: 'Get beginner score for the CI test player',
+            value: {
+                name: 'schemathesis-player',
+                level: 'beginner',
+            },
+        },
+    },
+    notify: {
+        invalidPlayer: {
+            summary: 'Submit a move with unknown player credentials',
+            value: {
+                game: 0,
+                name: 'unknown-player',
+                key: 'unknown-key',
+                row: 1,
+                col: 1,
+            },
+        },
+    },
+};
+
+const queryExamples = {
+    update: {
+        game: '0',
+        name: 'unknown-player',
+        key: 'unknown-key',
     },
 };
 
@@ -339,6 +383,7 @@ for (const [name, operation] of Object.entries(apiOperations)) {
                       name: 'Player name.',
                       key: 'Player key.',
                   }[parameterName],
+                  ...(queryExamples[name] === undefined ? {} : { example: queryExamples[name][parameterName] }),
                   schema,
               }))
             : undefined;
