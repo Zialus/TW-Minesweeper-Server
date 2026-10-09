@@ -105,6 +105,20 @@ const queryExamples = {
     },
 };
 
+const rankingEntry = { name: 'schemathesis-player', level: 'beginner', score: 42, timestamp: 1700000000000 };
+
+const propertyExamples = {
+    name: 'schemathesis-player',
+    pass: 'schemathesis-password',
+    level: 'beginner',
+    group: 0,
+    game: 0,
+    key: 'unknown-key',
+    row: 1,
+    col: 1,
+    error: 'Utilizador registado com senha diferente',
+};
+
 const responses = {
     register: {
         200: {
@@ -133,9 +147,12 @@ const responses = {
                                 type: 'array',
                                 maxItems: 10,
                                 items: { $ref: '#/components/schemas/Ranking' },
+                                example: [rankingEntry],
                             },
                         },
+                        example: { ranking: [rankingEntry] },
                     },
+                    examples: { topPlayers: { value: { ranking: [rankingEntry] } } },
                 },
             },
         },
@@ -149,10 +166,11 @@ const responses = {
                         type: 'object',
                         required: ['key', 'game'],
                         properties: {
-                            key: { type: 'string' },
-                            game: { type: 'integer', minimum: 0 },
+                            key: { type: 'string', example: 'player-key' },
+                            game: { type: 'integer', minimum: 0, example: 0 },
                         },
                     },
+                    examples: { joined: { value: { key: 'player-key', game: 0 } } },
                 },
             },
         },
@@ -160,7 +178,9 @@ const responses = {
     leave: {
         200: {
             description: 'Request accepted',
-            content: { 'application/json': { schema: emptyResult } },
+            content: {
+                'application/json': { schema: emptyResult, examples: { accepted: { value: {} } } },
+            },
         },
     },
     score: {
@@ -178,6 +198,10 @@ const responses = {
                             errorResult,
                         ],
                     },
+                    examples: {
+                        score: { value: { score: 42 } },
+                        failure: { value: { error: 'Utilizador inexistente' } },
+                    },
                 },
             },
         },
@@ -188,6 +212,10 @@ const responses = {
             content: {
                 'application/json': {
                     schema: { oneOf: [emptyResult, errorResult] },
+                    examples: {
+                        success: { value: {} },
+                        failure: { value: { error: 'Jogador inexistente' } },
+                    },
                 },
             },
         },
@@ -214,7 +242,10 @@ const responses = {
                         },
                     },
                 },
-                'application/json': { schema: errorResult },
+                'application/json': {
+                    schema: errorResult,
+                    examples: { failure: { value: { error: 'Jogo inexistente' } } },
+                },
             },
         },
     },
@@ -359,6 +390,12 @@ schemas.Move = {
         winner: { type: 'string' },
     },
 };
+for (const name of [...Object.keys(requestSchemas), 'ErrorResult']) {
+    for (const [property, schema] of Object.entries(schemas[name].properties)) {
+        schema.example = name === 'UpdateRequest' ? queryExamples.update[property] : propertyExamples[property];
+    }
+}
+schemas.RegisterRequest.example = requestExamples.register.existingUser.value;
 for (const [name, description] of Object.entries(schemaDescriptions)) {
     schemas[name].description = description;
 }
@@ -439,7 +476,9 @@ const document = {
                             type: 'object',
                             description: 'Zod validation error',
                             additionalProperties: true,
+                            example: { error: 'Invalid request body' },
                         },
+                        examples: { validationError: { value: { error: 'Invalid request body' } } },
                     },
                 },
             },
