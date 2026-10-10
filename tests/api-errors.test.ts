@@ -19,7 +19,7 @@ describe('API error responses', () => {
             json: vi.fn(),
         };
         const next = vi.fn();
-        const error = Object.assign(new SyntaxError('Invalid JSON'), { status: 400 });
+        const error = Object.assign(new SyntaxError('Invalid JSON'), { status: 400, type: 'entity.parse.failed' });
 
         malformedJsonHandler(error, {} as Request, response as unknown as Response, next as NextFunction);
 
@@ -29,7 +29,10 @@ describe('API error responses', () => {
     });
 
     it('passes unrelated errors to Express', () => {
-        const error = new Error('Unexpected failure');
+        const error = Object.assign(new SyntaxError('Unexpected failure'), {
+            status: 400,
+            type: 'request.aborted',
+        });
         const next = vi.fn();
 
         malformedJsonHandler(error, {} as Request, {} as Response, next as NextFunction);

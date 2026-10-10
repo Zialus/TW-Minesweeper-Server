@@ -1,5 +1,7 @@
 # Schemathesis workflow: findings and post-merge follow-up
 
+> Historical PR-run snapshot. Check the linked Actions run and current TraceCov comment for later results.
+
 ## Workflow run reviewed
 
 The latest completed run available when this summary was written was [Build and Test run 304](https://github.com/Zialus/TW-Minesweeper-Server/actions/runs/37961398841), for PR #246 at commit `fc52caca85a16e655857b80bc1d3dbe1e2ece8d3` (2026-10-09).
