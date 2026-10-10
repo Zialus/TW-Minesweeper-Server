@@ -3,6 +3,8 @@ import { z } from 'zod';
 const playerNameSchema = z.string().min(1);
 
 export const invalidCredentialsMessage = 'Credenciais inválidas';
+export const invalidJsonRequestBodyMessage = 'Invalid JSON request body';
+export const invalidRequestBodyMessage = 'Invalid request body';
 
 export const registerRequestSchema = z.object({
     name: playerNameSchema,

@@ -1,8 +1,12 @@
 import type { NextFunction, Request, Response } from 'express';
 import { describe, expect, it, vi } from 'vitest';
 
-import { invalidCredentialsMessage } from '../src/api-schemas';
-import { malformedJsonHandler, respondWithInvalidCredentials } from '../src/api-errors';
+import {
+    invalidCredentialsMessage,
+    invalidJsonRequestBodyMessage,
+    invalidRequestBodyMessage,
+} from '../src/api-schemas';
+import { bodyParserErrorHandler, respondWithInvalidCredentials } from '../src/api-errors';
 
 describe('API error responses', () => {
     it('returns the shared invalid-credentials message', () => {
@@ -14,11 +18,11 @@ describe('API error responses', () => {
     });
 
     it.each([
-        { status: 400, type: 'entity.parse.failed', message: 'Invalid JSON request body' },
-        { status: 400, type: 'request.aborted', message: 'Invalid request body' },
-        { status: 403, type: 'entity.verify.failed', message: 'Invalid request body' },
-        { status: 413, type: 'entity.too.large', message: 'Invalid request body' },
-        { status: 415, type: 'encoding.unsupported', message: 'Invalid request body' },
+        { status: 400, type: 'entity.parse.failed', message: invalidJsonRequestBodyMessage },
+        { status: 400, type: 'request.aborted', message: invalidRequestBodyMessage },
+        { status: 403, type: 'entity.verify.failed', message: invalidRequestBodyMessage },
+        { status: 413, type: 'entity.too.large', message: invalidRequestBodyMessage },
+        { status: 415, type: 'encoding.unsupported', message: invalidRequestBodyMessage },
     ])('returns a JSON $status response for $type', ({ status, type, message }) => {
         const response = {
             status: vi.fn().mockReturnThis(),
@@ -27,7 +31,7 @@ describe('API error responses', () => {
         const next = vi.fn();
         const error = Object.assign(new Error('Request parsing failed'), { status, type });
 
-        malformedJsonHandler(error, {} as Request, response as unknown as Response, next as NextFunction);
+        bodyParserErrorHandler(error, {} as Request, response as unknown as Response, next as NextFunction);
 
         expect(response.status).toHaveBeenCalledWith(status);
         expect(response.json).toHaveBeenCalledWith({ error: message });
@@ -43,7 +47,7 @@ describe('API error responses', () => {
     ])('passes $description to Express', ({ error }) => {
         const next = vi.fn();
 
-        malformedJsonHandler(error, {} as Request, {} as Response, next as NextFunction);
+        bodyParserErrorHandler(error, {} as Request, {} as Response, next as NextFunction);
 
         expect(next).toHaveBeenCalledWith(error);
     });

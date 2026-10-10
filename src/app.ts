@@ -15,7 +15,7 @@ import type { Player } from './Player';
 import type { Game } from './Game';
 import type { Move } from './Move';
 import { apiOperations } from './api-schemas';
-import { malformedJsonHandler, respondWithInvalidCredentials } from './api-errors';
+import { bodyParserErrorHandler, respondWithInvalidCredentials } from './api-errors';
 import { countNeighbours, expandPop } from './board';
 
 const logger = pino({
@@ -697,4 +697,4 @@ app.get(apiOperations.update.path, (request, response) => {
     });
 });
 
-app.use(malformedJsonHandler);
+app.use(bodyParserErrorHandler);

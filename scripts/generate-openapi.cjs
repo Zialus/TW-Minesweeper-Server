@@ -6,6 +6,8 @@ const compiledApiSchemasPath = resolve(__dirname, '../dist/api-schemas.js');
 const {
     apiOperations,
     invalidCredentialsMessage,
+    invalidJsonRequestBodyMessage,
+    invalidRequestBodyMessage,
     joinRequestSchema,
     notifyRequestSchema,
     playerCredentialsSchema,
@@ -465,7 +467,7 @@ const document = {
                             ],
                         },
                         examples: {
-                            malformedJson: { value: { error: 'Invalid JSON request body' } },
+                            malformedJson: { value: { error: invalidJsonRequestBodyMessage } },
                             validationError: {
                                 value: {
                                     name: 'ZodError',
@@ -482,7 +484,7 @@ const document = {
                 content: {
                     'application/json': {
                         schema: errorResult,
-                        examples: { verificationFailed: { value: { error: 'Invalid request body' } } },
+                        examples: { verificationFailed: { value: { error: invalidRequestBodyMessage } } },
                     },
                 },
             },
@@ -491,7 +493,7 @@ const document = {
                 content: {
                     'application/json': {
                         schema: errorResult,
-                        examples: { bodyTooLarge: { value: { error: 'Invalid request body' } } },
+                        examples: { bodyTooLarge: { value: { error: invalidRequestBodyMessage } } },
                     },
                 },
             },
@@ -500,7 +502,7 @@ const document = {
                 content: {
                     'application/json': {
                         schema: errorResult,
-                        examples: { unsupportedEncoding: { value: { error: 'Invalid request body' } } },
+                        examples: { unsupportedEncoding: { value: { error: invalidRequestBodyMessage } } },
                     },
                 },
             },

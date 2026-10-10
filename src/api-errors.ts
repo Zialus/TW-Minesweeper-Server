@@ -1,6 +1,6 @@
 import type { ErrorRequestHandler, Response } from 'express';
 
-import { invalidCredentialsMessage } from './api-schemas';
+import { invalidCredentialsMessage, invalidJsonRequestBodyMessage, invalidRequestBodyMessage } from './api-schemas';
 
 const bodyParserClientErrorTypes = new Set([
     'entity.parse.failed',
@@ -35,11 +35,12 @@ function getBodyParserClientError(error: unknown): { status: number; type: strin
     return { status, type };
 }
 
-export const malformedJsonHandler: ErrorRequestHandler = (error, _request, response, next) => {
+export const bodyParserErrorHandler: ErrorRequestHandler = (error, _request, response, next) => {
     const parserError = getBodyParserClientError(error);
     if (parserError !== undefined) {
         response.status(parserError.status).json({
-            error: parserError.type === 'entity.parse.failed' ? 'Invalid JSON request body' : 'Invalid request body',
+            error:
+                parserError.type === 'entity.parse.failed' ? invalidJsonRequestBodyMessage : invalidRequestBodyMessage,
         });
         return;
     }
