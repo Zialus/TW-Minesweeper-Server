@@ -13,6 +13,7 @@ if (
 
 const {
     apiOperations,
+    invalidCredentialsMessage,
     joinRequestSchema,
     notifyRequestSchema,
     playerCredentialsSchema,
@@ -177,7 +178,7 @@ const responses = {
                     },
                     examples: {
                         joined: { value: { key: 'player-key', game: 0 } },
-                        invalidCredentials: { value: { error: 'Credenciais inválidas' } },
+                        invalidCredentials: { value: { error: invalidCredentialsMessage } },
                     },
                 },
             },
@@ -191,7 +192,7 @@ const responses = {
                     schema: { oneOf: [emptyResult, errorResult] },
                     examples: {
                         accepted: { value: {} },
-                        invalidCredentials: { value: { error: 'Credenciais inválidas' } },
+                        invalidCredentials: { value: { error: invalidCredentialsMessage } },
                     },
                 },
             },

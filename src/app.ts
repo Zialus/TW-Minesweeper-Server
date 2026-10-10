@@ -15,7 +15,7 @@ import type { Ranking } from './Ranking';
 import type { Player } from './Player';
 import type { Game } from './Game';
 import type { Move } from './Move';
-import { apiOperations } from './api-schemas';
+import { apiOperations, invalidCredentialsMessage } from './api-schemas';
 import { countNeighbours, expandPop } from './board';
 
 const logger = pino({
@@ -538,10 +538,10 @@ app.post(apiOperations.join.path, generalRateLimit, (request, response) => {
                 }
                 response.json({ key: p1.key, game: gameId });
             } else {
-                response.json({ error: 'Credenciais inválidas' });
+                response.json({ error: invalidCredentialsMessage });
             }
         } else {
-            response.json({ error: 'Credenciais inválidas' });
+            response.json({ error: invalidCredentialsMessage });
         }
     });
 });
@@ -567,7 +567,7 @@ app.post(apiOperations.leave.path, (request, response) => {
 
         response.json({});
     } else {
-        response.json({ error: 'Credenciais inválidas' });
+        response.json({ error: invalidCredentialsMessage });
     }
 });
 

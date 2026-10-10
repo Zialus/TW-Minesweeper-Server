@@ -2,6 +2,8 @@ import { z } from 'zod';
 
 const playerNameSchema = z.string().min(1);
 
+export const invalidCredentialsMessage = 'Credenciais inválidas';
+
 export const registerRequestSchema = z.object({
     name: playerNameSchema,
     pass: z.string(),
