@@ -106,15 +106,22 @@ const queryExamples = {
 const rankingEntry = { name: 'schemathesis-player', level: 'beginner', score: 42, timestamp: 1700000000000 };
 
 const propertyExamples = {
-    name: 'schemathesis-player',
-    pass: 'schemathesis-password',
-    level: 'beginner',
-    group: 0,
-    game: 0,
-    key: 'unknown-key',
-    row: 1,
-    col: 1,
-    error: 'Utilizador registado com senha diferente',
+    RegisterRequest: {
+        name: 'schemathesis-player',
+        pass: 'schemathesis-password',
+    },
+    RankingRequest: { level: 'beginner' },
+    JoinRequest: {
+        name: 'schemathesis-player',
+        pass: 'schemathesis-password',
+        group: 0,
+        level: 'beginner',
+    },
+    PlayerCredentials: { game: 0, name: 'unknown-player', key: 'unknown-key' },
+    ScoreRequest: { name: 'schemathesis-player', level: 'beginner' },
+    NotifyRequest: { game: 0, name: 'unknown-player', key: 'unknown-key', row: 1, col: 1 },
+    UpdateRequest: queryExamples.update,
+    ErrorResult: { error: 'Utilizador registado com senha diferente' },
 };
 
 const responses = {
@@ -362,7 +369,7 @@ schemas.Ranking = {
 };
 for (const name of [...Object.keys(requestSchemas), 'ErrorResult']) {
     for (const [property, schema] of Object.entries(schemas[name].properties)) {
-        schema.example = name === 'UpdateRequest' ? queryExamples.update[property] : propertyExamples[property];
+        schema.example = propertyExamples[name][property];
     }
 }
 schemas.RegisterRequest.example = requestExamples.register.existingUser.value;

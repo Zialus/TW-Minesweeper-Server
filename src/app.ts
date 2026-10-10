@@ -77,11 +77,6 @@ const DEFAULT_SERVER_PORT = 9876;
 
 const SELECT_FROM_RANKINGS_WHERE_NAME_AND_LEVEL = 'SELECT * FROM rankings WHERE name = $1 AND level = $2';
 
-const server = app.listen(process.env['PORT'] ?? DEFAULT_SERVER_PORT, () => {
-    const serverAddress = server.address() as AddressInfo;
-    logger.info('Listening at http://%s:%d', serverAddress.address, serverAddress.port);
-});
-
 /**
  * Returns the first valid opponent for player1, if he exists, otherwise returns undefined.
  * The calling side will need to add player1 to the waiting list
@@ -698,3 +693,8 @@ app.get(apiOperations.update.path, (request, response) => {
 });
 
 app.use(bodyParserErrorHandler);
+
+const server = app.listen(process.env['PORT'] ?? DEFAULT_SERVER_PORT, () => {
+    const serverAddress = server.address() as AddressInfo;
+    logger.info('Listening at http://%s:%d', serverAddress.address, serverAddress.port);
+});

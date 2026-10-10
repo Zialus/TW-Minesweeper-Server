@@ -129,7 +129,7 @@ export const apiOperations = {
         operationId: 'subscribeToGame',
         summary: 'Subscribe to game updates',
         description:
-            'Streams JSON game-start, move, and end events via SSE; invalid credentials return a JSON error with HTTP 200.',
+            'Streams JSON game-start, move, and end events via SSE when query parameters are valid. Query validation failures return HTTP 400; invalid game credentials return a JSON error with HTTP 200.',
         tag: 'Games',
         requestSource: 'query',
         requestSchemaName: 'UpdateRequest',
