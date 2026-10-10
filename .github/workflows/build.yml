@@ -31,7 +31,7 @@ jobs:
                   cache: true
 
             - name: 📦 Install dependencies
-              run: pnpm install --frozen-lockfile
+              run: pnpm install --frozen-lockfile --ignore-scripts
 
             - name: 🏗️ Run build
               run: pnpm run build
@@ -91,7 +91,10 @@ jobs:
                   cache: true
 
             - name: 📦 Install dependencies
-              run: pnpm install --frozen-lockfile
+              run: pnpm install --frozen-lockfile --ignore-scripts
+
+            - name: 📦 Build Vacuum CLI
+              run: pnpm rebuild @quobix/vacuum
 
             - name: 🏗️ Build API and generate OpenAPI spec
               run: pnpm run openapi:generate

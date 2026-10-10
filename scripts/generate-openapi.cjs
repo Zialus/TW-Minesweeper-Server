@@ -1,15 +1,7 @@
-const { existsSync, statSync, writeFileSync } = require('node:fs');
+const { writeFileSync } = require('node:fs');
 const { resolve } = require('node:path');
 const { toJSONSchema } = require('zod');
 const compiledApiSchemasPath = resolve(__dirname, '../dist/api-schemas.js');
-const sourceApiSchemasPath = resolve(__dirname, '../src/api-schemas.ts');
-
-if (
-    !existsSync(compiledApiSchemasPath) ||
-    statSync(sourceApiSchemasPath).mtimeMs > statSync(compiledApiSchemasPath).mtimeMs
-) {
-    throw new Error('API schemas are not built or are out of date; run `pnpm run build` before generation.');
-}
 
 const {
     apiOperations,
