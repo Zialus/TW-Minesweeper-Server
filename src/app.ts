@@ -1,4 +1,5 @@
 import express, { json, urlencoded } from 'express';
+import type { ErrorRequestHandler } from 'express';
 import cors from 'cors';
 import { Pool } from 'pg';
 import crypto from 'crypto';
@@ -536,7 +537,11 @@ app.post(apiOperations.join.path, generalRateLimit, (request, response) => {
                     );
                 }
                 response.json({ key: p1.key, game: gameId });
+            } else {
+                response.json({ error: 'Credenciais inválidas' });
             }
+        } else {
+            response.json({ error: 'Credenciais inválidas' });
         }
     });
 });
@@ -561,6 +566,8 @@ app.post(apiOperations.leave.path, (request, response) => {
         });
 
         response.json({});
+    } else {
+        response.json({ error: 'Credenciais inválidas' });
     }
 });
 
@@ -689,3 +696,14 @@ app.get(apiOperations.update.path, (request, response) => {
         });
     });
 });
+
+const malformedJsonHandler: ErrorRequestHandler = (error, _request, response, next) => {
+    if (error instanceof SyntaxError && 'status' in error && error.status === STATUS_BAD_REQUEST) {
+        response.status(STATUS_BAD_REQUEST).json({ error: 'Invalid JSON request body' });
+        return;
+    }
+
+    next(error);
+};
+
+app.use(malformedJsonHandler);

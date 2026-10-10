@@ -159,27 +159,41 @@ const responses = {
     },
     join: {
         200: {
-            description: 'Game and player credentials',
+            description: 'Game and player credentials, or an application-level error',
             content: {
                 'application/json': {
                     schema: {
-                        type: 'object',
-                        required: ['key', 'game'],
-                        properties: {
-                            key: { type: 'string', example: 'player-key' },
-                            game: { type: 'integer', minimum: 0, example: 0 },
-                        },
+                        oneOf: [
+                            {
+                                type: 'object',
+                                required: ['key', 'game'],
+                                properties: {
+                                    key: { type: 'string', example: 'player-key' },
+                                    game: { type: 'integer', minimum: 0, example: 0 },
+                                },
+                            },
+                            errorResult,
+                        ],
                     },
-                    examples: { joined: { value: { key: 'player-key', game: 0 } } },
+                    examples: {
+                        joined: { value: { key: 'player-key', game: 0 } },
+                        invalidCredentials: { value: { error: 'Credenciais inválidas' } },
+                    },
                 },
             },
         },
     },
     leave: {
         200: {
-            description: 'Request accepted',
+            description: 'Request accepted, or an application-level error',
             content: {
-                'application/json': { schema: emptyResult, examples: { accepted: { value: {} } } },
+                'application/json': {
+                    schema: { oneOf: [emptyResult, errorResult] },
+                    examples: {
+                        accepted: { value: {} },
+                        invalidCredentials: { value: { error: 'Credenciais inválidas' } },
+                    },
+                },
             },
         },
     },

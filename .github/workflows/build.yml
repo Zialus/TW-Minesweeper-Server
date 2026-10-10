@@ -164,10 +164,12 @@ jobs:
               with:
                   schema: docs/openapi.yaml
                   base-url: http://127.0.0.1:9876
-                  version: 4.29.4
+                  version: 4.30.1
                   coverage: 'true'
                   args: >-
                       --workers auto
+                      --max-examples 150
+                      --continue-on-failure
                       --exclude-checks unsupported_method
                       --generation-allow-x00 false
                       --seed 20261007
