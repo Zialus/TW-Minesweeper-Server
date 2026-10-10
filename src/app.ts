@@ -1,5 +1,4 @@
 import express, { json, urlencoded } from 'express';
-import type { ErrorRequestHandler } from 'express';
 import cors from 'cors';
 import { Pool } from 'pg';
 import crypto from 'crypto';
@@ -15,7 +14,8 @@ import type { Ranking } from './Ranking';
 import type { Player } from './Player';
 import type { Game } from './Game';
 import type { Move } from './Move';
-import { apiOperations, invalidCredentialsMessage } from './api-schemas';
+import { apiOperations } from './api-schemas';
+import { malformedJsonHandler, respondWithInvalidCredentials } from './api-errors';
 import { countNeighbours, expandPop } from './board';
 
 const logger = pino({
@@ -538,10 +538,10 @@ app.post(apiOperations.join.path, generalRateLimit, (request, response) => {
                 }
                 response.json({ key: p1.key, game: gameId });
             } else {
-                response.json({ error: invalidCredentialsMessage });
+                respondWithInvalidCredentials(response);
             }
         } else {
-            response.json({ error: invalidCredentialsMessage });
+            respondWithInvalidCredentials(response);
         }
     });
 });
@@ -567,7 +567,7 @@ app.post(apiOperations.leave.path, (request, response) => {
 
         response.json({});
     } else {
-        response.json({ error: invalidCredentialsMessage });
+        respondWithInvalidCredentials(response);
     }
 });
 
@@ -696,14 +696,5 @@ app.get(apiOperations.update.path, (request, response) => {
         });
     });
 });
-
-const malformedJsonHandler: ErrorRequestHandler = (error, _request, response, next) => {
-    if (error instanceof SyntaxError && 'status' in error && error.status === STATUS_BAD_REQUEST) {
-        response.status(STATUS_BAD_REQUEST).json({ error: 'Invalid JSON request body' });
-        return;
-    }
-
-    next(error);
-};
 
 app.use(malformedJsonHandler);

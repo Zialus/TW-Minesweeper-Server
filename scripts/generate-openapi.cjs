@@ -434,16 +434,36 @@ const document = {
     components: {
         responses: {
             BadRequest: {
-                description: 'Request data failed validation',
+                description: 'Malformed JSON body or request data failed validation',
                 content: {
                     'application/json': {
                         schema: {
-                            type: 'object',
-                            description: 'Zod validation error',
-                            additionalProperties: true,
-                            example: { error: 'Invalid request body' },
+                            oneOf: [
+                                {
+                                    type: 'object',
+                                    required: ['error'],
+                                    properties: { error: { type: 'string' } },
+                                },
+                                {
+                                    type: 'object',
+                                    required: ['name', 'message'],
+                                    properties: {
+                                        name: { type: 'string', const: 'ZodError' },
+                                        message: { type: 'string' },
+                                    },
+                                },
+                            ],
                         },
-                        examples: { validationError: { value: { error: 'Invalid request body' } } },
+                        examples: {
+                            malformedJson: { value: { error: 'Invalid JSON request body' } },
+                            validationError: {
+                                value: {
+                                    name: 'ZodError',
+                                    message:
+                                        '[{"expected":"string","code":"invalid_type","path":["name"],"message":"Invalid input: expected string, received undefined"}]',
+                                },
+                            },
+                        },
                     },
                 },
             },
