@@ -1,0 +1,642 @@
+openapi: "3.1.0"
+info:
+  title: "TW Minesweeper Server API"
+  version: "1.0.0"
+  description: "HTTP and server-sent event API implemented by the Minesweeper server."
+tags:
+  -
+    name: "Games"
+    description: "Game and matchmaking operations."
+  -
+    name: "Rankings"
+    description: "Player rankings and scores."
+  -
+    name: "Users"
+    description: "User registration and authentication."
+servers:
+  -
+    url: "/"
+paths:
+  "/register":
+    post:
+      operationId: "register"
+      summary: "Register a user or log in an existing user"
+      description: "Creates a user when the name is new. For an existing user, validates the password."
+      tags:
+        - "Users"
+      requestBody:
+        required: true
+        description: "User name and password."
+        content:
+          "application/json":
+            schema:
+              "$ref": "#/components/schemas/RegisterRequest"
+            examples:
+              existingUser:
+                summary: "Log in as the CI test player"
+                value:
+                  name: "schemathesis-player"
+                  pass: "schemathesis-password"
+      responses:
+        "200":
+          description: "Registration or login result"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/Result"
+              examples:
+                success:
+                  value: {}
+                failure:
+                  value:
+                    error: "Utilizador registado com senha diferente"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "403":
+          "$ref": "#/components/responses/RequestVerificationFailed"
+        "413":
+          "$ref": "#/components/responses/RequestBodyTooLarge"
+        "415":
+          "$ref": "#/components/responses/UnsupportedMediaType"
+        "429":
+          "$ref": "#/components/responses/TooManyRequests"
+  "/ranking":
+    post:
+      operationId: "getRanking"
+      summary: "Get the top ten rankings for a level"
+      description: "Returns the top ten rankings for the requested difficulty level."
+      tags:
+        - "Rankings"
+      requestBody:
+        required: true
+        description: "Difficulty level for which to retrieve rankings."
+        content:
+          "application/json":
+            schema:
+              "$ref": "#/components/schemas/RankingRequest"
+            examples:
+              beginner:
+                summary: "Get beginner rankings"
+                value:
+                  level: "beginner"
+      responses:
+        "200":
+          description: "Rankings ordered by score and timestamp"
+          content:
+            "application/json":
+              schema:
+                type: "object"
+                required:
+                  - "ranking"
+                properties:
+                  ranking:
+                    type: "array"
+                    maxItems: 10
+                    items:
+                      "$ref": "#/components/schemas/Ranking"
+                    example:
+                      -
+                        name: "schemathesis-player"
+                        level: "beginner"
+                        score: 42
+                        timestamp: 1700000000000
+                example:
+                  ranking:
+                    -
+                      name: "schemathesis-player"
+                      level: "beginner"
+                      score: 42
+                      timestamp: 1700000000000
+              examples:
+                topPlayers:
+                  value:
+                    ranking:
+                      -
+                        name: "schemathesis-player"
+                        level: "beginner"
+                        score: 42
+                        timestamp: 1700000000000
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "403":
+          "$ref": "#/components/responses/RequestVerificationFailed"
+        "413":
+          "$ref": "#/components/responses/RequestBodyTooLarge"
+        "415":
+          "$ref": "#/components/responses/UnsupportedMediaType"
+        "429":
+          "$ref": "#/components/responses/TooManyRequests"
+  "/join":
+    post:
+      operationId: "joinGame"
+      summary: "Join the waiting queue for a game"
+      description: "Returns a game identifier and player key when the credentials are valid."
+      tags:
+        - "Games"
+      requestBody:
+        required: true
+        description: "User credentials and desired game settings."
+        content:
+          "application/json":
+            schema:
+              "$ref": "#/components/schemas/JoinRequest"
+            examples:
+              waitingPlayer:
+                summary: "Join the queue as the CI test player"
+                value:
+                  name: "schemathesis-player"
+                  pass: "schemathesis-password"
+                  group: 0
+                  level: "beginner"
+      responses:
+        "200":
+          description: "Game and player credentials, or an application-level error"
+          content:
+            "application/json":
+              schema:
+                oneOf:
+                  -
+                    type: "object"
+                    required:
+                      - "key"
+                      - "game"
+                    properties:
+                      key:
+                        type: "string"
+                        example: "player-key"
+                      game:
+                        type: "integer"
+                        minimum: 0
+                        example: 0
+                  -
+                    "$ref": "#/components/schemas/ErrorResult"
+              examples:
+                joined:
+                  value:
+                    key: "player-key"
+                    game: 0
+                invalidCredentials:
+                  value:
+                    error: "Credenciais inválidas"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "403":
+          "$ref": "#/components/responses/RequestVerificationFailed"
+        "413":
+          "$ref": "#/components/responses/RequestBodyTooLarge"
+        "415":
+          "$ref": "#/components/responses/UnsupportedMediaType"
+        "429":
+          "$ref": "#/components/responses/TooManyRequests"
+  "/leave":
+    post:
+      operationId: "leaveQueue"
+      summary: "Leave the waiting queue"
+      description: "Removes a player from the waiting queue when the game credentials are valid."
+      tags:
+        - "Games"
+      requestBody:
+        required: true
+        description: "Game identifier and player credentials."
+        content:
+          "application/json":
+            schema:
+              "$ref": "#/components/schemas/PlayerCredentials"
+            examples:
+              unknownPlayer:
+                summary: "Credentials for a player who is not in a game"
+                value:
+                  game: 0
+                  name: "unknown-player"
+                  key: "unknown-key"
+      responses:
+        "200":
+          description: "Request accepted, or an application-level error"
+          content:
+            "application/json":
+              schema:
+                oneOf:
+                  -
+                    "$ref": "#/components/schemas/EmptyResult"
+                  -
+                    "$ref": "#/components/schemas/ErrorResult"
+              examples:
+                accepted:
+                  value: {}
+                invalidCredentials:
+                  value:
+                    error: "Credenciais inválidas"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "403":
+          "$ref": "#/components/responses/RequestVerificationFailed"
+        "413":
+          "$ref": "#/components/responses/RequestBodyTooLarge"
+        "415":
+          "$ref": "#/components/responses/UnsupportedMediaType"
+  "/score":
+    post:
+      operationId: "getScore"
+      summary: "Get a player's score for a level"
+      description: "Returns the player score for the requested difficulty level."
+      tags:
+        - "Rankings"
+      requestBody:
+        required: true
+        description: "Player name and difficulty level."
+        content:
+          "application/json":
+            schema:
+              "$ref": "#/components/schemas/ScoreRequest"
+            examples:
+              beginner:
+                summary: "Get beginner score for the CI test player"
+                value:
+                  name: "schemathesis-player"
+                  level: "beginner"
+      responses:
+        "200":
+          description: "Player score or an application-level error"
+          content:
+            "application/json":
+              schema:
+                oneOf:
+                  -
+                    type: "object"
+                    required:
+                      - "score"
+                    properties:
+                      score:
+                        type: "integer"
+                        minimum: 0
+                  -
+                    "$ref": "#/components/schemas/ErrorResult"
+              examples:
+                score:
+                  value:
+                    score: 42
+                failure:
+                  value:
+                    error: "Utilizador inexistente"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "403":
+          "$ref": "#/components/responses/RequestVerificationFailed"
+        "413":
+          "$ref": "#/components/responses/RequestBodyTooLarge"
+        "415":
+          "$ref": "#/components/responses/UnsupportedMediaType"
+        "429":
+          "$ref": "#/components/responses/TooManyRequests"
+  "/notify":
+    post:
+      operationId: "notifyMove"
+      summary: "Submit a move in a game"
+      description: "Submits a one-based row and column position for the current game."
+      tags:
+        - "Games"
+      requestBody:
+        required: true
+        description: "Game credentials and the row and column of the move."
+        content:
+          "application/json":
+            schema:
+              "$ref": "#/components/schemas/NotifyRequest"
+            examples:
+              invalidPlayer:
+                summary: "Submit a move with unknown player credentials"
+                value:
+                  game: 0
+                  name: "unknown-player"
+                  key: "unknown-key"
+                  row: 1
+                  col: 1
+      responses:
+        "200":
+          description: "Move accepted, or an application-level error"
+          content:
+            "application/json":
+              schema:
+                oneOf:
+                  -
+                    "$ref": "#/components/schemas/EmptyResult"
+                  -
+                    "$ref": "#/components/schemas/ErrorResult"
+              examples:
+                success:
+                  value: {}
+                failure:
+                  value:
+                    error: "Jogador inexistente"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "403":
+          "$ref": "#/components/responses/RequestVerificationFailed"
+        "413":
+          "$ref": "#/components/responses/RequestBodyTooLarge"
+        "415":
+          "$ref": "#/components/responses/UnsupportedMediaType"
+        "429":
+          "$ref": "#/components/responses/TooManyRequests"
+  "/update":
+    get:
+      operationId: "subscribeToGame"
+      summary: "Subscribe to game updates"
+      description: "Streams JSON game-start, move, and end events via SSE when query parameters are valid. Query validation failures return HTTP 400; invalid game credentials return a JSON error with HTTP 200."
+      tags:
+        - "Games"
+      parameters:
+        -
+          name: "game"
+          in: "query"
+          required: true
+          description: "Game identifier."
+          example: "0"
+          schema:
+            type: "string"
+            minLength: 1
+            example: "0"
+        -
+          name: "name"
+          in: "query"
+          required: true
+          description: "Player name."
+          example: "unknown-player"
+          schema:
+            type: "string"
+            minLength: 1
+            example: "unknown-player"
+        -
+          name: "key"
+          in: "query"
+          required: true
+          description: "Player key."
+          example: "unknown-key"
+          schema:
+            type: "string"
+            minLength: 1
+            example: "unknown-key"
+      responses:
+        "200":
+          description: "Server-sent game events, or a JSON application-level error"
+          content:
+            "text/event-stream":
+              schema:
+                type: "string"
+                description: "Each data event contains a JSON game-start, move, or end payload."
+              examples:
+                start:
+                  value: "data: {\"opponent\":\"player2\",\"turn\":\"player1\"}\n\n"
+                move:
+                  value: "data: {\"move\":{\"name\":\"player1\",\"cells\":[[1,1,0]]},\"turn\":\"player2\"}\n\n"
+                end:
+                  value: "data: {\"move\":{\"name\":\"player1\",\"cells\":[[1,1,-1]]},\"winner\":\"player1\"}\n\n"
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ErrorResult"
+              examples:
+                failure:
+                  value:
+                    error: "Jogo inexistente"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+components:
+  responses:
+    BadRequest:
+      description: "Malformed JSON body or request data failed validation"
+      content:
+        "application/json":
+          schema:
+            oneOf:
+              -
+                type: "object"
+                required:
+                  - "error"
+                properties:
+                  error:
+                    type: "string"
+              -
+                type: "object"
+                required:
+                  - "name"
+                  - "message"
+                properties:
+                  name:
+                    type: "string"
+                    const: "ZodError"
+                  message:
+                    type: "string"
+          examples:
+            malformedJson:
+              value:
+                error: "Invalid JSON request body"
+            validationError:
+              value:
+                name: "ZodError"
+                message: "[{\"expected\":\"string\",\"code\":\"invalid_type\",\"path\":[\"name\"],\"message\":\"Invalid input: expected string, received undefined\"}]"
+    RequestVerificationFailed:
+      description: "The request body failed verification"
+      content:
+        "application/json":
+          schema:
+            "$ref": "#/components/schemas/ErrorResult"
+          examples:
+            verificationFailed:
+              value:
+                error: "Invalid request body"
+    RequestBodyTooLarge:
+      description: "The request body exceeds the maximum size"
+      content:
+        "application/json":
+          schema:
+            "$ref": "#/components/schemas/ErrorResult"
+          examples:
+            bodyTooLarge:
+              value:
+                error: "Invalid request body"
+    UnsupportedMediaType:
+      description: "The request body uses an unsupported encoding or character set"
+      content:
+        "application/json":
+          schema:
+            "$ref": "#/components/schemas/ErrorResult"
+          examples:
+            unsupportedEncoding:
+              value:
+                error: "Invalid request body"
+    TooManyRequests:
+      description: "Rate limit exceeded"
+      content:
+        "application/json":
+          schema:
+            type: "object"
+            required:
+              - "message"
+            properties:
+              message:
+                type: "string"
+                example: "Too many requests, please try again later."
+  schemas:
+    RegisterRequest:
+      type: "object"
+      properties:
+        name:
+          type: "string"
+          minLength: 1
+          example: "schemathesis-player"
+        pass:
+          type: "string"
+          example: "schemathesis-password"
+      required:
+        - "name"
+        - "pass"
+      example:
+        name: "schemathesis-player"
+        pass: "schemathesis-password"
+      description: "User name and password used to register or log in."
+    RankingRequest:
+      type: "object"
+      properties:
+        level:
+          type: "string"
+          minLength: 1
+          example: "beginner"
+      required:
+        - "level"
+      description: "Request for rankings at a difficulty level."
+    JoinRequest:
+      type: "object"
+      properties:
+        name:
+          type: "string"
+          minLength: 1
+          example: "schemathesis-player"
+        pass:
+          type: "string"
+          example: "schemathesis-password"
+        group:
+          type: "integer"
+          minimum: 0
+          maximum: 9007199254740991
+          example: 0
+        level:
+          type: "string"
+          minLength: 1
+          example: "beginner"
+      required:
+        - "name"
+        - "pass"
+        - "group"
+        - "level"
+      description: "User credentials and game settings used to join matchmaking."
+    PlayerCredentials:
+      type: "object"
+      properties:
+        game:
+          type: "integer"
+          minimum: 0
+          maximum: 9007199254740991
+          example: 0
+        name:
+          type: "string"
+          minLength: 1
+          example: "unknown-player"
+        key:
+          type: "string"
+          minLength: 1
+          example: "unknown-key"
+      required:
+        - "game"
+        - "name"
+        - "key"
+      description: "Credentials identifying a player in a game."
+    ScoreRequest:
+      type: "object"
+      properties:
+        name:
+          type: "string"
+          minLength: 1
+          example: "schemathesis-player"
+        level:
+          type: "string"
+          minLength: 1
+          example: "beginner"
+      required:
+        - "name"
+        - "level"
+      description: "Player name and difficulty level for a score lookup."
+    NotifyRequest:
+      type: "object"
+      properties:
+        game:
+          type: "integer"
+          minimum: 0
+          maximum: 9007199254740991
+          example: 0
+        name:
+          type: "string"
+          minLength: 1
+          example: "unknown-player"
+        key:
+          type: "string"
+          minLength: 1
+          example: "unknown-key"
+        row:
+          type: "integer"
+          minimum: 0
+          maximum: 9007199254740991
+          example: 1
+        col:
+          type: "integer"
+          minimum: 0
+          maximum: 9007199254740991
+          example: 1
+      required:
+        - "game"
+        - "name"
+        - "key"
+        - "row"
+        - "col"
+      description: "Player credentials and board position for a move."
+    EmptyResult:
+      type: "object"
+      additionalProperties: false
+      description: "Empty JSON object returned when an operation succeeds without additional data."
+    Result:
+      oneOf:
+        -
+          "$ref": "#/components/schemas/EmptyResult"
+        -
+          "$ref": "#/components/schemas/ErrorResult"
+      description: "Successful empty result or an application-level error."
+    ErrorResult:
+      type: "object"
+      required:
+        - "error"
+      properties:
+        error:
+          type: "string"
+          example: "Utilizador registado com senha diferente"
+      description: "Application-level error message."
+    Ranking:
+      type: "object"
+      required:
+        - "name"
+        - "level"
+        - "score"
+        - "timestamp"
+      properties:
+        name:
+          type: "string"
+        level:
+          type: "string"
+          enum:
+            - "beginner"
+            - "intermediate"
+            - "expert"
+        score:
+          type: "integer"
+        timestamp:
+          type: "integer"
+          format: "int64"
+      description: "A player score and its ranking level and timestamp."

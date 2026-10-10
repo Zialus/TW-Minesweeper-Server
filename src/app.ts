@@ -7,7 +7,6 @@ import helmet from 'helmet';
 import pino from 'pino';
 import { rateLimit } from 'express-rate-limit';
 import type { AddressInfo } from 'net';
-import { z } from 'zod';
 
 import type { Connection } from './Connection';
 import type { User } from './User';
@@ -15,6 +14,8 @@ import type { Ranking } from './Ranking';
 import type { Player } from './Player';
 import type { Game } from './Game';
 import type { Move } from './Move';
+import { apiOperations } from './api-schemas';
+import { bodyParserErrorHandler, respondWithInvalidCredentials } from './api-errors';
 import { countNeighbours, expandPop } from './board';
 
 const logger = pino({
@@ -75,11 +76,6 @@ dbConnection.query('SELECT NOW()', (err) => {
 const DEFAULT_SERVER_PORT = 9876;
 
 const SELECT_FROM_RANKINGS_WHERE_NAME_AND_LEVEL = 'SELECT * FROM rankings WHERE name = $1 AND level = $2';
-
-const server = app.listen(process.env['PORT'] ?? DEFAULT_SERVER_PORT, () => {
-    const serverAddress = server.address() as AddressInfo;
-    logger.info('Listening at http://%s:%d', serverAddress.address, serverAddress.port);
-});
 
 /**
  * Returns the first valid opponent for player1, if he exists, otherwise returns undefined.
@@ -412,13 +408,8 @@ function createHash(str: string): string {
 }
 
 // Deals with both registration and login
-app.post('/register', generalRateLimit, (request, response) => {
-    const bodySchema = z.object({
-        name: z.string().min(1),
-        pass: z.string(),
-    });
-
-    const parse = bodySchema.safeParse(request.body);
+app.post(apiOperations.register.path, generalRateLimit, (request, response) => {
+    const parse = apiOperations.register.requestSchema.safeParse(request.body);
 
     if (!parse.success) {
         response.status(STATUS_BAD_REQUEST).json(parse.error);
@@ -471,12 +462,8 @@ app.post('/register', generalRateLimit, (request, response) => {
     });
 });
 
-app.post('/ranking', generalRateLimit, (request, response) => {
-    const bodySchema = z.object({
-        level: z.string().min(1),
-    });
-
-    const parse = bodySchema.safeParse(request.body);
+app.post(apiOperations.ranking.path, generalRateLimit, (request, response) => {
+    const parse = apiOperations.ranking.requestSchema.safeParse(request.body);
 
     if (!parse.success) {
         response.status(STATUS_BAD_REQUEST).json(parse.error);
@@ -497,15 +484,8 @@ app.post('/ranking', generalRateLimit, (request, response) => {
     );
 });
 
-app.post('/join', generalRateLimit, (request, response) => {
-    const bodySchema = z.object({
-        name: z.string().min(1),
-        pass: z.string(),
-        group: z.number().nonnegative(),
-        level: z.string().min(1),
-    });
-
-    const parse = bodySchema.safeParse(request.body);
+app.post(apiOperations.join.path, generalRateLimit, (request, response) => {
+    const parse = apiOperations.join.requestSchema.safeParse(request.body);
 
     if (!parse.success) {
         response.status(STATUS_BAD_REQUEST).json(parse.error);
@@ -552,19 +532,17 @@ app.post('/join', generalRateLimit, (request, response) => {
                     );
                 }
                 response.json({ key: p1.key, game: gameId });
+            } else {
+                respondWithInvalidCredentials(response);
             }
+        } else {
+            respondWithInvalidCredentials(response);
         }
     });
 });
 
-app.post('/leave', (request, response) => {
-    const bodySchema = z.object({
-        game: z.number().nonnegative(),
-        name: z.string().min(1),
-        key: z.string().min(1),
-    });
-
-    const parse = bodySchema.safeParse(request.body);
+app.post(apiOperations.leave.path, (request, response) => {
+    const parse = apiOperations.leave.requestSchema.safeParse(request.body);
 
     if (!parse.success) {
         response.status(STATUS_BAD_REQUEST).json(parse.error);
@@ -583,16 +561,13 @@ app.post('/leave', (request, response) => {
         });
 
         response.json({});
+    } else {
+        respondWithInvalidCredentials(response);
     }
 });
 
-app.post('/score', generalRateLimit, (request, response) => {
-    const bodySchema = z.object({
-        name: z.string().min(1),
-        level: z.string().min(1),
-    });
-
-    const parse = bodySchema.safeParse(request.body);
+app.post(apiOperations.score.path, generalRateLimit, (request, response) => {
+    const parse = apiOperations.score.requestSchema.safeParse(request.body);
 
     if (!parse.success) {
         response.status(STATUS_BAD_REQUEST).json(parse.error);
@@ -625,16 +600,8 @@ function validNameAndKey(name: string, key: string, game: number): boolean {
     return regex.test(name) && testKey(name, key, game);
 }
 
-app.post('/notify', notifyRateLimit, (request, response) => {
-    const bodySchema = z.object({
-        row: z.number().nonnegative(),
-        col: z.number().nonnegative(),
-        game: z.number().nonnegative(),
-        name: z.string().min(1),
-        key: z.string().min(1),
-    });
-
-    const parse = bodySchema.safeParse(request.body);
+app.post(apiOperations.notify.path, notifyRateLimit, (request, response) => {
+    const parse = apiOperations.notify.requestSchema.safeParse(request.body);
 
     if (!parse.success) {
         response.status(STATUS_BAD_REQUEST).json(parse.error);
@@ -679,14 +646,8 @@ app.post('/notify', notifyRateLimit, (request, response) => {
     clickPop(row - 1, col - 1, game);
 });
 
-app.get('/update', (request, response) => {
-    const bodySchema = z.object({
-        game: z.string().min(1),
-        name: z.string().min(1),
-        key: z.string().min(1),
-    });
-
-    const parse = bodySchema.safeParse(request.query);
+app.get(apiOperations.update.path, (request, response) => {
+    const parse = apiOperations.update.requestSchema.safeParse(request.query);
 
     if (!parse.success) {
         response.status(STATUS_BAD_REQUEST).json(parse.error);
@@ -729,4 +690,11 @@ app.get('/update', (request, response) => {
             return false;
         });
     });
+});
+
+app.use(bodyParserErrorHandler);
+
+const server = app.listen(process.env['PORT'] ?? DEFAULT_SERVER_PORT, () => {
+    const serverAddress = server.address() as AddressInfo;
+    logger.info('Listening at http://%s:%d', serverAddress.address, serverAddress.port);
 });
