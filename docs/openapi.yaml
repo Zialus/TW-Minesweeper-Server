@@ -52,6 +52,12 @@ paths:
                     error: "Utilizador registado com senha diferente"
         "400":
           "$ref": "#/components/responses/BadRequest"
+        "403":
+          "$ref": "#/components/responses/RequestVerificationFailed"
+        "413":
+          "$ref": "#/components/responses/RequestBodyTooLarge"
+        "415":
+          "$ref": "#/components/responses/UnsupportedMediaType"
         "429":
           "$ref": "#/components/responses/TooManyRequests"
   "/ranking":
@@ -112,6 +118,12 @@ paths:
                         timestamp: 1700000000000
         "400":
           "$ref": "#/components/responses/BadRequest"
+        "403":
+          "$ref": "#/components/responses/RequestVerificationFailed"
+        "413":
+          "$ref": "#/components/responses/RequestBodyTooLarge"
+        "415":
+          "$ref": "#/components/responses/UnsupportedMediaType"
         "429":
           "$ref": "#/components/responses/TooManyRequests"
   "/join":
@@ -168,6 +180,12 @@ paths:
                     error: "Credenciais inválidas"
         "400":
           "$ref": "#/components/responses/BadRequest"
+        "403":
+          "$ref": "#/components/responses/RequestVerificationFailed"
+        "413":
+          "$ref": "#/components/responses/RequestBodyTooLarge"
+        "415":
+          "$ref": "#/components/responses/UnsupportedMediaType"
         "429":
           "$ref": "#/components/responses/TooManyRequests"
   "/leave":
@@ -210,6 +228,12 @@ paths:
                     error: "Credenciais inválidas"
         "400":
           "$ref": "#/components/responses/BadRequest"
+        "403":
+          "$ref": "#/components/responses/RequestVerificationFailed"
+        "413":
+          "$ref": "#/components/responses/RequestBodyTooLarge"
+        "415":
+          "$ref": "#/components/responses/UnsupportedMediaType"
   "/score":
     post:
       operationId: "getScore"
@@ -256,6 +280,12 @@ paths:
                     error: "Utilizador inexistente"
         "400":
           "$ref": "#/components/responses/BadRequest"
+        "403":
+          "$ref": "#/components/responses/RequestVerificationFailed"
+        "413":
+          "$ref": "#/components/responses/RequestBodyTooLarge"
+        "415":
+          "$ref": "#/components/responses/UnsupportedMediaType"
         "429":
           "$ref": "#/components/responses/TooManyRequests"
   "/notify":
@@ -300,6 +330,12 @@ paths:
                     error: "Jogador inexistente"
         "400":
           "$ref": "#/components/responses/BadRequest"
+        "403":
+          "$ref": "#/components/responses/RequestVerificationFailed"
+        "413":
+          "$ref": "#/components/responses/RequestBodyTooLarge"
+        "415":
+          "$ref": "#/components/responses/UnsupportedMediaType"
         "429":
           "$ref": "#/components/responses/TooManyRequests"
   "/update":
@@ -398,6 +434,36 @@ components:
               value:
                 name: "ZodError"
                 message: "[{\"expected\":\"string\",\"code\":\"invalid_type\",\"path\":[\"name\"],\"message\":\"Invalid input: expected string, received undefined\"}]"
+    RequestVerificationFailed:
+      description: "The request body failed verification"
+      content:
+        "application/json":
+          schema:
+            "$ref": "#/components/schemas/ErrorResult"
+          examples:
+            verificationFailed:
+              value:
+                error: "Invalid request body"
+    RequestBodyTooLarge:
+      description: "The request body exceeds the maximum size"
+      content:
+        "application/json":
+          schema:
+            "$ref": "#/components/schemas/ErrorResult"
+          examples:
+            bodyTooLarge:
+              value:
+                error: "Invalid request body"
+    UnsupportedMediaType:
+      description: "The request body uses an unsupported encoding or character set"
+      content:
+        "application/json":
+          schema:
+            "$ref": "#/components/schemas/ErrorResult"
+          examples:
+            unsupportedEncoding:
+              value:
+                error: "Invalid request body"
     TooManyRequests:
       description: "Rate limit exceeded"
       content:

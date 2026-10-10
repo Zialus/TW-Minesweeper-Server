@@ -28,6 +28,9 @@ const requestSchemas = {
 const errorResult = { $ref: '#/components/schemas/ErrorResult' };
 const emptyResult = { $ref: '#/components/schemas/EmptyResult' };
 const badRequestResponse = { $ref: '#/components/responses/BadRequest' };
+const requestVerificationFailedResponse = { $ref: '#/components/responses/RequestVerificationFailed' };
+const requestBodyTooLargeResponse = { $ref: '#/components/responses/RequestBodyTooLarge' };
+const unsupportedMediaTypeResponse = { $ref: '#/components/responses/UnsupportedMediaType' };
 const rateLimitResponse = { $ref: '#/components/responses/TooManyRequests' };
 
 const requestExamples = {
@@ -412,6 +415,13 @@ for (const [name, operation] of Object.entries(apiOperations)) {
         responses: {
             ...responses[name],
             400: badRequestResponse,
+            ...(operation.requestSource === 'body'
+                ? {
+                      403: requestVerificationFailedResponse,
+                      413: requestBodyTooLargeResponse,
+                      415: unsupportedMediaTypeResponse,
+                  }
+                : {}),
             ...(operation.rateLimited ? { 429: rateLimitResponse } : {}),
         },
     };
@@ -464,6 +474,33 @@ const document = {
                                 },
                             },
                         },
+                    },
+                },
+            },
+            RequestVerificationFailed: {
+                description: 'The request body failed verification',
+                content: {
+                    'application/json': {
+                        schema: errorResult,
+                        examples: { verificationFailed: { value: { error: 'Invalid request body' } } },
+                    },
+                },
+            },
+            RequestBodyTooLarge: {
+                description: 'The request body exceeds the maximum size',
+                content: {
+                    'application/json': {
+                        schema: errorResult,
+                        examples: { bodyTooLarge: { value: { error: 'Invalid request body' } } },
+                    },
+                },
+            },
+            UnsupportedMediaType: {
+                description: 'The request body uses an unsupported encoding or character set',
+                content: {
+                    'application/json': {
+                        schema: errorResult,
+                        examples: { unsupportedEncoding: { value: { error: 'Invalid request body' } } },
                     },
                 },
             },
