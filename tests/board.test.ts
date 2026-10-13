@@ -84,4 +84,48 @@ describe('expandPop', () => {
             [false, false],
         ]);
     });
+
+    it('expands zero cells down to the board edge', () => {
+        const game = createGame([
+            [1, 1, 1],
+            [1, 0, 1],
+            [1, 0, 1],
+        ]);
+
+        const cells = expandPop(1, 1, game);
+
+        expect(cells).toContainEqual([2, 3, 0]);
+        expect(game.popped[2][1]).toBe(true);
+    });
+
+    it('expands connected zero cells to the left of the selected cell', () => {
+        const game = createGame([
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+        ]);
+
+        const cells = expandPop(2, 2, game);
+
+        expect(cells).toHaveLength(9);
+        expect(game.popped).toEqual([
+            [true, true, true],
+            [true, true, true],
+            [true, true, true],
+        ]);
+    });
+
+    it('expands a zero cell at the top edge without leaving the board', () => {
+        const game = createGame([
+            [0, 1],
+            [1, 2],
+        ]);
+
+        expect(expandPop(0, 0, game)).toEqual([
+            [1, 1, 0],
+            [2, 1, 1],
+            [1, 2, 1],
+            [2, 2, 2],
+        ]);
+    });
 });
