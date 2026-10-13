@@ -201,8 +201,8 @@ importers:
         specifier: 10.0.1
         version: 10.0.1(eslint@10.12.0(jiti@2.7.0)(supports-color@7.2.0))
       '@quobix/vacuum':
-        specifier: 0.32.0
-        version: 0.32.0(supports-color@7.2.0)
+        specifier: 0.33.0
+        version: 0.33.0(supports-color@7.2.0)
       '@stryker-mutator/core':
         specifier: 10.0.0
         version: 10.0.0(@types/node@26.6.4)
@@ -742,8 +742,8 @@ packages:
     resolution: {integrity: sha512-SEeaJLb3qBNF/OaXnaR1NmmBbFYk1zC0ZH/52fATcRPLFg/p791YrcyFFy44Bo9sLaGuSuLp5Q6axbb/O+v/RA==}
     engines: {node: ^14.18.0 || >=16.0.0}
 
-  '@quobix/vacuum@0.32.0':
-    resolution: {integrity: sha512-h+nn6HVaOpxqOL8y3ndgjWSEYk7F52hHkryFBhEp9xZpMR4lJZeX1j40KJpZ38ck8ddwOiNQj+JkSvxNNTDv2Q==}
+  '@quobix/vacuum@0.33.0':
+    resolution: {integrity: sha512-Af4vbbDx8UWEez4rM9rHTjI8EaVwUjQ1OTtTzC6aaYKhTSAj/DJbslBVDQPVsikFjkZUY4mMJ5fFv74X1FO8PQ==}
     engines: {node: '>=24.16.0'}
     hasBin: true
 
@@ -3147,7 +3147,7 @@ snapshots:
 
   '@pkgr/core@0.3.6': {}
 
-  '@quobix/vacuum@0.32.0(supports-color@7.2.0)':
+  '@quobix/vacuum@0.33.0(supports-color@7.2.0)':
     dependencies:
       https-proxy-agent: 9.1.0(supports-color@7.2.0)
       tar: 7.5.22
