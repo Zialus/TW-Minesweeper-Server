@@ -52,6 +52,36 @@ describe('countNeighbours', () => {
 
         expect(countNeighbours(game, 1, 1)).toBe(1);
     });
+
+    it('uses board width for horizontal bounds on a rectangular board', () => {
+        const game = createGame([
+            [0, 0, -1, 0],
+            [0, 0, 0, 0],
+        ]);
+
+        expect(countNeighbours(game, 1, 0)).toBe(1);
+    });
+
+    it('uses board height for vertical bounds on a rectangular board', () => {
+        const game = createGame([
+            [0, 0],
+            [0, 0],
+            [-1, 0],
+            [0, 0],
+        ]);
+
+        expect(countNeighbours(game, 0, 1)).toBe(1);
+    });
+
+    it('does not count mines more than one cell away horizontally', () => {
+        const game = createGame([
+            [-1, 0, 0, -1],
+            [0, 0, 0, 0],
+        ]);
+
+        expect(countNeighbours(game, 2, 0)).toBe(1);
+        expect(countNeighbours(game, 1, 0)).toBe(0);
+    });
 });
 
 describe('expandPop', () => {
