@@ -40,11 +40,11 @@ describe('createHash', () => {
 });
 
 describe('isValidName', () => {
-    it.each(['player1', 'player-name', 'player_name'])('accepts %s', (name) => {
+    it.each(['a', 'player1', 'player-name', 'player_name'])('accepts %s', (name) => {
         expect(isValidName(name)).toBe(true);
     });
 
-    it.each(['', 'player name', 'player.name'])('rejects %s', (name) => {
+    it.each(['', 'player name', 'player.name', '!player', 'player!'])('rejects %s', (name) => {
         expect(isValidName(name)).toBe(false);
     });
 });

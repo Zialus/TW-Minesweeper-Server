@@ -3,14 +3,12 @@ import crypto from 'crypto';
 import type { Game } from './Game';
 import type { Player } from './Player';
 
-const validNamePattern = /^[\w-]+$/i;
-
 export function createHash(value: string): string {
     return crypto.createHash('md5').update(value).digest('hex');
 }
 
 export function isValidName(name: string): boolean {
-    return validNamePattern.test(name);
+    return /^[\w-]+$/i.test(name);
 }
 
 export function findOpponent(player: Player, waitingList: Player[]): Player | undefined {
