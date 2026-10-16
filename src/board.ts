@@ -2,22 +2,10 @@ import type { Game } from './Game';
 
 export function countNeighbours(game: Game, x: number, y: number): number {
     let count = 0;
-    let startY = y;
-    let startX = x;
-    let limitY = y;
-    let limitX = x;
-    if (x > 0) {
-        startX = x - 1;
-    }
-    if (x + 1 < game.boardWidth) {
-        limitX = x + 1;
-    }
-    if (y > 0) {
-        startY = y - 1;
-    }
-    if (y + 1 < game.boardHeight) {
-        limitY = y + 1;
-    }
+    const startY = Math.max(0, y - 1);
+    const startX = Math.max(0, x - 1);
+    const limitY = Math.min(game.boardHeight - 1, y + 1);
+    const limitX = Math.min(game.boardWidth - 1, x + 1);
     for (let rowIndex = startY; rowIndex <= limitY; rowIndex++) {
         for (let columnIndex = startX; columnIndex <= limitX; columnIndex++) {
             if (game.board[rowIndex][columnIndex] === -1) {
