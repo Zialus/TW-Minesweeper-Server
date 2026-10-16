@@ -52,12 +52,13 @@ describe('isValidName', () => {
 describe('findOpponent', () => {
     it('removes and returns the first player with a matching level and group', () => {
         const first = createPlayer('first', 'expert', 3);
+        const differentGroup = createPlayer('different-group', 'beginner', 3);
         const opponent = createPlayer('opponent', 'beginner', 2);
         const laterMatch = createPlayer('later', 'beginner', 2);
-        const waitingList = [first, opponent, laterMatch];
+        const waitingList = [first, differentGroup, opponent, laterMatch];
 
         expect(findOpponent(createPlayer('joining', 'beginner', 2), waitingList)).toBe(opponent);
-        expect(waitingList).toEqual([first, laterMatch]);
+        expect(waitingList).toEqual([first, differentGroup, laterMatch]);
     });
 
     it('leaves the waiting list unchanged when no opponent matches', () => {
@@ -79,12 +80,15 @@ describe('game participant helpers', () => {
         expect(checkPair(game, 'player1', 'player2')).toBe(true);
         expect(checkPair(game, 'player2', 'player1')).toBe(true);
         expect(checkPair(game, 'player1', 'other')).toBe(false);
+        expect(checkPair(game, 'player1', 'player1')).toBe(false);
+        expect(checkPair(game, 'player2', 'player2')).toBe(false);
     });
 
     it('validates active-game credentials for each player', () => {
         expect(keyFoundOnActiveGame(game, 'player1', 'key1')).toBe(true);
         expect(keyFoundOnActiveGame(game, 'player2', 'key2')).toBe(true);
         expect(keyFoundOnActiveGame(game, 'player1', 'key2')).toBe(false);
+        expect(keyFoundOnActiveGame(game, 'player2', 'key1')).toBe(false);
         expect(keyFoundOnActiveGame(game, 'other', 'key1')).toBe(false);
     });
 
