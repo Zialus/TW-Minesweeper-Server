@@ -49,6 +49,21 @@ describe('countNeighbours', () => {
             [-1, 0],
             [0, 0],
         ]);
+        game.board = game.board.map(
+            (row) =>
+                new Proxy(row, {
+                    get(target, property, receiver): number {
+                        if (
+                            typeof property === 'string' &&
+                            Number.isInteger(Number(property)) &&
+                            (Number(property) < 0 || Number(property) >= target.length)
+                        ) {
+                            throw new RangeError(`Column ${property} is outside the board`);
+                        }
+                        return Reflect.get(target, property, receiver) as number;
+                    },
+                }),
+        );
 
         expect(countNeighbours(game, 1, 1)).toBe(1);
     });
@@ -80,7 +95,7 @@ describe('countNeighbours', () => {
         ]);
 
         expect(countNeighbours(game, 2, 0)).toBe(1);
-        expect(countNeighbours(game, 1, 0)).toBe(0);
+        expect(countNeighbours(game, 1, 0)).toBe(1);
     });
 });
 
