@@ -1,6 +1,6 @@
 {
     "$schema": "https://json.schemastore.org/package",
-    "packageManager": "pnpm@12.10.1",
+    "packageManager": "pnpm@12.13.0",
     "private": true,
     "main": "dist/app.js",
     "scripts": {
