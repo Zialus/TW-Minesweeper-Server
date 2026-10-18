@@ -49,8 +49,53 @@ describe('countNeighbours', () => {
             [-1, 0],
             [0, 0],
         ]);
+        game.board = game.board.map(
+            (row) =>
+                new Proxy(row, {
+                    get(target, property, receiver): number {
+                        if (
+                            typeof property === 'string' &&
+                            Number.isInteger(Number(property)) &&
+                            (Number(property) < 0 || Number(property) >= target.length)
+                        ) {
+                            throw new RangeError(`Column ${property} is outside the board`);
+                        }
+                        return Reflect.get(target, property, receiver) as number;
+                    },
+                }),
+        );
 
         expect(countNeighbours(game, 1, 1)).toBe(1);
+    });
+
+    it('uses board width for horizontal bounds on a rectangular board', () => {
+        const game = createGame([
+            [0, 0, -1, 0],
+            [0, 0, 0, 0],
+        ]);
+
+        expect(countNeighbours(game, 1, 0)).toBe(1);
+    });
+
+    it('uses board height for vertical bounds on a rectangular board', () => {
+        const game = createGame([
+            [0, 0],
+            [0, 0],
+            [-1, 0],
+            [0, 0],
+        ]);
+
+        expect(countNeighbours(game, 0, 1)).toBe(1);
+    });
+
+    it('does not count mines more than one cell away horizontally', () => {
+        const game = createGame([
+            [-1, 0, 0, -1],
+            [0, 0, 0, 0],
+        ]);
+
+        expect(countNeighbours(game, 2, 0)).toBe(1);
+        expect(countNeighbours(game, 1, 0)).toBe(1);
     });
 });
 
@@ -64,12 +109,19 @@ describe('expandPop', () => {
 
         const cells = expandPop(0, 2, game);
 
-        expect(cells).toHaveLength(6);
-        expect(cells).not.toContainEqual([2, 1, -1]);
-        expect(cells).toContainEqual([1, 3, 0]);
-        expect(cells).toContainEqual([2, 2, 1]);
-        expect(game.popped[2]).toEqual([true, true, true]);
-        expect(game.popped[0][1]).toBe(false);
+        expect(cells).toEqual([
+            [1, 3, 0],
+            [1, 2, 1],
+            [2, 2, 1],
+            [2, 3, 0],
+            [3, 2, 1],
+            [3, 3, 0],
+        ]);
+        expect(game.popped).toEqual([
+            [false, false, false],
+            [true, true, true],
+            [true, true, true],
+        ]);
     });
 
     it('reveals only the selected numbered cell when it is not zero', () => {
@@ -78,10 +130,86 @@ describe('expandPop', () => {
             [1, 1],
         ]);
 
-        expect(expandPop(0, 0, game)).toEqual([[1, 1, 1]]);
+        const cells = expandPop(0, 0, game);
+
+        expect(cells).toEqual([[1, 1, 1]]);
         expect(game.popped).toEqual([
             [true, false],
             [false, false],
+        ]);
+    });
+
+    it('expands zero cells down to the board edge', () => {
+        const game = createGame([
+            [1, 1, 1],
+            [1, 0, 1],
+            [1, 0, 1],
+        ]);
+
+        const cells = expandPop(1, 1, game);
+
+        expect(cells).toEqual([
+            [2, 2, 0],
+            [1, 1, 1],
+            [2, 1, 1],
+            [3, 1, 1],
+            [1, 2, 1],
+            [3, 2, 1],
+            [1, 3, 1],
+            [2, 3, 0],
+            [3, 3, 1],
+        ]);
+        expect(game.popped).toEqual([
+            [true, true, true],
+            [true, true, true],
+            [true, true, true],
+        ]);
+    });
+
+    it('expands connected zero cells to the left of the selected cell', () => {
+        const game = createGame([
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+        ]);
+
+        const cells = expandPop(2, 2, game);
+
+        expect(cells).toEqual([
+            [3, 3, 0],
+            [2, 2, 0],
+            [1, 1, 0],
+            [2, 1, 0],
+            [3, 1, 0],
+            [3, 2, 0],
+            [2, 3, 0],
+            [1, 2, 0],
+            [1, 3, 0],
+        ]);
+        expect(game.popped).toEqual([
+            [true, true, true],
+            [true, true, true],
+            [true, true, true],
+        ]);
+    });
+
+    it('expands a zero cell at the top edge without leaving the board', () => {
+        const game = createGame([
+            [0, 1],
+            [1, 2],
+        ]);
+
+        const cells = expandPop(0, 0, game);
+
+        expect(cells).toEqual([
+            [1, 1, 0],
+            [2, 1, 1],
+            [1, 2, 1],
+            [2, 2, 2],
+        ]);
+        expect(game.popped).toEqual([
+            [true, true],
+            [true, true],
         ]);
     });
 });
