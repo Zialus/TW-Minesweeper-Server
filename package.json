@@ -9,6 +9,7 @@
         "postinstall": "tsc",
         "test": "vitest run --coverage",
         "test:mutate": "stryker run",
+        "bench": "vitest bench --run",
         "lint": "pnpm run lint:prettier:ts && pnpm run lint:prettier:others && pnpm run lint:eslint",
         "lint:prettier:ts": "prettier --check src tests",
         "lint:prettier:ts:fix": "prettier --write src tests",
@@ -30,6 +31,7 @@
         "zod": "4.6.7"
     },
     "devDependencies": {
+        "@codspeed/vitest-plugin": "6.1.0",
         "@eslint/js": "10.0.1",
         "@quobix/vacuum": "0.33.1",
         "@stryker-mutator/core": "10.0.0",

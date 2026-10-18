@@ -19,7 +19,7 @@ export default defineConfig(
         },
     },
     {
-        files: ['src/**/*.ts', 'tests/**/*.test.ts'],
+        files: ['src/**/*.ts', 'tests/**/*.test.ts', 'tests/**/*.bench.ts'],
         settings: {
             'import-x/resolver': {
                 name: 'tsResolver',
@@ -65,13 +65,22 @@ export default defineConfig(
         },
     },
     {
-        files: ['tests/**/*.test.ts'],
+        files: ['tests/**/*.test.ts', 'tests/**/*.bench.ts'],
         extends: [vitest.configs.recommended],
         languageOptions: {
             globals: vitest.environments.env.globals,
             parserOptions: {
                 project: 'tsconfig.tests.json',
             },
+        },
+    },
+    {
+        files: ['tests/**/*.bench.ts'],
+        rules: {
+            // Benchmarks measure performance and register their cases dynamically, so they hold no assertions.
+            'sonarjs/assertions-in-tests': 'off',
+            'vitest/expect-expect': 'off',
+            'vitest/valid-title': 'off',
         },
     },
 );
