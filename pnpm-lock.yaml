@@ -204,8 +204,8 @@ importers:
         specifier: 10.0.1
         version: 10.0.1(eslint@10.13.0(jiti@2.7.0))
       '@quobix/vacuum':
-        specifier: 0.33.1
-        version: 0.33.1
+        specifier: 0.33.2
+        version: 0.33.2
       '@stryker-mutator/core':
         specifier: 10.0.0
         version: 10.0.0(@types/node@26.6.5)
@@ -748,8 +748,8 @@ packages:
     resolution: {integrity: sha512-SEeaJLb3qBNF/OaXnaR1NmmBbFYk1zC0ZH/52fATcRPLFg/p791YrcyFFy44Bo9sLaGuSuLp5Q6axbb/O+v/RA==}
     engines: {node: ^14.18.0 || >=16.0.0}
 
-  '@quobix/vacuum@0.33.1':
-    resolution: {integrity: sha512-NCzPjxfnCdKSy+umaqtAS4+EfKrRJI47n/TPZYYF6g10xg/+QJ7Xyc+p6sVdrRI8+ViJZpCn9uQDRGwlDGg3gQ==}
+  '@quobix/vacuum@0.33.2':
+    resolution: {integrity: sha512-cLCW6ArmsxDSgxmLLRTE2/62QwHEZ6DSgPVxubyLvJkxbqvmeZqju83wEo/pfHgkuV9NeRAjidHk8Pc0MzTdYg==}
     engines: {node: '>=24.16.0'}
     hasBin: true
 
@@ -3191,7 +3191,7 @@ snapshots:
 
   '@pkgr/core@0.3.6': {}
 
-  '@quobix/vacuum@0.33.1':
+  '@quobix/vacuum@0.33.2':
     dependencies:
       https-proxy-agent: 9.1.0
       tar: 7.5.22
