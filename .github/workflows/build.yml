@@ -118,6 +118,8 @@ jobs:
                   PGUSER: minesweeper
                   PGPASSWORD: ci-password
                   PORT: 9876
+                  GENERAL_RATE_LIMIT_MAX: 10000
+                  NOTIFY_RATE_LIMIT_MAX: 10000
               run: |
                   set -euo pipefail
                   server_log="$RUNNER_TEMP/minesweeper-api.log"
@@ -129,6 +131,8 @@ jobs:
                     PGUSER="$PGUSER" \
                     PGPASSWORD="$PGPASSWORD" \
                     PORT="$PORT" \
+                    GENERAL_RATE_LIMIT_MAX="$GENERAL_RATE_LIMIT_MAX" \
+                    NOTIFY_RATE_LIMIT_MAX="$NOTIFY_RATE_LIMIT_MAX" \
                     node dist/app.js >"$server_log" 2>&1 &
                   echo "$!" >"$server_pid_file"
 

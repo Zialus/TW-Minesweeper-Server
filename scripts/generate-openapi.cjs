@@ -8,6 +8,7 @@ const {
     invalidCredentialsMessage,
     invalidJsonRequestBodyMessage,
     invalidRequestBodyMessage,
+    rateLimitExceededMessage,
     joinRequestSchema,
     notifyRequestSchema,
     playerCredentialsSchema,
@@ -523,7 +524,7 @@ const document = {
                             properties: {
                                 message: {
                                     type: 'string',
-                                    example: 'Too many requests, please try again later.',
+                                    example: rateLimitExceededMessage,
                                 },
                             },
                         },

@@ -1,6 +1,11 @@
 import type { ErrorRequestHandler, Response } from 'express';
 
-import { invalidCredentialsMessage, invalidJsonRequestBodyMessage, invalidRequestBodyMessage } from './api-schemas';
+import {
+    invalidCredentialsMessage,
+    invalidJsonRequestBodyMessage,
+    invalidRequestBodyMessage,
+    rateLimitExceededMessage,
+} from './api-schemas';
 
 const bodyParserClientErrorTypes = new Set([
     'entity.parse.failed',
@@ -14,6 +19,10 @@ const bodyParserClientErrorTypes = new Set([
 
 export function respondWithInvalidCredentials(response: Pick<Response, 'json'>): void {
     response.json({ error: invalidCredentialsMessage });
+}
+
+export function respondWithRateLimitExceeded(response: Pick<Response, 'status' | 'json'>): void {
+    response.status(429).json({ message: rateLimitExceededMessage });
 }
 
 function getBodyParserClientError(error: unknown): { status: number; type: string } | undefined {

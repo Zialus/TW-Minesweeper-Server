@@ -15,7 +15,7 @@ import type { Player } from './Player';
 import type { Game } from './Game';
 import type { Move } from './Move';
 import { apiOperations } from './api-schemas';
-import { bodyParserErrorHandler, respondWithInvalidCredentials } from './api-errors';
+import { bodyParserErrorHandler, respondWithInvalidCredentials, respondWithRateLimitExceeded } from './api-errors';
 import { countNeighbours, expandPop } from './board';
 
 const logger = pino({
@@ -31,13 +31,29 @@ const logger = pino({
 
 const generalRateLimit = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100,
+    max: getRateLimitMax('GENERAL_RATE_LIMIT_MAX', 100),
+    handler: (_request, response) => respondWithRateLimitExceeded(response),
 });
 
 const notifyRateLimit = rateLimit({
     windowMs: 60 * 1000,
-    max: 100,
+    max: getRateLimitMax('NOTIFY_RATE_LIMIT_MAX', 100),
+    handler: (_request, response) => respondWithRateLimitExceeded(response),
 });
+
+function getRateLimitMax(environmentVariable: string, defaultMax: number): number {
+    const configuredMax = process.env[environmentVariable];
+    if (configuredMax === undefined) {
+        return defaultMax;
+    }
+
+    const max = Number(configuredMax);
+    if (!Number.isSafeInteger(max) || max < 1) {
+        throw new Error(`${environmentVariable} must be a positive safe integer`);
+    }
+
+    return max;
+}
 
 const app = express();
 app.use(helmet());

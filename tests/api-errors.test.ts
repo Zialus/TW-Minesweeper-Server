@@ -5,8 +5,13 @@ import {
     invalidCredentialsMessage,
     invalidJsonRequestBodyMessage,
     invalidRequestBodyMessage,
+    rateLimitExceededMessage,
 } from '../src/api-schemas';
-import { bodyParserErrorHandler, respondWithInvalidCredentials } from '../src/api-errors';
+import {
+    bodyParserErrorHandler,
+    respondWithInvalidCredentials,
+    respondWithRateLimitExceeded,
+} from '../src/api-errors';
 
 describe('API error responses', () => {
     it('returns the shared invalid-credentials message', () => {
@@ -15,6 +20,18 @@ describe('API error responses', () => {
         respondWithInvalidCredentials(response);
 
         expect(response.json).toHaveBeenCalledWith({ error: invalidCredentialsMessage });
+    });
+
+    it('returns the documented JSON rate-limit response', () => {
+        const response = {
+            status: vi.fn().mockReturnThis(),
+            json: vi.fn(),
+        };
+
+        respondWithRateLimitExceeded(response);
+
+        expect(response.status).toHaveBeenCalledWith(429);
+        expect(response.json).toHaveBeenCalledWith({ message: rateLimitExceededMessage });
     });
 
     it.each([
