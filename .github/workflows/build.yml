@@ -167,11 +167,11 @@ jobs:
                     http://127.0.0.1:9876/register
 
             - name: 🧪 Test live API with Schemathesis
-              uses: schemathesis/action@806cace2053cbbac93188e1281ff7da415643160  # v3.0.0
+              uses: schemathesis/action@b0cacf86f25caaa79ac110cc2077afd70fdd67ff  # v3.1.0
               with:
                   schema: docs/openapi.yaml
                   base-url: http://127.0.0.1:9876
-                  version: 4.30.1
+                  version: 4.32.4
                   coverage: 'true'
                   args: >-
                       --workers auto
