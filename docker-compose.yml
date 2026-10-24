@@ -1,0 +1,16 @@
+services:
+    postgres:
+        image: postgres@sha256:2d2b8998d31037bf721cfdf764d76ba74171b4fab3431b7f72c27c56ddbdf9e3
+        environment:
+            POSTGRES_DB: minesweeper
+            POSTGRES_USER: minesweeper
+            POSTGRES_PASSWORD: ci-password
+        ports:
+            - '5432:5432'
+        volumes:
+            - ./DB/minesweeperDB.sql:/docker-entrypoint-initdb.d/minesweeperDB.sql:ro
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U minesweeper -d minesweeper']
+            interval: 10s
+            timeout: 5s
+            retries: 5

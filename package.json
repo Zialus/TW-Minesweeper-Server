@@ -9,6 +9,8 @@
         "postinstall": "tsc",
         "test": "vitest run --coverage",
         "test:mutate": "stryker run",
+        "openapi:generate": "tsc && node scripts/generate-openapi.cjs",
+        "openapi:lint": "vacuum lint docs/openapi.yaml",
         "lint": "pnpm run lint:prettier:ts && pnpm run lint:prettier:others && pnpm run lint:eslint",
         "lint:prettier:ts": "prettier --check src tests",
         "lint:prettier:ts:fix": "prettier --write src tests",
