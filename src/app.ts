@@ -32,13 +32,17 @@ const logger = pino({
 const generalRateLimit = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: getRateLimitMax('GENERAL_RATE_LIMIT_MAX', 100),
-    handler: (_request, response) => respondWithRateLimitExceeded(response),
+    handler: (_request, response) => {
+        respondWithRateLimitExceeded(response);
+    },
 });
 
 const notifyRateLimit = rateLimit({
     windowMs: 60 * 1000,
     max: getRateLimitMax('NOTIFY_RATE_LIMIT_MAX', 100),
-    handler: (_request, response) => respondWithRateLimitExceeded(response),
+    handler: (_request, response) => {
+        respondWithRateLimitExceeded(response);
+    },
 });
 
 function getRateLimitMax(environmentVariable: string, defaultMax: number): number {
