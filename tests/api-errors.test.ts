@@ -7,11 +7,7 @@ import {
     invalidRequestBodyMessage,
     rateLimitExceededMessage,
 } from '../src/api-schemas';
-import {
-    bodyParserErrorHandler,
-    respondWithInvalidCredentials,
-    respondWithRateLimitExceeded,
-} from '../src/api-errors';
+import { bodyParserErrorHandler, respondWithInvalidCredentials, respondWithRateLimitExceeded } from '../src/api-errors';
 
 describe('API error responses', () => {
     it('returns the shared invalid-credentials message', () => {
