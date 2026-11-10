@@ -27,7 +27,7 @@ jobs:
               uses: reviewdog/action-yamllint@3224b47de22a2fd9c8c0fbc120e6d0049d1f5060  # v1.25.2
 
             - name: 🔍 Run actionlint
-              uses: reviewdog/action-actionlint@419a49378266e892f40c773b4f2fc6de9aa87499  # v1.80.4
+              uses: reviewdog/action-actionlint@78b296370c5c75abca79860e9baa9846e3286a29  # v1.84.0
 
             - name: 🛡️ Run zizmor (pedantic)
               uses: zizmorcore/zizmor-action@45d7276c9ca790aabd705e31ca99c6185c3e76dd  # v0.8.1
