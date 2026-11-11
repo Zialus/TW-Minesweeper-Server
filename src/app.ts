@@ -1,7 +1,6 @@
 import express, { json, urlencoded } from 'express';
 import cors from 'cors';
 import { Pool } from 'pg';
-import crypto from 'crypto';
 import Chance from 'chance';
 import helmet from 'helmet';
 import pino from 'pino';
@@ -16,6 +15,16 @@ import type { Player } from './Player';
 import type { Game } from './Game';
 import type { Move } from './Move';
 import { countNeighbours, expandPop } from './board';
+import {
+    checkPair,
+    createHash,
+    findOpponent,
+    getOpponent,
+    isValidName,
+    keyFoundOnActiveGame,
+    keyFoundOnWaitingList,
+    positionWithinTable,
+} from './appUtils';
 
 const logger = pino({
     transport: {
@@ -60,7 +69,6 @@ const playerWaitingList: Player[] = [];
 const openConnections: Connection[] = [];
 let gameVar = 0;
 const games: Game[] = [];
-const regex = /^[\w-]+$/i;
 
 // conecção e selecção da base de dados
 dbConnection.query('SELECT NOW()', (err) => {
@@ -80,33 +88,6 @@ const server = app.listen(process.env['PORT'] ?? DEFAULT_SERVER_PORT, () => {
     const serverAddress = server.address() as AddressInfo;
     logger.info('Listening at http://%s:%d', serverAddress.address, serverAddress.port);
 });
-
-/**
- * Returns the first valid opponent for player1, if he exists, otherwise returns undefined.
- * The calling side will need to add player1 to the waiting list
- */
-function findOpponent(p1: Player): Player | undefined {
-    let p2: Player | undefined;
-
-    playerWaitingList.some((playerWaiting, index) => {
-        if (playerWaiting.level === p1.level && playerWaiting.group === p1.group) {
-            playerWaitingList.splice(index, 1); // remove element from the list
-            p2 = playerWaiting;
-            return true; // found opponent, break out of the loop
-        }
-        return false; // didnt find opponent, keep loop going
-    });
-
-    return p2;
-}
-
-function getOpponent(playerName: string, game: Game): string {
-    if (playerName === game.player1) {
-        return game.player2;
-    } else {
-        return game.player1;
-    }
-}
 
 function sendStartEvent(gameId: number): void {
     logger.info('Start Sending Start Event...');
@@ -157,26 +138,10 @@ function sendEndEvent(gameId: number, move: Move): void {
     logger.info('Finished Sending End Event.');
 }
 
-function keyFoundOnActiveGame(game: Game, playerName: string, playerKey: string): boolean {
-    return (
-        (game.player1 === playerName && game.p1key === playerKey) ||
-        (game.player2 === playerName && game.p2key === playerKey)
-    );
-}
-
-function keyFoundOnWaitingList(playerName: string, playerKey: string): boolean {
-    for (const player of playerWaitingList) {
-        if (player.name === playerName && player.key === playerKey) {
-            return true;
-        }
-    }
-    return false;
-}
-
 function testKey(playerName: string, playerKey: string, gameId: number): boolean {
     const game = games[gameId];
     if (game === undefined) {
-        return keyFoundOnWaitingList(playerName, playerKey);
+        return keyFoundOnWaitingList(playerName, playerKey, playerWaitingList);
     } else {
         return keyFoundOnActiveGame(game, playerName, playerKey);
     }
@@ -202,13 +167,6 @@ function gatherPlayersFrom(gameId: number): string[] {
     }
 
     return players;
-}
-
-function checkPair(game: Game, player: string, adversary: string): boolean {
-    return (
-        (player === game.player1 && adversary === game.player2) ||
-        (player === game.player2 && adversary === game.player1)
-    );
 }
 
 // espalhar minas no início de um jogo
@@ -406,11 +364,6 @@ function decreaseScore(name: string, level: string): void {
     });
 }
 
-// função para criar hashes a partir de password e salt
-function createHash(str: string): string {
-    return crypto.createHash('md5').update(str).digest('hex');
-}
-
 // Deals with both registration and login
 app.post('/register', generalRateLimit, (request, response) => {
     const bodySchema = z.object({
@@ -427,7 +380,7 @@ app.post('/register', generalRateLimit, (request, response) => {
     const { name, pass } = parse.data;
 
     // Checks if name follows regex rules
-    if (!regex.test(name)) {
+    if (!isValidName(name)) {
         response.json({ error: 'Nome de utilizador inválido!' });
         return;
     }
@@ -513,7 +466,7 @@ app.post('/join', generalRateLimit, (request, response) => {
     }
     const { name, pass, group, level } = parse.data;
 
-    if (!regex.test(name)) {
+    if (!isValidName(name)) {
         response.json({ error: 'Jogada inválida!' });
         return;
     }
@@ -536,7 +489,7 @@ app.post('/join', generalRateLimit, (request, response) => {
                 p1.level = level;
                 p1.key = createHash(chance.string({ length: 8 }));
 
-                const p2 = findOpponent(p1);
+                const p2 = findOpponent(p1, playerWaitingList);
 
                 if (p2 === undefined) {
                     gameVar++;
@@ -600,7 +553,7 @@ app.post('/score', generalRateLimit, (request, response) => {
     }
     const { name, level } = parse.data;
 
-    if (regex.test(name)) {
+    if (isValidName(name)) {
         dbConnection.query<Ranking>(SELECT_FROM_RANKINGS_WHERE_NAME_AND_LEVEL, [name, level], (err, queryResult) => {
             const result = queryResult.rows;
             if (err) {
@@ -617,12 +570,8 @@ app.post('/score', generalRateLimit, (request, response) => {
     }
 });
 
-function positionWithinTable(row: number, game: Game, col: number): boolean {
-    return row > 0 && row <= game.boardHeight && col > 0 && col <= game.boardWidth;
-}
-
 function validNameAndKey(name: string, key: string, game: number): boolean {
-    return regex.test(name) && testKey(name, key, game);
+    return isValidName(name) && testKey(name, key, game);
 }
 
 app.post('/notify', notifyRateLimit, (request, response) => {
