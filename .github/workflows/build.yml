@@ -30,6 +30,11 @@ jobs:
             - name: 📦 Install dependencies
               run: pnpm install --ignore-scripts --frozen-lockfile
 
+            - name: 📜 Generate and lint OpenAPI
+              run: |
+                  pnpm rebuild @quobix/vacuum
+                  pnpm run lint:openapi
+
             - name: 🏗️ Run build
               run: pnpm run build
 

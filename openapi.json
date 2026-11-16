@@ -1,0 +1,351 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "Minesweeper Server API",
+        "version": "1.0.0",
+        "description": "HTTP API for user authentication, Minesweeper games, scores, and game updates."
+    },
+    "servers": [{ "url": "http://localhost:9876", "description": "Default local server" }],
+    "tags": [
+        { "name": "Authentication", "description": "User registration and authentication." },
+        { "name": "Rankings", "description": "Player ranking and score lookups." },
+        { "name": "Games", "description": "Game participation and moves." },
+        { "name": "Game updates", "description": "Server-sent game event streams." }
+    ],
+    "components": { "schemas": {}, "parameters": {} },
+    "paths": {
+        "/register": {
+            "post": {
+                "summary": "Register or authenticate a user",
+                "description": "Register a new user or authenticate an existing user.",
+                "operationId": "registerUser",
+                "tags": ["Authentication"],
+                "requestBody": {
+                    "required": true,
+                    "description": "User credentials.",
+                    "content": {
+                        "application/json": {
+                            "example": { "name": "player1", "pass": "example-password" },
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": { "type": "string", "minLength": 1 },
+                                    "pass": { "type": "string" }
+                                },
+                                "required": ["name", "pass"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The registration or authentication result.",
+                        "content": {
+                            "application/json": {
+                                "example": {},
+                                "schema": {
+                                    "anyOf": [
+                                        { "type": "object", "properties": {} },
+                                        {
+                                            "type": "object",
+                                            "properties": { "error": { "type": "string" } },
+                                            "required": ["error"]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": { "description": "The request body did not match the expected credentials." }
+                }
+            }
+        },
+        "/ranking": {
+            "post": {
+                "summary": "Get the top ten players for a level",
+                "description": "Retrieve the ten highest-ranked players for the requested level.",
+                "operationId": "getRanking",
+                "tags": ["Rankings"],
+                "requestBody": {
+                    "required": true,
+                    "description": "The level to retrieve rankings for.",
+                    "content": {
+                        "application/json": {
+                            "example": { "level": "beginner" },
+                            "schema": {
+                                "type": "object",
+                                "properties": { "level": { "type": "string", "minLength": 1 } },
+                                "required": ["level"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The ordered ranking entries for the requested level.",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "ranking": [
+                                        {
+                                            "name": "player1",
+                                            "level": "beginner",
+                                            "score": 3,
+                                            "timestamp": 1700000000000
+                                        }
+                                    ]
+                                },
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ranking": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "name": { "type": "string" },
+                                                    "level": { "type": "string" },
+                                                    "score": { "type": "number" },
+                                                    "timestamp": { "type": "number" }
+                                                },
+                                                "required": ["name", "level", "score", "timestamp"]
+                                            }
+                                        }
+                                    },
+                                    "required": ["ranking"]
+                                }
+                            }
+                        }
+                    },
+                    "400": { "description": "The request body did not include a valid level." }
+                }
+            }
+        },
+        "/join": {
+            "post": {
+                "summary": "Join a game or wait for an opponent",
+                "description": "Join the waiting list or start a game with a matching opponent.",
+                "operationId": "joinGame",
+                "tags": ["Games"],
+                "requestBody": {
+                    "required": true,
+                    "description": "Credentials and game preferences.",
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "name": "player1",
+                                "pass": "example-password",
+                                "group": 1,
+                                "level": "beginner"
+                            },
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": { "type": "string", "minLength": 1 },
+                                    "pass": { "type": "string" },
+                                    "group": { "type": "number", "minimum": 0 },
+                                    "level": { "type": "string", "minLength": 1 }
+                                },
+                                "required": ["name", "pass", "group", "level"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The game identifier and player key.",
+                        "content": {
+                            "application/json": {
+                                "example": { "key": "example-key", "game": 1 },
+                                "schema": {
+                                    "type": "object",
+                                    "properties": { "key": { "type": "string" }, "game": { "type": "number" } },
+                                    "required": ["key", "game"]
+                                }
+                            }
+                        }
+                    },
+                    "400": { "description": "The request body did not match the expected player and game details." }
+                }
+            }
+        },
+        "/leave": {
+            "post": {
+                "summary": "Leave a waiting game",
+                "description": "Remove a player from the waiting list when the supplied credentials are valid.",
+                "operationId": "leaveGame",
+                "tags": ["Games"],
+                "requestBody": {
+                    "required": true,
+                    "description": "The player and game credentials.",
+                    "content": {
+                        "application/json": {
+                            "example": { "game": 1, "name": "player1", "key": "example-key" },
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "game": { "type": "number", "minimum": 0 },
+                                    "name": { "type": "string", "minLength": 1 },
+                                    "key": { "type": "string", "minLength": 1 }
+                                },
+                                "required": ["game", "name", "key"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The player left the waiting list.",
+                        "content": {
+                            "application/json": { "example": {}, "schema": { "type": "object", "properties": {} } }
+                        }
+                    },
+                    "400": { "description": "The request body did not match the expected player and game details." }
+                }
+            }
+        },
+        "/score": {
+            "post": {
+                "summary": "Get a player score for a level",
+                "description": "Retrieve a player score for the requested level.",
+                "operationId": "getPlayerScore",
+                "tags": ["Rankings"],
+                "requestBody": {
+                    "required": true,
+                    "description": "The player and level to look up.",
+                    "content": {
+                        "application/json": {
+                            "example": { "name": "player1", "level": "beginner" },
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": { "type": "string", "minLength": 1 },
+                                    "level": { "type": "string", "minLength": 1 }
+                                },
+                                "required": ["name", "level"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The player score or a validation error.",
+                        "content": {
+                            "application/json": {
+                                "example": { "score": 3 },
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": { "score": { "type": "number" } },
+                                            "required": ["score"]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": { "error": { "type": "string" } },
+                                            "required": ["error"]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": { "description": "The request body did not match the expected player and level." }
+                }
+            }
+        },
+        "/notify": {
+            "post": {
+                "summary": "Submit a move",
+                "description": "Submit a move for the current player in a game.",
+                "operationId": "submitMove",
+                "tags": ["Games"],
+                "requestBody": {
+                    "required": true,
+                    "description": "The move coordinates and player credentials.",
+                    "content": {
+                        "application/json": {
+                            "example": { "row": 1, "col": 1, "game": 1, "name": "player1", "key": "example-key" },
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "row": { "type": "number", "minimum": 0 },
+                                    "col": { "type": "number", "minimum": 0 },
+                                    "game": { "type": "number", "minimum": 0 },
+                                    "name": { "type": "string", "minLength": 1 },
+                                    "key": { "type": "string", "minLength": 1 }
+                                },
+                                "required": ["row", "col", "game", "name", "key"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The move result.",
+                        "content": {
+                            "application/json": {
+                                "example": {},
+                                "schema": {
+                                    "anyOf": [
+                                        { "type": "object", "properties": {} },
+                                        {
+                                            "type": "object",
+                                            "properties": { "error": { "type": "string" } },
+                                            "required": ["error"]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": { "description": "The request body did not match the expected move details." }
+                }
+            }
+        },
+        "/update": {
+            "get": {
+                "summary": "Subscribe to game updates",
+                "description": "Open a server-sent events connection for updates from a game.",
+                "operationId": "subscribeToGameUpdates",
+                "tags": ["Game updates"],
+                "parameters": [
+                    {
+                        "schema": { "type": "string", "minLength": 1, "description": "Game identifier." },
+                        "required": true,
+                        "description": "Game identifier.",
+                        "name": "game",
+                        "in": "query"
+                    },
+                    {
+                        "schema": { "type": "string", "minLength": 1, "description": "Player name." },
+                        "required": true,
+                        "description": "Player name.",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "schema": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "Player key returned by the join endpoint."
+                        },
+                        "required": true,
+                        "description": "Player key returned by the join endpoint.",
+                        "name": "key",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Server-sent game events",
+                        "content": { "text/event-stream": { "schema": { "type": "string" } } }
+                    },
+                    "400": {
+                        "description": "The query parameters did not match the expected game and player credentials."
+                    }
+                }
+            }
+        }
+    }
+}

@@ -7,7 +7,6 @@ import helmet from 'helmet';
 import pino from 'pino';
 import { rateLimit } from 'express-rate-limit';
 import type { AddressInfo } from 'net';
-import { z } from 'zod';
 
 import type { Connection } from './Connection';
 import type { User } from './User';
@@ -16,6 +15,15 @@ import type { Player } from './Player';
 import type { Game } from './Game';
 import type { Move } from './Move';
 import { countNeighbours, expandPop } from './board';
+import {
+    joinRequestSchema,
+    leaveRequestSchema,
+    notifyRequestSchema,
+    rankingRequestSchema,
+    registerRequestSchema,
+    scoreRequestSchema,
+    updateQuerySchema,
+} from './api-schemas';
 
 const logger = pino({
     transport: {
@@ -413,12 +421,7 @@ function createHash(str: string): string {
 
 // Deals with both registration and login
 app.post('/register', generalRateLimit, (request, response) => {
-    const bodySchema = z.object({
-        name: z.string().min(1),
-        pass: z.string(),
-    });
-
-    const parse = bodySchema.safeParse(request.body);
+    const parse = registerRequestSchema.safeParse(request.body);
 
     if (!parse.success) {
         response.status(STATUS_BAD_REQUEST).json(parse.error);
@@ -472,11 +475,7 @@ app.post('/register', generalRateLimit, (request, response) => {
 });
 
 app.post('/ranking', generalRateLimit, (request, response) => {
-    const bodySchema = z.object({
-        level: z.string().min(1),
-    });
-
-    const parse = bodySchema.safeParse(request.body);
+    const parse = rankingRequestSchema.safeParse(request.body);
 
     if (!parse.success) {
         response.status(STATUS_BAD_REQUEST).json(parse.error);
@@ -498,14 +497,7 @@ app.post('/ranking', generalRateLimit, (request, response) => {
 });
 
 app.post('/join', generalRateLimit, (request, response) => {
-    const bodySchema = z.object({
-        name: z.string().min(1),
-        pass: z.string(),
-        group: z.number().nonnegative(),
-        level: z.string().min(1),
-    });
-
-    const parse = bodySchema.safeParse(request.body);
+    const parse = joinRequestSchema.safeParse(request.body);
 
     if (!parse.success) {
         response.status(STATUS_BAD_REQUEST).json(parse.error);
@@ -558,13 +550,7 @@ app.post('/join', generalRateLimit, (request, response) => {
 });
 
 app.post('/leave', (request, response) => {
-    const bodySchema = z.object({
-        game: z.number().nonnegative(),
-        name: z.string().min(1),
-        key: z.string().min(1),
-    });
-
-    const parse = bodySchema.safeParse(request.body);
+    const parse = leaveRequestSchema.safeParse(request.body);
 
     if (!parse.success) {
         response.status(STATUS_BAD_REQUEST).json(parse.error);
@@ -587,12 +573,7 @@ app.post('/leave', (request, response) => {
 });
 
 app.post('/score', generalRateLimit, (request, response) => {
-    const bodySchema = z.object({
-        name: z.string().min(1),
-        level: z.string().min(1),
-    });
-
-    const parse = bodySchema.safeParse(request.body);
+    const parse = scoreRequestSchema.safeParse(request.body);
 
     if (!parse.success) {
         response.status(STATUS_BAD_REQUEST).json(parse.error);
@@ -626,15 +607,7 @@ function validNameAndKey(name: string, key: string, game: number): boolean {
 }
 
 app.post('/notify', notifyRateLimit, (request, response) => {
-    const bodySchema = z.object({
-        row: z.number().nonnegative(),
-        col: z.number().nonnegative(),
-        game: z.number().nonnegative(),
-        name: z.string().min(1),
-        key: z.string().min(1),
-    });
-
-    const parse = bodySchema.safeParse(request.body);
+    const parse = notifyRequestSchema.safeParse(request.body);
 
     if (!parse.success) {
         response.status(STATUS_BAD_REQUEST).json(parse.error);
@@ -680,13 +653,7 @@ app.post('/notify', notifyRateLimit, (request, response) => {
 });
 
 app.get('/update', (request, response) => {
-    const bodySchema = z.object({
-        game: z.string().min(1),
-        name: z.string().min(1),
-        key: z.string().min(1),
-    });
-
-    const parse = bodySchema.safeParse(request.query);
+    const parse = updateQuerySchema.safeParse(request.query);
 
     if (!parse.success) {
         response.status(STATUS_BAD_REQUEST).json(parse.error);
