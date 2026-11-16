@@ -36,7 +36,7 @@ export const notifyRequestSchema = z.object({
 });
 
 export const updateQuerySchema = z.object({
-    game: z.string().min(1),
-    name: z.string().min(1),
-    key: z.string().min(1),
+    game: z.string().min(1).describe('Game identifier.'),
+    name: z.string().min(1).describe('Player name.'),
+    key: z.string().min(1).describe('Player key returned by the join endpoint.'),
 });
