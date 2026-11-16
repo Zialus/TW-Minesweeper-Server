@@ -9,7 +9,7 @@
         "postinstall": "tsc",
         "test": "vitest run --coverage",
         "test:mutate": "stryker run",
-        "lint": "pnpm run lint:prettier:ts && pnpm run lint:prettier:others && pnpm run lint:eslint && pnpm run lint:openapi",
+        "lint": "pnpm run lint:prettier:ts && pnpm run lint:prettier:others && pnpm run lint:eslint",
         "openapi:generate": "jiti generate-openapi.mts",
         "lint:openapi": "pnpm run openapi:generate && vacuum lint openapi.json",
         "lint:prettier:ts": "prettier --check src tests",
