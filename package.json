@@ -31,7 +31,7 @@
     },
     "devDependencies": {
         "@eslint/js": "10.0.1",
-        "@quobix/vacuum": "0.41.0",
+        "@quobix/vacuum": "0.42.3",
         "@stryker-mutator/core": "10.1.1",
         "@stryker-mutator/typescript-checker": "10.1.1",
         "@stryker-mutator/vitest-runner": "10.1.1",
